@@ -17,6 +17,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="m5V-Na-Rf9">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                            </mapView>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5hf-Hc-m5u">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                 <subviews>
@@ -44,7 +47,11 @@
                         <color key="backgroundColor" red="0.40000000600000002" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
                             <constraint firstItem="5hf-Hc-m5u" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="1LZ-qa-OJn"/>
+                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="42R-0R-Kr4"/>
                             <constraint firstItem="5hf-Hc-m5u" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="RNv-aQ-dbS"/>
+                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="leading" secondItem="5hf-Hc-m5u" secondAttribute="leading" id="WYz-9V-E10"/>
+                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="trailing" secondItem="5hf-Hc-m5u" secondAttribute="trailing" id="Z8V-Hc-rpG"/>
+                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="top" secondItem="5hf-Hc-m5u" secondAttribute="top" id="kWz-NL-gNz"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
