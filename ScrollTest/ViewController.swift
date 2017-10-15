@@ -41,7 +41,7 @@ extension ViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        var cell = tableView.dequeueReusableCell(withIdentifier: "Cell") ?? UITableViewCell(style: .default, reuseIdentifier: "Cell")
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") ?? UITableViewCell(style: .default, reuseIdentifier: "Cell")
         cell.textLabel?.text = "Cell \(indexPath.row)"
         cell.backgroundColor = UIColor.clear
         return cell
@@ -64,6 +64,7 @@ extension ViewController: UIScrollViewDelegate {
             // Accumulate offset when negative
             if scrollView.contentOffset.y < 0 {
                 // Try #1
+                print(">")
                 parentScroll.contentOffset.y = parentScroll.contentOffset.y + scrollView.contentOffset.y
                 offset = offset + scrollView.contentOffset.y
                 scrollView.contentOffset.y = 0
@@ -83,7 +84,7 @@ extension ViewController: UIScrollViewDelegate {
 
                 offset = offset + scrollView.contentOffset.y
                 if offset > 0 {
-                    print("!")
+                    print("<")
                     offset = 0
                 } else {
                     parentScroll.contentOffset.y = parentScroll.contentOffset.y + scrollView.contentOffset.y
@@ -96,7 +97,7 @@ extension ViewController: UIScrollViewDelegate {
     }
 
     func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
-        print("scrollViewWillBeginDecelerating")
+//        print("scrollViewWillBeginDecelerating")
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -105,7 +106,7 @@ extension ViewController: UIScrollViewDelegate {
 
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         self.isDragging = false
-        print("scrollViewDidEndDragging")
+//        print("scrollViewDidEndDragging")
         if offset < 0 {
             offset = 0
             UIView.animate(withDuration: 0.4, delay: 0.0, options: UIViewAnimationOptions.curveEaseInOut, animations: {
