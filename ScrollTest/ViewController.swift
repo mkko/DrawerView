@@ -64,31 +64,31 @@ extension ViewController: UIScrollViewDelegate {
             // Accumulate offset when negative
             if scrollView.contentOffset.y < 0 {
                 // Try #1
-//                parentScroll.contentOffset.y = parentScroll.contentOffset.y + scrollView.contentOffset.y
-//                offset = offset + scrollView.contentOffset.y
-//                scrollView.contentOffset.y = 0
+                parentScroll.contentOffset.y = parentScroll.contentOffset.y + scrollView.contentOffset.y
+                offset = offset + scrollView.contentOffset.y
+                scrollView.contentOffset.y = 0
 
                 // Try #2
-//                offset = offset + scrollView.contentOffset.y
-//                print("offset: \(offset)")
-//                print("offset: \(offset)")
-                parentScroll.bounds = CGRect(
-                    origin: CGPoint(x: parentScroll.bounds.origin.x, y: scrollView.contentOffset.y),
-                    size: parentScroll.bounds.size)
-
-//                scrollView.contentOffset.y = 0
+////                offset = offset + scrollView.contentOffset.y
+////                print("offset: \(offset)")
+////                print("offset: \(offset)")
+//                parentScroll.bounds = CGRect(
+//                    origin: CGPoint(x: parentScroll.bounds.origin.x, y: scrollView.contentOffset.y),
+//                    size: parentScroll.bounds.size)
+//
+////                scrollView.contentOffset.y = 0
 
             } else if scrollView.contentOffset.y > 0 && offset < 0 {
                 // var o = s.contentOffset
 
-//                offset = offset + scrollView.contentOffset.y
-//                if offset > 0 {
-//                    print("!")
-//                    offset = 0
-//                } else {
-//                    s.contentOffset.y = s.contentOffset.y + scrollView.contentOffset.y
-//                    scrollView.contentOffset.y = 0
-//                }
+                offset = offset + scrollView.contentOffset.y
+                if offset > 0 {
+                    print("!")
+                    offset = 0
+                } else {
+                    parentScroll.contentOffset.y = parentScroll.contentOffset.y + scrollView.contentOffset.y
+                    scrollView.contentOffset.y = 0
+                }
 
             }
         }
