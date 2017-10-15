@@ -69,14 +69,14 @@ extension ViewController: UIScrollViewDelegate {
 //                scrollView.contentOffset.y = 0
 
                 // Try #2
-                offset = offset + scrollView.contentOffset.y
-                print("offset: \(offset)")
-                print("offset: \(offset)")
+//                offset = offset + scrollView.contentOffset.y
+//                print("offset: \(offset)")
+//                print("offset: \(offset)")
                 parentScroll.bounds = CGRect(
-                    origin: CGPoint(x: parentScroll.bounds.origin.x, y: offset),
+                    origin: CGPoint(x: parentScroll.bounds.origin.x, y: scrollView.contentOffset.y),
                     size: parentScroll.bounds.size)
 
-                scrollView.contentOffset.y = 0
+//                scrollView.contentOffset.y = 0
 
             } else if scrollView.contentOffset.y > 0 && offset < 0 {
                 // var o = s.contentOffset
