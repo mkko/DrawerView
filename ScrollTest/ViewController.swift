@@ -107,8 +107,18 @@ extension ViewController: UIScrollViewDelegate {
         self.isDragging = false
         print("scrollViewDidEndDragging")
         if offset < 0 {
-            parentScrollView.setContentOffset(CGPoint(x: 0, y: 0), animated: true)
             offset = 0
+            UIView.animate(withDuration: 0.4, delay: 0.0, options: UIViewAnimationOptions.curveEaseInOut, animations: {
+                self.parentScrollView.contentOffset = CGPoint(x: 0, y: 0)
+            })
+//            UIView.animate(withDuration 0.4: TimeInterval, delay: TimeInterval, options: UIViewAnimationOptions = [], animations: @escaping () -> Swift.Void, completion: ((Bool) -> Swift.Void)? = nil)
+//            UIView.animate(withDuration: 0.4, delay: 0.0, usingSpringWithDamping: 2.0, initialSpringVelocity: 2.0, options: UIViewAnimationOptions.curveEaseInOut, animations: {
+//                self.parentScrollView.contentOffset = CGPoint(x: 0, y: 0)
+//            }, completion: nil)
+//            UIView.animate(withDuration: 0.2, animations: {
+//                self.parentScrollView.contentOffset = CGPoint(x: 0, y: 0)
+////                self.parentScrollView.setContentOffset(CGPoint(x: 0, y: 0), animated: true)
+//            })
         }
     }
 }
