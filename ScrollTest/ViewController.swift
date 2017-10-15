@@ -59,24 +59,36 @@ extension ViewController: UITableViewDelegate {
 extension ViewController: UIScrollViewDelegate {
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        if isDragging, let s = scrollView.superview as? UIScrollView {
+        if isDragging, let parentScroll = scrollView.superview as? UIScrollView {
 
             // Accumulate offset when negative
             if scrollView.contentOffset.y < 0 {
-                s.contentOffset.y = s.contentOffset.y + scrollView.contentOffset.y
+                // Try #1
+//                parentScroll.contentOffset.y = parentScroll.contentOffset.y + scrollView.contentOffset.y
+//                offset = offset + scrollView.contentOffset.y
+//                scrollView.contentOffset.y = 0
+
+                // Try #2
                 offset = offset + scrollView.contentOffset.y
+                print("offset: \(offset)")
+                print("offset: \(offset)")
+                parentScroll.bounds = CGRect(
+                    origin: CGPoint(x: parentScroll.bounds.origin.x, y: offset),
+                    size: parentScroll.bounds.size)
+
                 scrollView.contentOffset.y = 0
+
             } else if scrollView.contentOffset.y > 0 && offset < 0 {
                 // var o = s.contentOffset
 
-                offset = offset + scrollView.contentOffset.y
-                if offset > 0 {
-                    print("!")
-                    offset = 0
-                } else {
-                    s.contentOffset.y = s.contentOffset.y + scrollView.contentOffset.y
-                    scrollView.contentOffset.y = 0
-                }
+//                offset = offset + scrollView.contentOffset.y
+//                if offset > 0 {
+//                    print("!")
+//                    offset = 0
+//                } else {
+//                    s.contentOffset.y = s.contentOffset.y + scrollView.contentOffset.y
+//                    scrollView.contentOffset.y = 0
+//                }
 
             }
         }
