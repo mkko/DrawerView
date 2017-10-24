@@ -17,56 +17,41 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="m5V-Na-Rf9">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="m5V-Na-Rf9">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                             </mapView>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5hf-Hc-m5u">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <subviews>
-                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="7Pf-E5-690">
-                                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                        <color key="backgroundColor" red="1" green="0.0" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                        <view key="tableHeaderView" contentMode="scaleToFill" id="sFl-Jr-5xU">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        </view>
-                                        <connections>
-                                            <outlet property="dataSource" destination="BYZ-38-t0r" id="aaY-aJ-sT1"/>
-                                            <outlet property="delegate" destination="BYZ-38-t0r" id="KRb-jd-FZq"/>
-                                        </connections>
-                                    </tableView>
-                                </subviews>
-                                <constraints>
-                                    <constraint firstAttribute="trailing" secondItem="7Pf-E5-690" secondAttribute="trailing" id="335-w8-ZEM"/>
-                                    <constraint firstAttribute="height" constant="667" id="3cS-AS-pV9"/>
-                                    <constraint firstItem="7Pf-E5-690" firstAttribute="leading" secondItem="5hf-Hc-m5u" secondAttribute="leading" id="4Ke-9x-FUY"/>
-                                    <constraint firstAttribute="width" constant="375" id="OWB-bC-NBZ"/>
-                                    <constraint firstItem="7Pf-E5-690" firstAttribute="top" secondItem="5hf-Hc-m5u" secondAttribute="top" id="X9B-Zp-5UY"/>
-                                    <constraint firstAttribute="bottom" secondItem="7Pf-E5-690" secondAttribute="bottom" id="f34-oq-DY6"/>
-                                    <constraint firstItem="7Pf-E5-690" firstAttribute="height" secondItem="5hf-Hc-m5u" secondAttribute="height" id="fO1-MX-EGX"/>
-                                    <constraint firstItem="7Pf-E5-690" firstAttribute="width" secondItem="5hf-Hc-m5u" secondAttribute="width" id="gHX-St-AVj"/>
-                                </constraints>
-                            </scrollView>
+                            <containerView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KMW-ed-exH">
+                                <rect key="frame" x="0.0" y="198" width="375" height="469"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                <connections>
+                                    <segue destination="Ois-wO-3Wf" kind="embed" id="iHY-xF-Xr3"/>
+                                </connections>
+                            </containerView>
                         </subviews>
                         <color key="backgroundColor" red="0.40000000600000002" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
-                            <constraint firstItem="5hf-Hc-m5u" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="1LZ-qa-OJn"/>
                             <constraint firstItem="m5V-Na-Rf9" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="42R-0R-Kr4"/>
-                            <constraint firstItem="5hf-Hc-m5u" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="RNv-aQ-dbS"/>
-                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="leading" secondItem="5hf-Hc-m5u" secondAttribute="leading" id="WYz-9V-E10"/>
-                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="trailing" secondItem="5hf-Hc-m5u" secondAttribute="trailing" id="Z8V-Hc-rpG"/>
-                            <constraint firstItem="m5V-Na-Rf9" firstAttribute="top" secondItem="5hf-Hc-m5u" secondAttribute="top" id="kWz-NL-gNz"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
-                    <connections>
-                        <outlet property="parentScrollView" destination="5hf-Hc-m5u" id="FM1-4l-dz7"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="136.80000000000001" y="133.5832083958021"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="0Wk-dk-hOZ">
+            <objects>
+                <viewController id="Ois-wO-3Wf" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="RbK-Ey-uhP">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="469"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Q8f-Ve-XkZ" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1105" y="301"/>
         </scene>
     </scenes>
 </document>
