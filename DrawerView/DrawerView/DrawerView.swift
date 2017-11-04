@@ -31,9 +31,7 @@ public class DrawerView: UIView {
     var originScrollView: UIScrollView? = nil
     var otherGestureRecognizer: UIGestureRecognizer? = nil
 
-    var _offset: CGFloat = 0.0
-
-    var scrollViewOffset: CGFloat = 0.0
+    var panOrigin: CGFloat = 0.0
 
     private var _position: DrawerPosition = .collapsed
 
@@ -90,15 +88,12 @@ public class DrawerView: UIView {
     @objc func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
-            scrollViewOffset = 0.0
+            panOrigin = self.frame.origin.y
             self.isUserInteractionEnabled = false
             break
         case .changed:
             let translation = sender.translation(in: self)
-            sender.setTranslation(CGPoint.zero, in: self)
-
-//            _offset = _offset + translation.y
-//            let offset = max(_offset, 0)
+//            sender.setTranslation(CGPoint.zero, in: self)
 
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.originScrollView {
@@ -109,12 +104,10 @@ public class DrawerView: UIView {
                 }
 
                 if !childScrollView.isScrollEnabled || childScrollView.contentOffset.y <= 0 {
-                    self.frame.origin.y = self.frame.origin.y + translation.y
+                    self.frame.origin.y = panOrigin + translation.y
                 }
-
-                print("scrollViewOffset: \(scrollViewOffset)")
             } else {
-                self.frame.origin.y = self.frame.origin.y + translation.y
+                self.frame.origin.y = panOrigin + translation.y
             }
 
 
@@ -126,7 +119,6 @@ public class DrawerView: UIView {
             self.isUserInteractionEnabled = true
             self.originScrollView?.isScrollEnabled = true
             self.originScrollView = nil
-            _offset = 0
 
             let pos = positionFor(offset: self.frame.origin.y)
             self.setPosition(pos, animated: true)
