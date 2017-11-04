@@ -89,7 +89,7 @@ public class DrawerView: UIView {
         switch sender.state {
         case .began:
             panOrigin = self.frame.origin.y
-            self.isUserInteractionEnabled = false
+            //self.isUserInteractionEnabled = false
             break
         case .changed:
             let translation = sender.translation(in: self)
@@ -115,13 +115,19 @@ public class DrawerView: UIView {
             fallthrough
         case .ended:
             let velocity = sender.velocity(in: self)
-            print("sender.state: \(sender.state.rawValue)")
-            self.isUserInteractionEnabled = true
-            self.originScrollView?.isScrollEnabled = true
-            self.originScrollView = nil
 
-            let pos = positionFor(offset: self.frame.origin.y)
-            self.setPosition(pos, animated: true)
+            if let childScrollView = self.originScrollView,
+                childScrollView.contentOffset.y > 0 {
+                // Let it scroll.
+            } else {
+                //self.isUserInteractionEnabled = true
+                self.originScrollView?.isScrollEnabled = true
+                self.originScrollView = nil
+
+                let targetOffset = self.frame.origin.y + velocity.y * 0.15
+                let pos = positionFor(offset: targetOffset)
+                self.setPosition(pos, animated: true)
+            }
         default:
             break
         }
@@ -147,7 +153,11 @@ public class DrawerView: UIView {
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
         //let distanceFromOpen = offset
-        let distances = DrawerPosition.allValues
+        let distances = [
+            .open,
+            .partiallyOpen,
+            .collapsed
+            ]
             .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
