@@ -13,10 +13,11 @@ class DrawerView: UIView {
     var panGesture: UIPanGestureRecognizer! = nil
 
     var originScrollView: UIScrollView? = nil
+    var otherGestureRecognizer: UIGestureRecognizer? = nil
 
     var _offset: CGFloat = 0.0
 
-    var yOrigin: CGFloat = 0.0
+    var topOrigin: CGFloat = 0.0
 
     var scrollViewOffset: CGFloat = 0.0
 
@@ -31,7 +32,7 @@ class DrawerView: UIView {
     }
 
     override func layoutSubviews() {
-        yOrigin = self.center.y
+        topOrigin = self.frame.minY
     }
 
     private func setup() {
@@ -47,7 +48,6 @@ class DrawerView: UIView {
         switch sender.state {
         case .began:
             scrollViewOffset = 0.0
-            //self.originScrollView = nil
             break
         case .changed:
             let translation = sender.translation(in: self)
@@ -58,50 +58,33 @@ class DrawerView: UIView {
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.originScrollView {
                 if childScrollView.contentOffset.y < 0 {
-                    //self.transform = CGAffineTransform(translationX: 0, y: translation.y)
-                    self.center.y = yOrigin + offset
-                    scrollViewOffset = scrollViewOffset + childScrollView.contentOffset.y
+                    // Scrolling downwards and content was consumed, disable child scrolling
+                    childScrollView.isScrollEnabled = false
                     childScrollView.contentOffset.y = 0
-//                    let o = sv.contentOffset
-//                    o.y = 0
-//                    sv.contentOffset = o
-                } else if childScrollView.contentOffset.y > 0 && scrollViewOffset < 0 {
-                    scrollViewOffset = scrollViewOffset + childScrollView.contentOffset.y
-                    self.center.y = yOrigin + offset
+                }
 
-                    if scrollViewOffset > 0 {
-                        print("<, \(scrollViewOffset)")
-                        childScrollView.contentOffset.y = scrollViewOffset
-                        scrollViewOffset = 0
-                        //self.transform = CGAffineTransform(translationX: 0, y: translation.y - scrollViewOffset)
-                    } else {
-                        childScrollView.contentOffset.y = 0
-                        //self.transform = CGAffineTransform(translationX: 0, y: translation.y)
-                    }
+                if !childScrollView.isScrollEnabled || childScrollView.contentOffset.y <= 0 {
+                    self.frame.origin.y = topOrigin + offset
                 }
                 print("scrollViewOffset: \(scrollViewOffset)")
 
-            } else {
-                //self.center = CGPoint(x: self.center.x , y: self.center.y + translation.y)
-                //self.transform = CGAffineTransform(translationX: 0, y: translation.y)
-                //                sender.setTranslation(CGPoint.zero, in: self)
             }
-
-            //print("c: \(self.center)")
-            print("offset: \(offset)")
         case .ended:
             fallthrough
         case.failed:
             print("sender.state: \(sender.state.rawValue)")
+            self.originScrollView?.isScrollEnabled = true
             self.originScrollView = nil
             _offset = 0
-            UIView.animate(withDuration: 0.2, animations: {
-//                self.transform = CGAffineTransform.identity
-                self.center.y = self.yOrigin
-                //print("c: \(self.center)")
-                //self.transform = CGAffineTransform(translationX: 0, y: 0)
-            }, completion: { _ in
-                //print("c: \(self.center)")
+
+            // Add extra height to make sure that bottom doesn't show up.
+            let originalHeight = self.frame.size.height
+            self.frame.size.height = self.frame.size.height * 1.5
+
+            UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: [], animations: {
+                self.frame.origin.y = self.topOrigin
+            }, completion: { (completed) in
+                self.frame.size.height = originalHeight
             })
         default:
             break
@@ -116,16 +99,13 @@ extension DrawerView: UIGestureRecognizerDelegate {
         return true
     }
 
-
-
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         //        print("gestureRecognizer:shouldRecognizeSimultaneouslyWith:\(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
+            self.otherGestureRecognizer = otherGestureRecognizer
             self.originScrollView = sv
         }
         return true
     }
-
-    //gestureRecognizer
 }
 
