@@ -88,7 +88,7 @@ public class DrawerView: UIView {
     @objc func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
-            panOrigin = self.frame.origin.y
+            self.panOrigin = self.frame.origin.y
             break
         case .changed:
             let translation = sender.translation(in: self)
@@ -96,12 +96,14 @@ public class DrawerView: UIView {
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.originScrollView {
                 if childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
-                    // Scrolling downwards and content was consumed, disable child scrolling.
+                    // Scrolling downwards and content was consumed, so disable
+                    // child scrolling and catch up with the offset.
+                    self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
                     childScrollView.isScrollEnabled = false
-                    childScrollView.contentOffset.y = 0
 
                     // Also animate to the proper scroll position.
-                    UIView.animate(withDuration: 0.1, delay: 0.0, options: [UIViewAnimationOptions.allowUserInteraction], animations: {
+                    UIView.animate(withDuration: 0.1, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+                        childScrollView.contentOffset.y = 0
                         self.setPosition(forDragPoint: self.panOrigin + translation.y)
                     }, completion: nil)
                 }
@@ -122,7 +124,9 @@ public class DrawerView: UIView {
             if let childScrollView = self.originScrollView,
                 childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
+                print("Let it scroll")
             } else {
+                print("offset.y: \(self.originScrollView?.contentOffset.y)")
                 self.originScrollView?.isScrollEnabled = true
                 self.originScrollView = nil
 
@@ -186,7 +190,7 @@ public class DrawerView: UIView {
         let originalHeight = self.frame.size.height
         self.frame.size.height = self.frame.size.height * 1.5
 
-        UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: [], animations: {
+        UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
             self.frame.origin.y = snapPosition
         }, completion: { (completed) in
             self.frame.size.height = originalHeight
