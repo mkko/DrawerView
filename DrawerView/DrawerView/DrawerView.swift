@@ -89,27 +89,30 @@ public class DrawerView: UIView {
         switch sender.state {
         case .began:
             panOrigin = self.frame.origin.y
-            //self.isUserInteractionEnabled = false
             break
         case .changed:
             let translation = sender.translation(in: self)
-//            sender.setTranslation(CGPoint.zero, in: self)
 
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.originScrollView {
-                if childScrollView.contentOffset.y < 0 {
-                    // Scrolling downwards and content was consumed, disable child scrolling
+                if childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
+                    // Scrolling downwards and content was consumed, disable child scrolling.
                     childScrollView.isScrollEnabled = false
                     childScrollView.contentOffset.y = 0
+
+                    // Also animate to the proper scroll position.
+                    UIView.animate(withDuration: 0.1, delay: 0.0, options: [UIViewAnimationOptions.allowUserInteraction], animations: {
+                        self.setPosition(forDragPoint: self.panOrigin + translation.y)
+                    }, completion: nil)
                 }
 
+                // Scroll only if we're not scrolling the subviews.
                 if !childScrollView.isScrollEnabled || childScrollView.contentOffset.y <= 0 {
-                    self.frame.origin.y = panOrigin + translation.y
+                    setPosition(forDragPoint: panOrigin + translation.y)
                 }
             } else {
-                self.frame.origin.y = panOrigin + translation.y
+                setPosition(forDragPoint: panOrigin + translation.y)
             }
-
 
         case.failed:
             fallthrough
@@ -120,13 +123,16 @@ public class DrawerView: UIView {
                 childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
             } else {
-                //self.isUserInteractionEnabled = true
                 self.originScrollView?.isScrollEnabled = true
                 self.originScrollView = nil
 
+                // TODO: Check velocity and snap position separately:
+                // 1) A treshold for velocity that makes drawer slide to the next state
+                // 2) A prediction that estimates the next position based on target offset.
+                // If 2 doesn't evaluate to the current position, use that.
                 let targetOffset = self.frame.origin.y + velocity.y * 0.15
-                let pos = positionFor(offset: targetOffset)
-                self.setPosition(pos, animated: true)
+                let targetPosition = positionFor(offset: targetOffset)
+                self.setPosition(targetPosition, animated: true)
             }
         default:
             break
@@ -164,6 +170,10 @@ public class DrawerView: UIView {
         }
 
         return distances.first.map { $0.pos } ?? DrawerPosition.collapsed
+    }
+
+    func setPosition(forDragPoint dragPoint: CGFloat) {
+        self.frame.origin.y = dragPoint
     }
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
