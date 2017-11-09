@@ -16,11 +16,10 @@ public enum DrawerPosition: Int {
 }
 
 private extension DrawerPosition {
-    static let allValues: [DrawerPosition] = [
+    static let activePositions: [DrawerPosition] = [
         .open,
         .partiallyOpen,
-        .collapsed,
-        .hidden
+        .collapsed
     ]
 }
 
@@ -177,7 +176,16 @@ public class DrawerView: UIView {
     }
 
     func setPosition(forDragPoint dragPoint: CGFloat) {
-        self.frame.origin.y = dragPoint
+        let bounds = DrawerPosition.activePositions
+            .flatMap(snapPosition)
+            .sorted()
+        if let lowerBound = bounds.first, dragPoint < lowerBound {
+            self.frame.origin.y = lowerBound
+        } else if let upperBound = bounds.last, dragPoint > upperBound {
+            self.frame.origin.y = upperBound
+        } else {
+            self.frame.origin.y = dragPoint
+        }
     }
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
@@ -186,15 +194,19 @@ public class DrawerView: UIView {
             return
         }
 
-        // Add extra height to make sure that bottom doesn't show up.
-        let originalHeight = self.frame.size.height
-        self.frame.size.height = self.frame.size.height * 1.5
+        if animated {
+            // Add extra height to make sure that bottom doesn't show up.
+            let originalHeight = self.frame.size.height
+            self.frame.size.height = self.frame.size.height * 1.5
 
-        UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+            UIView.animate(withDuration: 1.0, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+                self.frame.origin.y = snapPosition
+            }, completion: { (completed) in
+                self.frame.size.height = originalHeight
+            })
+        } else {
             self.frame.origin.y = snapPosition
-        }, completion: { (completed) in
-            self.frame.size.height = originalHeight
-        })
+        }
 
         _position = position
     }
