@@ -69,7 +69,10 @@ public class DrawerView: UIView {
 
     public var supportedPositions: [DrawerPosition] = DrawerPosition.positions {
         didSet {
-            // TODO: Update position if needed
+            if supportedPositions.index(of: self.position) == nil {
+                // Current position is not in the given list, default to the most closed one.
+                self.setInitialPosition()
+            }
         }
     }
 
@@ -84,6 +87,7 @@ public class DrawerView: UIView {
     }
 
     override public func layoutSubviews() {
+        self.setPosition(self.position, animated: false)
     }
 
     private func setup() {
@@ -92,6 +96,12 @@ public class DrawerView: UIView {
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
         self.addGestureRecognizer(panGesture)
+
+        setInitialPosition()
+    }
+
+    private func setInitialPosition() {
+        self.position = self.sorted(positions: self.supportedPositions).first ?? .collapsed
     }
 
     @objc func handlePan(_ sender: UIPanGestureRecognizer) {
@@ -162,15 +172,19 @@ public class DrawerView: UIView {
     }
 
     private func advance(from position: DrawerPosition, by: Int) -> DrawerPosition? {
-        let positions = self.supportedPositions
-            .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
-            .sorted { $0.y < $1.y }
-            .map { $0.pos }
+        let positions = self.sorted(positions: self.supportedPositions)
 
         let index = (positions.index(of: position) ?? 0)
         let nextIndex = max(0, min(positions.count - 1, index + by))
 
         return positions.isEmpty ? nil : positions[nextIndex]
+    }
+
+    private func sorted(positions: [DrawerPosition]) -> [DrawerPosition] {
+        return positions
+            .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
+            .sorted { $0.y < $1.y }
+            .map { $0.pos }
     }
 
     private func snapPosition(for position: DrawerPosition) -> CGFloat? {
@@ -217,8 +231,7 @@ public class DrawerView: UIView {
     }
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        guard let superview = self.superview,
-            let snapPosition = snapPosition(for: position) else {
+        guard let snapPosition = snapPosition(for: position) else {
             return
         }
 
