@@ -10,9 +10,12 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var drawerView: DrawerView!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        drawerView.supportedPositions = [.collapsed, .partiallyOpen, .open]
     }
 
     override func didReceiveMemoryWarning() {

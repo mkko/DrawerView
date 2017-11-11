@@ -12,11 +12,10 @@ public enum DrawerPosition: Int {
     case open = 1
     case partiallyOpen = 2
     case collapsed = 3
-    case hidden = 4
 }
 
 private extension DrawerPosition {
-    static let activePositions: [DrawerPosition] = [
+    static let positions: [DrawerPosition] = [
         .open,
         .partiallyOpen,
         .collapsed
@@ -38,19 +37,19 @@ public class DrawerView: UIView {
 
     public var topMargin: CGFloat = 68.0 {
         didSet {
-            // TODO: Update position if collapsed.
+            // TODO: Update position if needed
         }
     }
 
     public var collapsedHeight: CGFloat = 68.0 {
         didSet {
-            // TODO: Update position if collapsed.
+            // TODO: Update position if needed
         }
     }
 
     public var partiallyOpenHeight: CGFloat = 264.0 {
         didSet {
-            // TODO: Update position if collapsed.
+            // TODO: Update position if needed
         }
     }
 
@@ -60,6 +59,12 @@ public class DrawerView: UIView {
         }
         set {
             self.setPosition(newValue, animated: false)
+        }
+    }
+
+    public var supportedPositions: [DrawerPosition] = DrawerPosition.positions {
+        didSet {
+            // TODO: Update position if needed
         }
     }
 
@@ -155,18 +160,16 @@ public class DrawerView: UIView {
             return superview.bounds.height - self.partiallyOpenHeight
         case .collapsed:
             return superview.bounds.height - self.collapsedHeight
-        case .hidden:
-            return superview.bounds.height
         }
+    }
+
+    private func snapPositionForHidden() -> CGFloat? {
+        return superview?.bounds.height
     }
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
         //let distanceFromOpen = offset
-        let distances = [
-            .open,
-            .partiallyOpen,
-            .collapsed
-            ]
+        let distances = self.supportedPositions
             .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
@@ -176,7 +179,7 @@ public class DrawerView: UIView {
     }
 
     func setPosition(forDragPoint dragPoint: CGFloat) {
-        let bounds = DrawerPosition.activePositions
+        let bounds = self.supportedPositions
             .flatMap(snapPosition)
             .sorted()
         if let lowerBound = bounds.first, dragPoint < lowerBound {
