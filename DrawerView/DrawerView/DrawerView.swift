@@ -180,9 +180,9 @@ public class DrawerView: UIView {
             .flatMap(snapPosition)
             .sorted()
         if let lowerBound = bounds.first, dragPoint < lowerBound {
-            self.frame.origin.y = lowerBound
+            self.frame.origin.y = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
         } else if let upperBound = bounds.last, dragPoint > upperBound {
-            self.frame.origin.y = upperBound
+            self.frame.origin.y = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
             self.frame.origin.y = dragPoint
         }
@@ -199,7 +199,7 @@ public class DrawerView: UIView {
             let originalHeight = self.frame.size.height
             self.frame.size.height = self.frame.size.height * 1.5
 
-            UIView.animate(withDuration: 1.0, delay: 0.0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+            UIView.animate(withDuration: 1.0, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                 self.frame.origin.y = snapPosition
             }, completion: { (completed) in
                 self.frame.size.height = originalHeight
@@ -209,6 +209,10 @@ public class DrawerView: UIView {
         }
 
         _position = position
+    }
+
+    func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
+        return factor * (log10(value + factor/log(10)) - log10(factor/log(10)))
     }
 }
 
