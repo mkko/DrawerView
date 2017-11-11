@@ -22,6 +22,8 @@ private extension DrawerPosition {
     ]
 }
 
+let kVelocityTreshold: CGFloat = 10.0
+
 public class DrawerView: UIView {
 
     var panGesture: UIPanGestureRecognizer! = nil
@@ -35,18 +37,21 @@ public class DrawerView: UIView {
 
     // MARK: Public properties
 
+    // TODO: Use size classes here
     public var topMargin: CGFloat = 68.0 {
         didSet {
             // TODO: Update position if needed
         }
     }
 
+    // TODO: Use size classes here
     public var collapsedHeight: CGFloat = 68.0 {
         didSet {
             // TODO: Update position if needed
         }
     }
 
+    // TODO: Use size classes here
     public var partiallyOpenHeight: CGFloat = 264.0 {
         didSet {
             // TODO: Update position if needed
@@ -128,24 +133,44 @@ public class DrawerView: UIView {
             if let childScrollView = self.originScrollView,
                 childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
-                print("Let it scroll")
             } else {
-                print("offset.y: \(self.originScrollView?.contentOffset.y)")
                 self.originScrollView?.isScrollEnabled = true
                 self.originScrollView = nil
 
-                // TODO: Check velocity and snap position separately:
+                // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
                 // 2) A prediction that estimates the next position based on target offset.
                 // If 2 doesn't evaluate to the current position, use that.
                 let targetOffset = self.frame.origin.y + velocity.y * 0.15
                 let targetPosition = positionFor(offset: targetOffset)
-                self.setPosition(targetPosition, animated: true)
+
+                let velocitySign = velocity.y > 0 ? 1 : -1
+
+                let nextPosition: DrawerPosition
+                if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
+                    let pos = advance(from: targetPosition, by: velocitySign) {
+                    nextPosition = pos
+                } else {
+                    nextPosition = targetPosition
+                }
+
+                self.setPosition(nextPosition, animated: true)
             }
         default:
             break
         }
+    }
 
+    private func advance(from position: DrawerPosition, by: Int) -> DrawerPosition? {
+        let positions = self.supportedPositions
+            .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
+            .sorted { $0.y < $1.y }
+            .map { $0.pos }
+
+        let index = (positions.index(of: position) ?? 0)
+        let nextIndex = max(0, min(positions.count - 1, index + by))
+
+        return positions.isEmpty ? nil : positions[nextIndex]
     }
 
     private func snapPosition(for position: DrawerPosition) -> CGFloat? {
@@ -241,3 +266,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 }
 
+extension CGPoint {
+
+}
