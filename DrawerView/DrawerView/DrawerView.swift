@@ -22,15 +22,19 @@ private extension DrawerPosition {
     ]
 }
 
-let kVelocityTreshold: CGFloat = 10.0
+let kVelocityTreshold: CGFloat = 0
 
 public class DrawerView: UIView {
+
+    private var animator: UIDynamicAnimator? = nil
+    private var drawerBehavior: DrawerBehavior? = nil
 
     var panGesture: UIPanGestureRecognizer! = nil
 
     var originScrollView: UIScrollView? = nil
     var otherGestureRecognizer: UIGestureRecognizer? = nil
 
+    var frameOrigin: CGPoint = CGPoint()
     var panOrigin: CGFloat = 0.0
 
     private var _position: DrawerPosition = .collapsed
@@ -63,7 +67,7 @@ public class DrawerView: UIView {
             return _position
         }
         set {
-            self.setPosition(newValue, animated: false)
+            self.snapToPosition(newValue, withVelocity: CGPoint(), animated: false)
         }
     }
 
@@ -87,7 +91,13 @@ public class DrawerView: UIView {
     }
 
     override public func layoutSubviews() {
-        self.setPosition(self.position, animated: false)
+//        self.snapToPosition(self.position, animated: false)
+
+        if let superview = self.superview,
+            self.animator?.referenceView != superview {
+            // TODO: Handle superview changes
+            self.animator = UIDynamicAnimator(referenceView: superview)
+        }
     }
 
     private func setup() {
@@ -108,10 +118,15 @@ public class DrawerView: UIView {
         switch sender.state {
         case .began:
             self.panOrigin = self.frame.origin.y
+            if let drawerBehavior = self.drawerBehavior {
+                self.animator?.removeBehavior(drawerBehavior)
+            }
+            setPosition(forDragPoint: panOrigin)
+
             break
         case .changed:
-            let translation = sender.translation(in: self)
 
+            let translation = sender.translation(in: self)
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.originScrollView {
                 if childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
@@ -164,7 +179,7 @@ public class DrawerView: UIView {
                     nextPosition = targetPosition
                 }
 
-                self.setPosition(nextPosition, animated: true)
+                self.snapToPosition(nextPosition, withVelocity: velocity, animated: true)
             }
         default:
             break
@@ -217,6 +232,17 @@ public class DrawerView: UIView {
         return distances.first.map { $0.pos } ?? DrawerPosition.collapsed
     }
 
+    func getDragBounds() -> (lower: CGFloat, upper: CGFloat) {
+        let bounds = self.supportedPositions
+            .flatMap(snapPosition)
+            .sorted()
+        if let lower = bounds.first, let upper = bounds.last {
+            return (lower: lower, upper: upper)
+        } else {
+            return (lower: 0, upper: 0)
+        }
+    }
+
     func setPosition(forDragPoint dragPoint: CGFloat) {
         let bounds = self.supportedPositions
             .flatMap(snapPosition)
@@ -230,24 +256,28 @@ public class DrawerView: UIView {
         }
     }
 
-    public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        guard let snapPosition = snapPosition(for: position) else {
+    public func snapToPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
+        guard let snapPosition = snapPosition(for: position),
+            let animator = self.animator else {
             return
         }
 
-        if animated {
-            // Add extra height to make sure that bottom doesn't show up.
-            let originalHeight = self.frame.size.height
-            self.frame.size.height = self.frame.size.height * 1.5
-
-            UIView.animate(withDuration: 1.0, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
-                self.frame.origin.y = snapPosition
-            }, completion: { (completed) in
-                self.frame.size.height = originalHeight
-            })
-        } else {
+        if !animated {
             self.frame.origin.y = snapPosition
         }
+
+        // TODO: Add extra height to make sure that bottom doesn't show up.
+
+        if drawerBehavior == nil {
+            drawerBehavior = DrawerBehavior(item: self)
+        }
+
+        let snapPoint = CGPoint(x: self.bounds.width / 2.0, y: snapPosition + self.bounds.height / 2.0)
+
+        self.drawerBehavior?.targetPoint = snapPoint
+        self.drawerBehavior?.velocity = velocity
+
+        animator.addBehavior(self.drawerBehavior!)
 
         _position = position
     }
@@ -281,4 +311,14 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
 extension CGPoint {
 
+
 }
+
+public func + (left: CGPoint, right: CGPoint) -> CGPoint {
+    return CGPoint(x: left.x + right.x, y: left.y + right.y)
+}
+
+public func - (left: CGPoint, right: CGPoint) -> CGPoint {
+    return CGPoint(x: left.x - right.x, y: left.y - right.y)
+}
+
