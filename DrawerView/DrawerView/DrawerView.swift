@@ -91,8 +91,6 @@ public class DrawerView: UIView {
     }
 
     override public func layoutSubviews() {
-//        self.snapToPosition(self.position, animated: false)
-
         if let superview = self.superview,
             self.animator?.referenceView != superview {
             // TODO: Handle superview changes
@@ -307,18 +305,5 @@ extension DrawerView: UIGestureRecognizerDelegate {
             ? false
             : otherGestureRecognizer.view is UIScrollView
     }
-}
-
-extension CGPoint {
-
-
-}
-
-public func + (left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x + right.x, y: left.y + right.y)
-}
-
-public func - (left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x - right.x, y: left.y - right.y)
 }
 
