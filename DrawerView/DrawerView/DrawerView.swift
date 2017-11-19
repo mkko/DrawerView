@@ -41,6 +41,12 @@ public class DrawerView: UIView {
 
     private var _position: DrawerPosition = .collapsed
 
+    private var maxHeight: CGFloat {
+        return (self.superview?.bounds.height)
+            .map { $0 - self.topMargin }
+            ?? self.frame.height
+    }
+
 
     // MARK: - Public properties
 
@@ -304,7 +310,9 @@ public class DrawerView: UIView {
             .flatMap(snapPosition)
             .sorted()
         if let lowerBound = bounds.first, dragPoint < lowerBound {
+            let stretch = damp(value: lowerBound - dragPoint, factor: 50)
             self.frame.origin.y = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
+            self.frame.size.height = self.maxHeight + stretch
         } else if let upperBound = bounds.last, dragPoint > upperBound {
             self.frame.origin.y = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
@@ -324,6 +332,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        //        print("gestureRecognizer:shouldRecognizeSimultaneouslyWith:\(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
             self.otherGestureRecognizer = otherGestureRecognizer
             self.originScrollView = sv
