@@ -41,6 +41,22 @@ public class DrawerView: UIView {
 
     // MARK: Public properties
 
+    @IBOutlet
+    public var containerView: UIView? {
+        didSet {
+            if let containerView = containerView {
+                // Adjust to full screen.
+                self.frame = containerView.bounds.insetBy(top: topMargin)
+                if self.superview != containerView {
+                    self.removeFromSuperview()
+                }
+                // TODO: Should we use autolayout to adjust our position?
+                containerView.addSubview(self)
+            }
+
+        }
+    }
+
     // TODO: Use size classes here
     public var topMargin: CGFloat = 68.0 {
         didSet {
@@ -313,3 +329,13 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 }
 
+extension CGRect {
+
+    func insetBy(top: CGFloat = 0, bottom: CGFloat = 0, left: CGFloat = 0, right: CGFloat = 0) -> CGRect {
+        return CGRect(
+            x: self.origin.x + left,
+            y: self.origin.y + top,
+            width: self.size.width - left - right,
+            height: self.size.height - top - bottom)
+    }
+}
