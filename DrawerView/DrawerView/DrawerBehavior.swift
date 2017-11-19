@@ -33,7 +33,6 @@ class DrawerBehavior: UIDynamicBehavior {
         self.velocity = CGPoint()
         self.targetPoint = CGPoint()
 
-//        let attachmentBehavior = UIAttachmentBehavior.slidingAttachment(with: item, attachmentAnchor: CGPoint(), axisOfTranslation: CGVector(dx: 0, dy: 1))
         let attachmentBehavior = UIAttachmentBehavior(item: item, attachedToAnchor: item.center)
         attachmentBehavior.frequency = 3.5
         attachmentBehavior.damping = 0.4

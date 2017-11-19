@@ -95,6 +95,7 @@ public class DrawerView: UIView {
             self.animator?.referenceView != superview {
             // TODO: Handle superview changes
             self.animator = UIDynamicAnimator(referenceView: superview)
+            setInitialPosition()
         }
     }
 
@@ -104,12 +105,10 @@ public class DrawerView: UIView {
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
         self.addGestureRecognizer(panGesture)
-
-        setInitialPosition()
     }
 
     private func setInitialPosition() {
-        self.position = self.sorted(positions: self.supportedPositions).first ?? .collapsed
+        self.position = self.sorted(positions: self.supportedPositions).last ?? .collapsed
     }
 
     @objc func handlePan(_ sender: UIPanGestureRecognizer) {
