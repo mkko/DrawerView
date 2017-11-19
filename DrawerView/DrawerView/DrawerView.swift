@@ -26,6 +26,8 @@ let kVelocityTreshold: CGFloat = 0
 
 public class DrawerView: UIView {
 
+    // MARK: - Private properties
+
     private var animator: UIDynamicAnimator? = nil
     private var drawerBehavior: DrawerBehavior? = nil
 
@@ -39,7 +41,8 @@ public class DrawerView: UIView {
 
     private var _position: DrawerPosition = .collapsed
 
-    // MARK: Public properties
+
+    // MARK: - Public properties
 
     @IBOutlet
     public var containerView: UIView? {
@@ -53,7 +56,6 @@ public class DrawerView: UIView {
                 // TODO: Should we use autolayout to adjust our position?
                 containerView.addSubview(self)
             }
-
         }
     }
 
@@ -96,6 +98,8 @@ public class DrawerView: UIView {
         }
     }
 
+    // MARK: - Initialization
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.setup()
@@ -106,6 +110,16 @@ public class DrawerView: UIView {
         self.setup()
     }
 
+    private func setup() {
+        panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        panGesture.maximumNumberOfTouches = 1
+        panGesture.minimumNumberOfTouches = 1
+        panGesture.delegate = self
+        self.addGestureRecognizer(panGesture)
+    }
+
+    // MARK: - View methods
+
     override public func layoutSubviews() {
         if let superview = self.superview,
             self.animator?.referenceView != superview {
@@ -115,19 +129,45 @@ public class DrawerView: UIView {
         }
     }
 
-    private func setup() {
-        panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        panGesture.maximumNumberOfTouches = 1
-        panGesture.minimumNumberOfTouches = 1
-        panGesture.delegate = self
-        self.addGestureRecognizer(panGesture)
+    // MARK: - Public methods
+
+    public func snapToPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
+        // TODO: Support unanimated.
+        guard let snapPosition = snapPosition(for: position),
+            let animator = self.animator else {
+                print("Snapping to position, but no animator.")
+                return
+        }
+
+        print("Snapping to \(position) with velocity \(velocity)")
+
+        if !animated {
+            self.frame.origin.y = snapPosition
+        }
+
+        // TODO: Add extra height to make sure that bottom doesn't show up.
+
+        if drawerBehavior == nil {
+            drawerBehavior = DrawerBehavior(item: self)
+        }
+
+        let snapPoint = CGPoint(x: self.bounds.width / 2.0, y: snapPosition + self.bounds.height / 2.0)
+
+        self.drawerBehavior?.targetPoint = snapPoint
+        self.drawerBehavior?.velocity = velocity
+
+        animator.addBehavior(self.drawerBehavior!)
+
+        _position = position
     }
+
+    // MARK: - Private methods
 
     private func setInitialPosition() {
         self.position = self.sorted(positions: self.supportedPositions).last ?? .collapsed
     }
 
-    @objc func handlePan(_ sender: UIPanGestureRecognizer) {
+    @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
             self.panOrigin = self.frame.origin.y
@@ -248,7 +288,7 @@ public class DrawerView: UIView {
         return distances.first.map { $0.pos } ?? DrawerPosition.collapsed
     }
 
-    func getDragBounds() -> (lower: CGFloat, upper: CGFloat) {
+    private func getDragBounds() -> (lower: CGFloat, upper: CGFloat) {
         let bounds = self.supportedPositions
             .flatMap(snapPosition)
             .sorted()
@@ -259,7 +299,7 @@ public class DrawerView: UIView {
         }
     }
 
-    func setPosition(forDragPoint dragPoint: CGFloat) {
+    private func setPosition(forDragPoint dragPoint: CGFloat) {
         let bounds = self.supportedPositions
             .flatMap(snapPosition)
             .sorted()
@@ -272,37 +312,7 @@ public class DrawerView: UIView {
         }
     }
 
-    public func snapToPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
-        // TODO: Support unanimated.
-        guard let snapPosition = snapPosition(for: position),
-            let animator = self.animator else {
-            print("Snapping to position, but no animator.")
-            return
-        }
-
-        print("Snapping to \(position) with velocity \(velocity)")
-
-        if !animated {
-            self.frame.origin.y = snapPosition
-        }
-
-        // TODO: Add extra height to make sure that bottom doesn't show up.
-
-        if drawerBehavior == nil {
-            drawerBehavior = DrawerBehavior(item: self)
-        }
-
-        let snapPoint = CGPoint(x: self.bounds.width / 2.0, y: snapPosition + self.bounds.height / 2.0)
-
-        self.drawerBehavior?.targetPoint = snapPoint
-        self.drawerBehavior?.velocity = velocity
-
-        animator.addBehavior(self.drawerBehavior!)
-
-        _position = position
-    }
-
-    func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
+    private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
         return factor * (log10(value + factor/log(10)) - log10(factor/log(10)))
     }
 }
@@ -314,7 +324,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        //        print("gestureRecognizer:shouldRecognizeSimultaneouslyWith:\(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
             self.otherGestureRecognizer = otherGestureRecognizer
             self.originScrollView = sv
