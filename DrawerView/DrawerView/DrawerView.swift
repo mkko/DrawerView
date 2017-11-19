@@ -132,12 +132,14 @@ public class DrawerView: UIView {
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
                     childScrollView.isScrollEnabled = false
+                    print("Disabled child scrolling")
 
                     // Also animate to the proper scroll position.
+                    print("Animating to target position...")
                     UIView.animate(withDuration: 0.1, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                         childScrollView.contentOffset.y = 0
                         self.setPosition(forDragPoint: self.panOrigin + translation.y)
-                    }, completion: nil)
+                    }, completion: {_ in print("...animated.")})
                 }
 
                 // Scroll only if we're not scrolling the subviews.
@@ -149,9 +151,11 @@ public class DrawerView: UIView {
             }
 
         case.failed:
+            print("ERROR: UIPanGestureRecognizer failed")
             fallthrough
         case .ended:
             let velocity = sender.velocity(in: self)
+            print("Ending with vertical velocity \(velocity.y)")
 
             if let childScrollView = self.originScrollView,
                 childScrollView.contentOffset.y > 0 {
@@ -176,7 +180,6 @@ public class DrawerView: UIView {
                 } else {
                     nextPosition = targetPosition
                 }
-
                 self.snapToPosition(nextPosition, withVelocity: velocity, animated: true)
             }
         default:
@@ -255,10 +258,14 @@ public class DrawerView: UIView {
     }
 
     public func snapToPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
+        // TODO: Support unanimated.
         guard let snapPosition = snapPosition(for: position),
             let animator = self.animator else {
+            print("Snapping to position, but no animator.")
             return
         }
+
+        print("Snapping to \(position) with velocity \(velocity)")
 
         if !animated {
             self.frame.origin.y = snapPosition
