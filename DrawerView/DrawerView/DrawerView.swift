@@ -33,11 +33,14 @@ public class DrawerView: UIView {
 
     var panGesture: UIPanGestureRecognizer! = nil
 
-    var originScrollView: UIScrollView? = nil
+    var childScrollView: UIScrollView? = nil
+    var childScrollWasEnabled: Bool = true
     var otherGestureRecognizer: UIGestureRecognizer? = nil
 
     var frameOrigin: CGPoint = CGPoint()
     var panOrigin: CGFloat = 0.0
+
+    private var childScrollTemporarilyDisabled = false
 
     private var _position: DrawerPosition = .collapsed
 
@@ -46,7 +49,6 @@ public class DrawerView: UIView {
             .map { $0 - self.topMargin }
             ?? self.frame.height
     }
-
 
     // MARK: - Public properties
 
@@ -173,6 +175,15 @@ public class DrawerView: UIView {
         self.position = self.sorted(positions: self.supportedPositions).last ?? .collapsed
     }
 
+    private func canScroll() -> Bool {
+        return false
+//        return !childScrollView.isScrollEnabled || childScrollView.contentOffset.y <= 0
+    }
+
+    private func shouldScrollChildView() -> Bool {
+        return true
+    }
+
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
@@ -187,8 +198,17 @@ public class DrawerView: UIView {
 
             let translation = sender.translation(in: self)
             // If scrolling upwards a scroll view, ignore the events.
-            if let childScrollView = self.originScrollView {
-                if childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
+            if let childScrollView = self.childScrollView {
+
+                let shouldCancelChildViewScroll = (childScrollView.contentOffset.y < 0)
+                let shouldScrollChildView = childScrollTemporarilyDisabled ?
+                    false : (!shouldCancelChildViewScroll && self.shouldScrollChildView())
+
+                print("shouldCancelChildViewScroll: \(shouldCancelChildViewScroll)")
+                print("shouldScrollChildView: \(self.shouldScrollChildView()) -> \(shouldScrollChildView)")
+
+                if !shouldScrollChildView && childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
+                    childScrollTemporarilyDisabled = true
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
@@ -201,10 +221,12 @@ public class DrawerView: UIView {
                         childScrollView.contentOffset.y = 0
                         self.setPosition(forDragPoint: self.panOrigin + translation.y)
                     }, completion: {_ in print("...animated.")})
+                } else {
+                    print("Let it scroll...")
                 }
 
                 // Scroll only if we're not scrolling the subviews.
-                if !childScrollView.isScrollEnabled || childScrollView.contentOffset.y <= 0 {
+                if !shouldScrollChildView {
                     setPosition(forDragPoint: panOrigin + translation.y)
                 }
             } else {
@@ -218,13 +240,13 @@ public class DrawerView: UIView {
             let velocity = sender.velocity(in: self)
             print("Ending with vertical velocity \(velocity.y)")
 
-            if let childScrollView = self.originScrollView,
+            childScrollTemporarilyDisabled = false
+
+            if let childScrollView = self.childScrollView,
                 childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
+                print("Let it scroll.")
             } else {
-                self.originScrollView?.isScrollEnabled = true
-                self.originScrollView = nil
-
                 // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
                 // 2) A prediction that estimates the next position based on target offset.
@@ -243,6 +265,10 @@ public class DrawerView: UIView {
                 }
                 self.snapToPosition(nextPosition, withVelocity: velocity, animated: true)
             }
+
+            self.childScrollView?.isScrollEnabled = childScrollWasEnabled
+            self.childScrollView = nil
+
         default:
             break
         }
@@ -318,6 +344,7 @@ public class DrawerView: UIView {
         } else {
             self.frame.origin.y = dragPoint
         }
+        print("y: \(self.frame.origin.y)")
     }
 
     private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
@@ -331,19 +358,26 @@ extension DrawerView: UIGestureRecognizerDelegate {
         return true
     }
 
+//    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        return true
+//    }
+
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         //        print("gestureRecognizer:shouldRecognizeSimultaneouslyWith:\(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
             self.otherGestureRecognizer = otherGestureRecognizer
-            self.originScrollView = sv
+            self.childScrollView = sv
+            self.childScrollWasEnabled = sv.isScrollEnabled
         }
         return true
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return self.position == .open
-            ? false
-            : otherGestureRecognizer.view is UIScrollView
+        if self.position == .open {
+            return false
+        } else {
+            return self.canScroll() && otherGestureRecognizer.view is UIScrollView
+        }
     }
 }
 
