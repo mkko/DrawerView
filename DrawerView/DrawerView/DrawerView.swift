@@ -40,8 +40,6 @@ public class DrawerView: UIView {
     var frameOrigin: CGPoint = CGPoint()
     var panOrigin: CGFloat = 0.0
 
-    private var childScrollTemporarilyDisabled = false
-
     private var _position: DrawerPosition = .collapsed
 
     private var maxHeight: CGFloat {
@@ -201,14 +199,13 @@ public class DrawerView: UIView {
             if let childScrollView = self.childScrollView {
 
                 let shouldCancelChildViewScroll = (childScrollView.contentOffset.y < 0)
-                let shouldScrollChildView = childScrollTemporarilyDisabled ?
+                let shouldScrollChildView = !childScrollView.isScrollEnabled ?
                     false : (!shouldCancelChildViewScroll && self.shouldScrollChildView())
 
                 print("shouldCancelChildViewScroll: \(shouldCancelChildViewScroll)")
                 print("shouldScrollChildView: \(self.shouldScrollChildView()) -> \(shouldScrollChildView)")
 
                 if !shouldScrollChildView && childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
-                    childScrollTemporarilyDisabled = true
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
@@ -239,8 +236,6 @@ public class DrawerView: UIView {
         case .ended:
             let velocity = sender.velocity(in: self)
             print("Ending with vertical velocity \(velocity.y)")
-
-            childScrollTemporarilyDisabled = false
 
             if let childScrollView = self.childScrollView,
                 childScrollView.contentOffset.y > 0 {
