@@ -24,6 +24,11 @@ private extension DrawerPosition {
 
 let kVelocityTreshold: CGFloat = 0
 
+@objc public protocol DrawerViewDelegate {
+
+    @objc optional func canScrollContent(drawerView: DrawerView) -> Bool
+}
+
 public class DrawerView: UIView {
 
     // MARK: - Private properties
@@ -49,6 +54,8 @@ public class DrawerView: UIView {
     }
 
     // MARK: - Public properties
+
+    public var delegate: DrawerViewDelegate?
 
     @IBOutlet
     public var containerView: UIView? {
@@ -173,13 +180,12 @@ public class DrawerView: UIView {
         self.position = self.sorted(positions: self.supportedPositions).last ?? .collapsed
     }
 
-    private func canScroll() -> Bool {
-        return false
-//        return !childScrollView.isScrollEnabled || childScrollView.contentOffset.y <= 0
-    }
-
     private func shouldScrollChildView() -> Bool {
-        return true
+        if let canScrollContent = self.delegate?.canScrollContent {
+            return canScrollContent(self)
+        }
+        // By default, child scrolling is enabled only when fully open.
+        return self.position == .open
     }
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
@@ -202,10 +208,7 @@ public class DrawerView: UIView {
                 let shouldScrollChildView = !childScrollView.isScrollEnabled ?
                     false : (!shouldCancelChildViewScroll && self.shouldScrollChildView())
 
-                print("shouldCancelChildViewScroll: \(shouldCancelChildViewScroll)")
-                print("shouldScrollChildView: \(self.shouldScrollChildView()) -> \(shouldScrollChildView)")
-
-                if !shouldScrollChildView && childScrollView.contentOffset.y < 0 && childScrollView.isScrollEnabled {
+                if !shouldScrollChildView || childScrollView.contentOffset.y < 0 {
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
@@ -238,7 +241,7 @@ public class DrawerView: UIView {
             print("Ending with vertical velocity \(velocity.y)")
 
             if let childScrollView = self.childScrollView,
-                childScrollView.contentOffset.y > 0 {
+                childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
                 // Let it scroll.
                 print("Let it scroll.")
             } else {
@@ -371,7 +374,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
         if self.position == .open {
             return false
         } else {
-            return self.canScroll() && otherGestureRecognizer.view is UIScrollView
+            return !self.shouldScrollChildView() && otherGestureRecognizer.view is UIScrollView
         }
     }
 }
