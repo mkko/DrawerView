@@ -179,7 +179,7 @@ public class DrawerView: UIView {
 
         _position = position
 
-        self.setOpacityForPoint(point: self.frame.origin.y)
+        self.setOpacityForPoint(point: snapPosition)
     }
 
     // MARK: - Private methods
@@ -372,6 +372,7 @@ public class DrawerView: UIView {
                 superview.insertSubview(overlay, belowSubview: self)
                 return overlay
             }()
+            self.overlay?.backgroundColor = UIColor.black
             self.overlay?.alpha = opacity * 0.5
         } else if let overlay = self.overlay {
             overlay.removeFromSuperview()
@@ -382,6 +383,7 @@ public class DrawerView: UIView {
     private func createOverlay() -> UIView {
         let overlay = UIView(frame: superview?.bounds ?? CGRect())
         overlay.backgroundColor = UIColor.black
+        overlay.alpha = 0
         // TODO: Setup tap recognition.
         return overlay
     }
