@@ -49,6 +49,8 @@ public class DrawerView: UIView {
     var frameOrigin: CGPoint = CGPoint()
     var panOrigin: CGFloat = 0.0
 
+    private var overlay: UIView?
+
     private var _position: DrawerPosition = .collapsed
 
     private var maxHeight: CGFloat {
@@ -176,6 +178,8 @@ public class DrawerView: UIView {
         animator.addBehavior(self.drawerBehavior!)
 
         _position = position
+
+        self.setOpacityForPoint(point: self.frame.origin.y)
     }
 
     // MARK: - Private methods
@@ -228,7 +232,7 @@ public class DrawerView: UIView {
                     UIView.animate(withDuration: 0.1, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                         childScrollView.contentOffset.y = 0
                         self.setPosition(forDragPoint: self.panOrigin + translation.y)
-                    }, completion: {_ in print("...animated.")})
+                    }, completion: {_ in /*print("...animated.")*/})
                 } else {
                     print("Let it scroll...")
                 }
@@ -355,8 +359,31 @@ public class DrawerView: UIView {
     }
 
     private func setOpacityForPoint(point: CGFloat) {
+        guard let superview = self.superview else {
+            return
+        }
+
         let opacity = getOpacityForPoint(point: point)
         print("opacity: \(opacity)")
+
+        if opacity > 0 {
+            self.overlay = self.overlay ?? {
+                let overlay = createOverlay()
+                superview.insertSubview(overlay, belowSubview: self)
+                return overlay
+            }()
+            self.overlay?.alpha = opacity * 0.5
+        } else if let overlay = self.overlay {
+            overlay.removeFromSuperview()
+            self.overlay = nil
+        }
+    }
+
+    private func createOverlay() -> UIView {
+        let overlay = UIView(frame: superview?.bounds ?? CGRect())
+        overlay.backgroundColor = UIColor.black
+        // TODO: Setup tap recognition.
+        return overlay
     }
 
     private func getOpacityForPoint(point: CGFloat) -> CGFloat {
