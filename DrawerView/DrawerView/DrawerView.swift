@@ -20,6 +20,10 @@ private extension DrawerPosition {
         .partiallyOpen,
         .collapsed
     ]
+
+    var backgroundOpacity: CGFloat {
+        return 0
+    }
 }
 
 let kVelocityTreshold: CGFloat = 0
@@ -176,8 +180,12 @@ public class DrawerView: UIView {
 
     // MARK: - Private methods
 
+    private func positionsSorted() -> [DrawerPosition] {
+        return self.sorted(positions: self.supportedPositions)
+    }
+
     private func setInitialPosition() {
-        self.position = self.sorted(positions: self.supportedPositions).last ?? .collapsed
+        self.position = self.positionsSorted().last ?? .collapsed
     }
 
     private func shouldScrollChildView() -> Bool {
@@ -273,7 +281,7 @@ public class DrawerView: UIView {
     }
 
     private func advance(from position: DrawerPosition, by: Int) -> DrawerPosition? {
-        let positions = self.sorted(positions: self.supportedPositions)
+        let positions = self.positionsSorted()
 
         let index = (positions.index(of: position) ?? 0)
         let nextIndex = max(0, min(positions.count - 1, index + by))
@@ -303,8 +311,19 @@ public class DrawerView: UIView {
         }
     }
 
-    private func snapPositionForHidden() -> CGFloat? {
-        return superview?.bounds.height
+    private func opacity(for position: DrawerPosition) -> CGFloat {
+        switch position {
+        case .open:
+            return 1
+        case .partiallyOpen:
+            return 0
+        case .collapsed:
+            return 0
+        }
+    }
+
+    private func snapPositionForHidden() -> CGFloat {
+        return superview?.bounds.height ?? 0
     }
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
@@ -318,31 +337,50 @@ public class DrawerView: UIView {
         return distances.first.map { $0.pos } ?? DrawerPosition.collapsed
     }
 
-    private func getDragBounds() -> (lower: CGFloat, upper: CGFloat) {
-        let bounds = self.supportedPositions
-            .flatMap(snapPosition)
-            .sorted()
-        if let lower = bounds.first, let upper = bounds.last {
-            return (lower: lower, upper: upper)
-        } else {
-            return (lower: 0, upper: 0)
-        }
-    }
-
     private func setPosition(forDragPoint dragPoint: CGFloat) {
-        let bounds = self.supportedPositions
+        let positions = self.supportedPositions
             .flatMap(snapPosition)
             .sorted()
-        if let lowerBound = bounds.first, dragPoint < lowerBound {
+        if let lowerBound = positions.first, dragPoint < lowerBound {
             let stretch = damp(value: lowerBound - dragPoint, factor: 50)
             self.frame.origin.y = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
             self.frame.size.height = self.maxHeight + stretch
-        } else if let upperBound = bounds.last, dragPoint > upperBound {
+        } else if let upperBound = positions.last, dragPoint > upperBound {
             self.frame.origin.y = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
             self.frame.origin.y = dragPoint
         }
-        print("y: \(self.frame.origin.y)")
+
+        self.setOpacityForPoint(point: self.frame.origin.y)
+    }
+
+    private func setOpacityForPoint(point: CGFloat) {
+        let opacity = getOpacityForPoint(point: point)
+        print("opacity: \(opacity)")
+    }
+
+    private func getOpacityForPoint(point: CGFloat) -> CGFloat {
+        let positions = self.supportedPositions
+            // Group the info on position together. For increased
+            // robustness, hide the ones without snap position.
+            .flatMap { p in self.snapPosition(for: p).map {(
+                snapPosition: $0,
+                opacity: opacity(for: p)
+                )}
+            }
+            .sorted { (p1, p2) -> Bool in p1.snapPosition < p2.snapPosition }
+
+        let prev = positions.last(where: { $0.snapPosition <= point })
+        let next = positions.first(where: { $0.snapPosition > point })
+
+        if let a = prev, let b = next {
+            let n = (point - a.snapPosition) / (b.snapPosition - a.snapPosition)
+            return a.opacity + (b.opacity - a.opacity) * n
+        } else if let a = prev ?? next {
+            return a.opacity
+        } else {
+            return 0
+        }
     }
 
     private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
@@ -388,4 +426,12 @@ extension CGRect {
             width: self.size.width - left - right,
             height: self.size.height - top - bottom)
     }
+}
+
+extension Array {
+
+    public func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
+        return try self.filter(predicate).last
+    }
+
 }
