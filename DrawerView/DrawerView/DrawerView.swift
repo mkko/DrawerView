@@ -104,7 +104,7 @@ public class DrawerView: UIView {
             return _position
         }
         set {
-            self.snapToPosition(newValue, withVelocity: CGPoint(), animated: false)
+            self.setPosition(newValue, animated: false)
         }
     }
 
@@ -130,7 +130,7 @@ public class DrawerView: UIView {
     }
 
     private func setup() {
-        panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        panGesture = UIPanGestureRecognizer(target: self, action: #selector(onPan))
         panGesture.maximumNumberOfTouches = 1
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
@@ -150,7 +150,11 @@ public class DrawerView: UIView {
 
     // MARK: - Public methods
 
-    public func snapToPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
+    public func setPosition(_ position: DrawerPosition, animated: Bool) {
+        self.setPosition(position, withVelocity: CGPoint(), animated: animated)
+    }
+
+    public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
         // TODO: Support unanimated.
         guard let snapPosition = snapPosition(for: position),
             let animator = self.animator else {
@@ -200,7 +204,7 @@ public class DrawerView: UIView {
         return self.position == .open
     }
 
-    @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
+    @objc private func onPan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
             self.panOrigin = self.frame.origin.y
@@ -267,13 +271,12 @@ public class DrawerView: UIView {
                 let velocitySign = velocity.y > 0 ? 1 : -1
 
                 let nextPosition: DrawerPosition
-                if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
-                    let pos = advance(from: targetPosition, by: velocitySign) {
-                    nextPosition = pos
+                if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold {
+                    nextPosition = targetPosition.advance(by: velocitySign, inPositions: self.positionsSorted())
                 } else {
                     nextPosition = targetPosition
                 }
-                self.snapToPosition(nextPosition, withVelocity: velocity, animated: true)
+                self.setPosition(nextPosition, withVelocity: velocity, animated: true)
             }
 
             self.childScrollView?.isScrollEnabled = childScrollWasEnabled
@@ -284,13 +287,11 @@ public class DrawerView: UIView {
         }
     }
 
-    private func advance(from position: DrawerPosition, by: Int) -> DrawerPosition? {
-        let positions = self.positionsSorted()
-
-        let index = (positions.index(of: position) ?? 0)
-        let nextIndex = max(0, min(positions.count - 1, index + by))
-
-        return positions.isEmpty ? nil : positions[nextIndex]
+    @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
+        if sender.state == .ended {
+            let prevPosition = self.position.advance(by: 1, inPositions: self.positionsSorted())
+            self.setPosition(prevPosition, animated: true)
+        }
     }
 
     private func sorted(positions: [DrawerPosition]) -> [DrawerPosition] {
@@ -384,6 +385,8 @@ public class DrawerView: UIView {
         let overlay = UIView(frame: superview?.bounds ?? CGRect())
         overlay.backgroundColor = UIColor.black
         overlay.alpha = 0
+        let tap = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
+        overlay.addGestureRecognizer(tap)
         // TODO: Setup tap recognition.
         return overlay
     }
@@ -461,6 +464,21 @@ extension Array {
 
     public func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
         return try self.filter(predicate).last
+    }
+
+}
+
+extension DrawerPosition {
+
+    func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition {
+        guard !positions.isEmpty else {
+            return self
+        }
+
+        let index = (positions.index(of: self) ?? 0)
+        let nextIndex = max(0, min(positions.count - 1, index + by))
+
+        return positions[nextIndex]
     }
 
 }
