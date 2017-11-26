@@ -403,7 +403,6 @@ public class DrawerView: UIView {
         overlay.alpha = 0
         let tap = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
         overlay.addGestureRecognizer(tap)
-        // TODO: Setup tap recognition.
         return overlay
     }
 
@@ -441,10 +440,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
     override public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
-
-//    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        return true
-//    }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         //        print("gestureRecognizer:shouldRecognizeSimultaneouslyWith:\(otherGestureRecognizer)")
