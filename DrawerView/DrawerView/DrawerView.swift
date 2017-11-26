@@ -193,7 +193,7 @@ public class DrawerView: UIView {
     }
 
     private func setInitialPosition() {
-        self.position = self.positionsSorted().last ?? .collapsed
+        self.position = self.positionsSorted().first ?? .collapsed
     }
 
     private func shouldScrollChildView() -> Bool {
@@ -268,11 +268,12 @@ public class DrawerView: UIView {
                 let targetOffset = self.frame.origin.y + velocity.y * 0.15
                 let targetPosition = positionFor(offset: targetOffset)
 
-                let velocitySign = velocity.y > 0 ? 1 : -1
+                // The positions are reversed, reverse the sign.
+                let advancement = velocity.y > 0 ? -1 : 1
 
                 let nextPosition: DrawerPosition
                 if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold {
-                    nextPosition = targetPosition.advance(by: velocitySign, inPositions: self.positionsSorted())
+                    nextPosition = targetPosition.advance(by: advancement, inPositions: self.positionsSorted())
                 } else {
                     nextPosition = targetPosition
                 }
@@ -289,7 +290,7 @@ public class DrawerView: UIView {
 
     @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
-            let prevPosition = self.position.advance(by: 1, inPositions: self.positionsSorted())
+            let prevPosition = self.position.advance(by: -1, inPositions: self.positionsSorted())
             self.setPosition(prevPosition, animated: true)
         }
     }
@@ -297,7 +298,7 @@ public class DrawerView: UIView {
     private func sorted(positions: [DrawerPosition]) -> [DrawerPosition] {
         return positions
             .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
-            .sorted { $0.y < $1.y }
+            .sorted { $0.y > $1.y }
             .map { $0.pos }
     }
 
