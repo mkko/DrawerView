@@ -53,6 +53,8 @@ public class DrawerView: UIView {
 
     private var _position: DrawerPosition = .collapsed
 
+    private var _originalHeight: CGFloat?
+
     private var maxHeight: CGFloat {
         return (self.superview?.bounds.height)
             .map { $0 - self.topMargin }
@@ -144,6 +146,7 @@ public class DrawerView: UIView {
             self.animator?.referenceView != superview {
             // TODO: Handle superview changes
             self.animator = UIDynamicAnimator(referenceView: superview)
+            self.animator?.delegate = self
             setInitialPosition()
         }
     }
@@ -174,6 +177,13 @@ public class DrawerView: UIView {
             drawerBehavior = DrawerBehavior(item: self)
         }
 
+        let originalHeight = _originalHeight ?? {
+            _originalHeight = self.frame.size.height
+            return _originalHeight!
+        }()
+
+        self.frame.size.height = originalHeight * 1.5
+
         let snapPoint = CGPoint(x: self.bounds.width / 2.0, y: snapPosition + self.bounds.height / 2.0)
 
         self.drawerBehavior?.targetPoint = snapPoint
@@ -183,7 +193,7 @@ public class DrawerView: UIView {
 
         _position = position
 
-        self.setOpacityForPoint(point: snapPosition)
+        self.setOverlayOpacityForPoint(point: snapPosition)
     }
 
     // MARK: - Private methods
@@ -357,16 +367,15 @@ public class DrawerView: UIView {
             self.frame.origin.y = dragPoint
         }
 
-        self.setOpacityForPoint(point: self.frame.origin.y)
+        self.setOverlayOpacityForPoint(point: self.frame.origin.y)
     }
 
-    private func setOpacityForPoint(point: CGFloat) {
+    private func setOverlayOpacityForPoint(point: CGFloat) {
         guard let superview = self.superview else {
             return
         }
 
-        let opacity = getOpacityForPoint(point: point)
-        print("opacity: \(opacity)")
+        let opacity = getOverlayOpacityForPoint(point: point)
 
         if opacity > 0 {
             self.overlay = self.overlay ?? {
@@ -392,7 +401,7 @@ public class DrawerView: UIView {
         return overlay
     }
 
-    private func getOpacityForPoint(point: CGFloat) -> CGFloat {
+    private func getOverlayOpacityForPoint(point: CGFloat) -> CGFloat {
         let positions = self.supportedPositions
             // Group the info on position together. For increased
             // robustness, hide the ones without snap position.
@@ -446,6 +455,21 @@ extension DrawerView: UIGestureRecognizerDelegate {
             return false
         } else {
             return !self.shouldScrollChildView() && otherGestureRecognizer.view is UIScrollView
+        }
+    }
+}
+
+extension DrawerView: UIDynamicAnimatorDelegate {
+
+    public func dynamicAnimatorWillResume(_ animator: UIDynamicAnimator) {
+        print("dynamicAnimatorWillResume")
+    }
+
+    public func dynamicAnimatorDidPause(_ animator: UIDynamicAnimator) {
+        print("dynamicAnimatorDidPause")
+        if let h = _originalHeight {
+            self.frame.size.height = h
+            _originalHeight = nil
         }
     }
 }
