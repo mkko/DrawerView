@@ -151,6 +151,14 @@ public class DrawerView: UIView {
         }
     }
 
+    override public var center: CGPoint {
+        didSet{
+            // Expect the dynamic animator to use this property.
+            let yPos = self.center.y - self.bounds.height / 2.0
+            self.setOverlayOpacityForPoint(point: yPos)
+        }
+    }
+
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
@@ -192,8 +200,6 @@ public class DrawerView: UIView {
         animator.addBehavior(self.drawerBehavior!)
 
         _position = position
-
-        self.setOverlayOpacityForPoint(point: snapPosition)
     }
 
     // MARK: - Private methods
