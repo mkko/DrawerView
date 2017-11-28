@@ -33,6 +33,8 @@ let kVelocityTreshold: CGFloat = 0
     @objc optional func canScrollContent(drawerView: DrawerView) -> Bool
 }
 
+let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
+
 public class DrawerView: UIView {
 
     // MARK: - Private properties
@@ -79,6 +81,8 @@ public class DrawerView: UIView {
             }
         }
     }
+
+    public let backgroundView = UIVisualEffectView(effect: defaultBackgroundEffect)
 
     // TODO: Use size classes here
     public var topMargin: CGFloat = 68.0 {
@@ -137,6 +141,33 @@ public class DrawerView: UIView {
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
         self.addGestureRecognizer(panGesture)
+
+        // Using a setup similar to Maps.app.
+        self.layer.cornerRadius = 10
+        self.layer.shadowRadius = 5
+        self.layer.shadowOpacity = 0.1
+
+        addBorder()
+        addBlurEffect()
+    }
+
+    func addBorder() {
+        let border = CALayer()
+        border.cornerRadius = self.layer.cornerRadius
+        border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
+        border.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
+        border.borderWidth = 0.5
+        self.layer.addSublayer(border)
+    }
+
+    func addBlurEffect() {
+        backgroundView.frame = self.bounds
+        backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        backgroundView.layer.cornerRadius = 8
+        backgroundView.clipsToBounds = true
+
+        self.insertSubview(backgroundView, at: 0)
+        self.backgroundColor = UIColor.clear
     }
 
     // MARK: - View methods
