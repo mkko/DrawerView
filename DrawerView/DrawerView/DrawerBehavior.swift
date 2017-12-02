@@ -35,7 +35,7 @@ class DrawerBehavior: UIDynamicBehavior {
 
         let attachmentBehavior = UIAttachmentBehavior(item: item, attachedToAnchor: item.center)
         attachmentBehavior.frequency = 3.5
-        attachmentBehavior.damping = 0.4
+        attachmentBehavior.damping = 1
         attachmentBehavior.length = 0
         self.attachmentBehavior = attachmentBehavior
 

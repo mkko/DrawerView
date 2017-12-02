@@ -8,7 +8,7 @@
 
 import UIKit
 
-public enum DrawerPosition: Int {
+@objc public enum DrawerPosition: Int {
     case open = 1
     case partiallyOpen = 2
     case collapsed = 3
@@ -28,12 +28,19 @@ private extension DrawerPosition {
 
 let kVelocityTreshold: CGFloat = 0
 
+let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
+
 @objc public protocol DrawerViewDelegate {
 
     @objc optional func canScrollContent(drawerView: DrawerView) -> Bool
-}
 
-let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
+    @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
+
+    // TODO: Implement this
+    @objc optional func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition)
+
+    @objc optional func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat)
+}
 
 public class DrawerView: UIView {
 
@@ -65,6 +72,7 @@ public class DrawerView: UIView {
 
     // MARK: - Public properties
 
+    @IBOutlet
     public var delegate: DrawerViewDelegate?
 
     @IBOutlet
@@ -193,6 +201,7 @@ public class DrawerView: UIView {
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
+        self.delegate?.drawer?(self, willTransitionFrom: _position)
         self.setPosition(position, withVelocity: CGPoint(), animated: animated)
     }
 
@@ -254,6 +263,8 @@ public class DrawerView: UIView {
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
+            self.delegate?.drawer?(self, willTransitionFrom: self.position)
+
             self.panOrigin = self.frame.origin.y
             if let drawerBehavior = self.drawerBehavior {
                 self.animator?.removeBehavior(drawerBehavior)
@@ -296,6 +307,8 @@ public class DrawerView: UIView {
                 setPosition(forDragPoint: panOrigin + translation.y)
             }
 
+            self.delegate?.drawerDidMove?(self, verticalPosition: panOrigin + translation.y)
+
         case.failed:
             print("ERROR: UIPanGestureRecognizer failed")
             fallthrough
@@ -337,8 +350,13 @@ public class DrawerView: UIView {
 
     @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
+            // TODO: self.delegate?.drawer?(self, willTransitionTo: prevPosition) ?
+
             let prevPosition = self.position.advance(by: -1, inPositions: self.positionsSorted())
             self.setPosition(prevPosition, animated: true)
+
+            // Notify
+            self.delegate?.drawer?(self, didTransitionTo: prevPosition)
         }
     }
 
@@ -494,11 +512,10 @@ extension DrawerView: UIGestureRecognizerDelegate {
 extension DrawerView: UIDynamicAnimatorDelegate {
 
     public func dynamicAnimatorWillResume(_ animator: UIDynamicAnimator) {
-        print("dynamicAnimatorWillResume")
     }
 
     public func dynamicAnimatorDidPause(_ animator: UIDynamicAnimator) {
-        print("dynamicAnimatorDidPause")
+        self.delegate?.drawer?(self, didTransitionTo: position)
         if let h = _originalHeight {
             self.frame.size.height = h
             _originalHeight = nil

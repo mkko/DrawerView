@@ -9,7 +9,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Delegate-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="DrawerView" customModuleProvider="target" sceneMemberID="viewController">
@@ -32,6 +32,7 @@
                     </view>
                     <connections>
                         <outlet property="drawerView" destination="mwC-kI-aDG" id="yhv-8b-J59"/>
+                        <outlet property="searchBar" destination="Xp7-w4-h2V" id="yB4-eD-NyM"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -40,34 +41,35 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="WiJ-yF-cUu">
-                            <rect key="frame" x="0.0" y="40" width="375" height="607"/>
+                            <rect key="frame" x="0.0" y="66" width="375" height="581"/>
                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             <connections>
                                 <outlet property="dataSource" destination="BYZ-38-t0r" id="znT-78-NOp"/>
                                 <outlet property="delegate" destination="BYZ-38-t0r" id="c9I-hO-sla"/>
                             </connections>
                         </tableView>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RRD-dm-Ddt">
-                            <rect key="frame" x="0.0" y="0.0" width="375" height="40"/>
-                            <fontDescription key="fontDescription" type="system" pointSize="36"/>
-                            <nil key="textColor"/>
-                            <nil key="highlightedColor"/>
-                        </label>
+                        <searchBar contentMode="redraw" misplaced="YES" searchBarStyle="minimal" text="" placeholder="Search for place or address" translatesAutoresizingMaskIntoConstraints="NO" id="Xp7-w4-h2V">
+                            <rect key="frame" x="7" y="0.0" width="361" height="56"/>
+                            <textInputTraits key="textInputTraits"/>
+                            <connections>
+                                <outlet property="delegate" destination="BYZ-38-t0r" id="nzq-Xq-S5L"/>
+                            </connections>
+                        </searchBar>
                     </subviews>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     <constraints>
-                        <constraint firstItem="WiJ-yF-cUu" firstAttribute="top" secondItem="mwC-kI-aDG" secondAttribute="top" constant="40" id="Fwg-iF-TaH"/>
-                        <constraint firstItem="RRD-dm-Ddt" firstAttribute="top" secondItem="mwC-kI-aDG" secondAttribute="top" id="LM0-LU-jeJ"/>
+                        <constraint firstItem="Xp7-w4-h2V" firstAttribute="top" secondItem="mwC-kI-aDG" secondAttribute="top" constant="5" id="HTw-lS-Pmo"/>
                         <constraint firstAttribute="trailing" secondItem="WiJ-yF-cUu" secondAttribute="trailing" id="Ssa-8v-B0D"/>
-                        <constraint firstItem="WiJ-yF-cUu" firstAttribute="top" secondItem="RRD-dm-Ddt" secondAttribute="bottom" id="VaI-Mz-4lN"/>
+                        <constraint firstItem="Xp7-w4-h2V" firstAttribute="leading" secondItem="COF-0K-5WI" secondAttribute="leading" constant="7" id="ecF-FW-vDS"/>
+                        <constraint firstItem="WiJ-yF-cUu" firstAttribute="top" secondItem="Xp7-w4-h2V" secondAttribute="bottom" constant="5" id="jzP-mf-JzS"/>
                         <constraint firstItem="WiJ-yF-cUu" firstAttribute="leading" secondItem="mwC-kI-aDG" secondAttribute="leading" id="lrw-lw-Fsc"/>
-                        <constraint firstAttribute="trailing" secondItem="RRD-dm-Ddt" secondAttribute="trailing" id="rxc-ld-hEE"/>
+                        <constraint firstItem="Xp7-w4-h2V" firstAttribute="trailing" secondItem="COF-0K-5WI" secondAttribute="trailing" constant="-7" id="maw-Qh-TOk"/>
                         <constraint firstAttribute="bottom" secondItem="WiJ-yF-cUu" secondAttribute="bottom" id="sdJ-WM-Lw9"/>
-                        <constraint firstItem="RRD-dm-Ddt" firstAttribute="leading" secondItem="mwC-kI-aDG" secondAttribute="leading" id="yWn-tq-o7E"/>
                     </constraints>
                     <viewLayoutGuide key="safeArea" id="COF-0K-5WI"/>
                     <connections>
                         <outlet property="containerView" destination="8bC-Xf-vdC" id="5EO-ge-j6J"/>
+                        <outlet property="delegate" destination="BYZ-38-t0r" id="USf-el-P8L"/>
                     </connections>
                 </view>
             </objects>

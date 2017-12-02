@@ -11,6 +11,7 @@ import UIKit
 class ViewController: UIViewController {
 
     @IBOutlet weak var drawerView: DrawerView!
+    @IBOutlet weak var searchBar: UISearchBar!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,5 +47,21 @@ extension ViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+}
+
+extension ViewController: UISearchBarDelegate {
+
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        drawerView.setPosition(.open, animated: true)
+    }
+}
+
+extension ViewController: DrawerViewDelegate {
+
+    func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
+        if position == .open {
+            searchBar.resignFirstResponder()
+        }
     }
 }
