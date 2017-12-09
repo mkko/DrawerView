@@ -46,9 +46,6 @@ public class DrawerView: UIView {
 
     // MARK: - Private properties
 
-    private var animator: UIDynamicAnimator? = nil
-    private var drawerBehavior: DrawerBehavior? = nil
-
     var panGesture: UIPanGestureRecognizer! = nil
 
     var childScrollView: UIScrollView? = nil
@@ -181,21 +178,9 @@ public class DrawerView: UIView {
     // MARK: - View methods
 
     override public func layoutSubviews() {
-        if let superview = self.superview,
-            self.animator?.referenceView != superview {
-            // TODO: Handle superview changes
-            self.animator = UIDynamicAnimator(referenceView: superview)
-            self.animator?.delegate = self
-            setInitialPosition()
-        }
-    }
-
-    override public var center: CGPoint {
-        didSet{
-            // Expect the dynamic animator to use this property.
-            let yPos = self.center.y - self.bounds.height / 2.0
-            self.setOverlayOpacityForPoint(point: yPos)
-        }
+//        if let superview = self.superview,
+//            self.a?.referenceView != superview {
+//        }
     }
 
     // MARK: - Public methods
@@ -206,38 +191,23 @@ public class DrawerView: UIView {
     }
 
     public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
-        // TODO: Support unanimated.
-        guard let snapPosition = snapPosition(for: position),
-            let animator = self.animator else {
-                print("Snapping to position, but no animator.")
-                return
+        guard let snapPosition = snapPosition(for: position) else {
+            return
         }
 
-        print("Snapping to \(position) with velocity \(velocity)")
+        if animated {
+            // Add extra height to make sure that bottom doesn't show up.
+            let originalHeight = self.frame.size.height
+            self.frame.size.height = self.frame.size.height * 1.5
 
-        if !animated {
+            UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+                self.frame.origin.y = snapPosition
+            }, completion: { (completed) in
+                self.frame.size.height = originalHeight
+            })
+        } else {
             self.frame.origin.y = snapPosition
         }
-
-        // TODO: Add extra height to make sure that bottom doesn't show up.
-
-        if drawerBehavior == nil {
-            drawerBehavior = DrawerBehavior(item: self)
-        }
-
-        let originalHeight = _originalHeight ?? {
-            _originalHeight = self.frame.size.height
-            return _originalHeight!
-        }()
-
-        self.frame.size.height = originalHeight * 1.5
-
-        let snapPoint = CGPoint(x: self.bounds.width / 2.0, y: snapPosition + self.bounds.height / 2.0)
-
-        self.drawerBehavior?.targetPoint = snapPoint
-        self.drawerBehavior?.velocity = velocity
-
-        animator.addBehavior(self.drawerBehavior!)
 
         _position = position
     }
@@ -265,10 +235,10 @@ public class DrawerView: UIView {
         case .began:
             self.delegate?.drawer?(self, willTransitionFrom: self.position)
 
-            self.panOrigin = self.frame.origin.y
-            if let drawerBehavior = self.drawerBehavior {
-                self.animator?.removeBehavior(drawerBehavior)
-            }
+            self.layer.removeAllAnimations()
+
+            let frame = self.layer.presentation()?.frame ?? self.frame
+            self.panOrigin = frame.origin.y
             setPosition(forDragPoint: panOrigin)
 
             break
@@ -287,16 +257,16 @@ public class DrawerView: UIView {
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
                     childScrollView.isScrollEnabled = false
-                    print("Disabled child scrolling")
+                    //print("Disabled child scrolling")
 
                     // Also animate to the proper scroll position.
-                    print("Animating to target position...")
+                    //print("Animating to target position...")
                     UIView.animate(withDuration: 0.1, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                         childScrollView.contentOffset.y = 0
                         self.setPosition(forDragPoint: self.panOrigin + translation.y)
                     }, completion: {_ in /*print("...animated.")*/})
                 } else {
-                    print("Let it scroll...")
+                    //print("Let it scroll...")
                 }
 
                 // Scroll only if we're not scrolling the subviews.
@@ -398,7 +368,6 @@ public class DrawerView: UIView {
     }
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
-        //let distanceFromOpen = offset
         let distances = self.supportedPositions
             .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
             .sorted { (p1, p2) -> Bool in
@@ -491,7 +460,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        //        print("gestureRecognizer:shouldRecognizeSimultaneouslyWith:\(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
             self.otherGestureRecognizer = otherGestureRecognizer
             self.childScrollView = sv
@@ -539,7 +507,6 @@ extension Array {
     public func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
         return try self.filter(predicate).last
     }
-
 }
 
 extension DrawerPosition {
@@ -554,5 +521,4 @@ extension DrawerPosition {
 
         return positions[nextIndex]
     }
-
 }
