@@ -21,8 +21,12 @@ private extension DrawerPosition {
         .collapsed
     ]
 
-    var backgroundOpacity: CGFloat {
-        return 0
+    var visibleName: String {
+        switch self {
+        case .open: return "open"
+        case .partiallyOpen: return "partiallyOpen"
+        case .collapsed: return "collapsed"
+        }
     }
 }
 
@@ -72,16 +76,17 @@ public class DrawerView: UIView {
     @IBOutlet
     public var delegate: DrawerViewDelegate?
 
+    // IB support, not intended to be used otherwise.
     @IBOutlet
     public var containerView: UIView? {
+        willSet {
+            if self.superview != nil {
+                abort(reason: "Superview already set, use normal UIView methods to set up the view hierarcy")
+            }
+        }
         didSet {
             if let containerView = containerView {
                 // Adjust to full screen.
-                self.frame = containerView.bounds.insetBy(top: topMargin)
-                if self.superview != containerView {
-                    self.removeFromSuperview()
-                }
-                // TODO: Should we use autolayout to adjust our position?
                 containerView.addSubview(self)
             }
         }
@@ -121,7 +126,7 @@ public class DrawerView: UIView {
 
     public var supportedPositions: [DrawerPosition] = DrawerPosition.positions {
         didSet {
-            if supportedPositions.index(of: self.position) == nil {
+            if !supportedPositions.contains(self.position) {
                 // Current position is not in the given list, default to the most closed one.
                 self.setInitialPosition()
             }
@@ -177,21 +182,28 @@ public class DrawerView: UIView {
 
     // MARK: - View methods
 
-    override public func layoutSubviews() {
-//        if let superview = self.superview,
-//            self.a?.referenceView != superview {
-//        }
+    public override func willMove(toSuperview newSuperview: UIView?) {
+        if let view = newSuperview {
+            self.frame = view.bounds.insetBy(top: topMargin)
+        }
+    }
+
+    public override func didMoveToSuperview() {
+        self.setPosition(_position, animated: false)
     }
 
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        self.delegate?.drawer?(self, willTransitionFrom: _position)
         self.setPosition(position, withVelocity: CGPoint(), animated: animated)
     }
 
     public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
+
+        _position = position
+
         guard let snapPosition = snapPosition(for: position) else {
+            print("Could not evaluate snap position for \(position.visibleName)")
             return
         }
 
@@ -208,8 +220,6 @@ public class DrawerView: UIView {
         } else {
             self.frame.origin.y = snapPosition
         }
-
-        _position = position
     }
 
     // MARK: - Private methods
@@ -219,7 +229,7 @@ public class DrawerView: UIView {
     }
 
     private func setInitialPosition() {
-        self.position = self.positionsSorted().first ?? .collapsed
+        self.position = self.positionsSorted().last ?? .collapsed
     }
 
     private func shouldScrollChildView() -> Bool {
@@ -284,7 +294,7 @@ public class DrawerView: UIView {
             fallthrough
         case .ended:
             let velocity = sender.velocity(in: self)
-            print("Ending with vertical velocity \(velocity.y)")
+            //print("Ending with vertical velocity \(velocity.y)")
 
             if let childScrollView = self.childScrollView,
                 childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
@@ -521,4 +531,9 @@ extension DrawerPosition {
 
         return positions[nextIndex]
     }
+}
+
+func abort(reason: String) -> Never  {
+    print(reason)
+    abort()
 }

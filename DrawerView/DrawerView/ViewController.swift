@@ -17,6 +17,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         drawerView.supportedPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView.position = .collapsed
     }
 
     override func didReceiveMemoryWarning() {
