@@ -32,6 +32,8 @@ private extension DrawerPosition {
 
 let kVelocityTreshold: CGFloat = 0
 
+let kVerticalLeeway: CGFloat = 100.0
+
 let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 @objc public protocol DrawerViewDelegate {
@@ -65,12 +67,6 @@ public class DrawerView: UIView {
 
     private var _originalHeight: CGFloat?
 
-    private var maxHeight: CGFloat {
-        return (self.superview?.bounds.height)
-            .map { $0 - self.topMargin }
-            ?? self.frame.height
-    }
-
     // MARK: - Public properties
 
     @IBOutlet
@@ -86,9 +82,31 @@ public class DrawerView: UIView {
         }
         didSet {
             if let containerView = containerView {
-                // Adjust to full screen.
-                containerView.addSubview(self)
+                self.attachTo(view: containerView)
             }
+        }
+    }
+
+    private var topConstraint: NSLayoutConstraint? = nil
+    private var heightConstraint: NSLayoutConstraint? = nil
+
+    public func attachTo(view: UIView) {
+
+        self.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(self)
+
+        topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
+        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topMargin)
+
+        let constraints = [
+            self.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            self.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            topConstraint,
+            heightConstraint
+        ];
+
+        for constraint in constraints {
+            constraint?.isActive = true
         }
     }
 
@@ -147,7 +165,7 @@ public class DrawerView: UIView {
 
     private func setup() {
         panGesture = UIPanGestureRecognizer(target: self, action: #selector(onPan))
-        panGesture.maximumNumberOfTouches = 1
+        panGesture.maximumNumberOfTouches = 2
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
         self.addGestureRecognizer(panGesture)
@@ -156,6 +174,8 @@ public class DrawerView: UIView {
         self.layer.cornerRadius = 10
         self.layer.shadowRadius = 5
         self.layer.shadowOpacity = 0.1
+
+        self.translatesAutoresizingMaskIntoConstraints = false
 
         addBorder()
         addBlurEffect()
@@ -207,18 +227,25 @@ public class DrawerView: UIView {
             return
         }
 
+        guard let heightConstraint = self.heightConstraint else {
+            print("No height constraint set")
+            return
+        }
+
         if animated {
             // Add extra height to make sure that bottom doesn't show up.
-            let originalHeight = self.frame.size.height
-            self.frame.size.height = self.frame.size.height * 1.5
+
+            heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
 
             UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
-                self.frame.origin.y = snapPosition
+                self.topConstraint?.constant = snapPosition
+                self.superview?.layoutIfNeeded()
             }, completion: { (completed) in
-                self.frame.size.height = originalHeight
+                heightConstraint.constant = -self.topMargin
+                self.superview?.layoutIfNeeded()
             })
         } else {
-            self.frame.origin.y = snapPosition
+            self.topConstraint?.constant = snapPosition
         }
     }
 
@@ -391,17 +418,21 @@ public class DrawerView: UIView {
         let positions = self.supportedPositions
             .flatMap(snapPosition)
             .sorted()
+
+        let position: CGFloat
         if let lowerBound = positions.first, dragPoint < lowerBound {
             let stretch = damp(value: lowerBound - dragPoint, factor: 50)
-            self.frame.origin.y = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
-            self.frame.size.height = self.maxHeight + stretch
+            position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
+            self.heightConstraint?.constant = -self.topMargin + stretch
         } else if let upperBound = positions.last, dragPoint > upperBound {
-            self.frame.origin.y = upperBound + damp(value: dragPoint - upperBound, factor: 50)
+            position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
-            self.frame.origin.y = dragPoint
+            position = dragPoint
         }
+        self.topConstraint?.constant = position
+        self.layoutIfNeeded()
 
-        self.setOverlayOpacityForPoint(point: self.frame.origin.y)
+        //self.setOverlayOpacityForPoint(point: position)
     }
 
     private func setOverlayOpacityForPoint(point: CGFloat) {
@@ -483,20 +514,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
             return false
         } else {
             return !self.shouldScrollChildView() && otherGestureRecognizer.view is UIScrollView
-        }
-    }
-}
-
-extension DrawerView: UIDynamicAnimatorDelegate {
-
-    public func dynamicAnimatorWillResume(_ animator: UIDynamicAnimator) {
-    }
-
-    public func dynamicAnimatorDidPause(_ animator: UIDynamicAnimator) {
-        self.delegate?.drawer?(self, didTransitionTo: position)
-        if let h = _originalHeight {
-            self.frame.size.height = h
-            _originalHeight = nil
         }
     }
 }
