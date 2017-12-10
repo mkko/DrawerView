@@ -67,6 +67,8 @@ public class DrawerView: UIView {
 
     private var _originalHeight: CGFloat?
 
+    private let border = CALayer()
+
     // MARK: - Public properties
 
     @IBOutlet
@@ -177,12 +179,11 @@ public class DrawerView: UIView {
 
         self.translatesAutoresizingMaskIntoConstraints = false
 
-        addBorder()
+        setupBorder()
         addBlurEffect()
     }
 
-    func addBorder() {
-        let border = CALayer()
+    func setupBorder() {
         border.cornerRadius = self.layer.cornerRadius
         border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
         border.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
@@ -198,6 +199,13 @@ public class DrawerView: UIView {
 
         self.insertSubview(backgroundView, at: 0)
         self.backgroundColor = UIColor.clear
+    }
+
+    public override func layoutSublayers(of layer: CALayer) {
+        super.layoutSublayers(of: layer)
+        if layer == self.layer {
+            border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
+        }
     }
 
     // MARK: - View methods
