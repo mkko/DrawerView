@@ -42,7 +42,6 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
 
-    // TODO: Implement this
     @objc optional func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition)
 
     @objc optional func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat)
@@ -69,6 +68,14 @@ public class DrawerView: UIView {
 
     private let border = CALayer()
 
+    private var topConstraint: NSLayoutConstraint? = nil
+
+    private var heightConstraint: NSLayoutConstraint? = nil
+
+    private var animator: UIViewPropertyAnimator? = nil
+
+    private var isDragging: Bool = false
+
     // MARK: - Public properties
 
     @IBOutlet
@@ -88,9 +95,6 @@ public class DrawerView: UIView {
             }
         }
     }
-
-    private var topConstraint: NSLayoutConstraint? = nil
-    private var heightConstraint: NSLayoutConstraint? = nil
 
     public func attachTo(view: UIView) {
 
@@ -201,13 +205,6 @@ public class DrawerView: UIView {
         self.backgroundColor = UIColor.clear
     }
 
-    public override func layoutSublayers(of layer: CALayer) {
-        super.layoutSublayers(of: layer)
-        if layer == self.layer {
-            border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
-        }
-    }
-
     // MARK: - View methods
 
     public override func willMove(toSuperview newSuperview: UIView?) {
@@ -218,6 +215,22 @@ public class DrawerView: UIView {
 
     public override func didMoveToSuperview() {
         self.setPosition(_position, animated: false)
+    }
+
+    public override func layoutSubviews() {
+        // Update snap position, if not dragging.
+        let animatorRunning = animator?.isRunning ?? false
+        if !animatorRunning && !isDragging {
+            // Handle possible layout changes, e.g. rotation.
+            self.updateSnapPosition(animated: false)
+        }
+    }
+
+    public override func layoutSublayers(of layer: CALayer) {
+        super.layoutSublayers(of: layer)
+        if layer == self.layer {
+            border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
+        }
     }
 
     // MARK: - Public methods
@@ -245,13 +258,21 @@ public class DrawerView: UIView {
 
             heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
 
-            UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+            self.animator = UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.5, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                 self.topConstraint?.constant = snapPosition
                 self.superview?.layoutIfNeeded()
-            }, completion: { (completed) in
+            }, completion: { position in
                 heightConstraint.constant = -self.topMargin
                 self.superview?.layoutIfNeeded()
             })
+
+//            UIView.animate(withDuration: 0.5, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+//                self.topConstraint?.constant = snapPosition
+//                self.superview?.layoutIfNeeded()
+//            }, completion: { (completed) in
+//                heightConstraint.constant = -self.topMargin
+//                self.superview?.layoutIfNeeded()
+//            })
         } else {
             self.topConstraint?.constant = snapPosition
         }
@@ -278,9 +299,11 @@ public class DrawerView: UIView {
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
+            isDragging = true
+
             self.delegate?.drawer?(self, willTransitionFrom: self.position)
 
-            self.layer.removeAllAnimations()
+            self.animator?.pauseAnimation()
 
             let frame = self.layer.presentation()?.frame ?? self.frame
             self.panOrigin = frame.origin.y
@@ -306,10 +329,16 @@ public class DrawerView: UIView {
 
                     // Also animate to the proper scroll position.
                     //print("Animating to target position...")
-                    UIView.animate(withDuration: 0.1, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+
+                    self.animator = UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.5, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                         childScrollView.contentOffset.y = 0
                         self.setPosition(forDragPoint: self.panOrigin + translation.y)
-                    }, completion: {_ in /*print("...animated.")*/})
+                    }, completion: nil)
+
+//                    UIView.animate(withDuration: 0.1, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+//                        childScrollView.contentOffset.y = 0
+//                        self.setPosition(forDragPoint: self.panOrigin + translation.y)
+//                    }, completion: {_ in /*print("...animated.")*/})
                 } else {
                     //print("Let it scroll...")
                 }
@@ -357,6 +386,8 @@ public class DrawerView: UIView {
 
             self.childScrollView?.isScrollEnabled = childScrollWasEnabled
             self.childScrollView = nil
+
+            isDragging = false
 
         default:
             break
@@ -441,6 +472,15 @@ public class DrawerView: UIView {
         self.layoutIfNeeded()
 
         //self.setOverlayOpacityForPoint(point: position)
+    }
+
+    private func updateSnapPosition(animated: Bool) {
+        if let topConstraint = self.topConstraint,
+            let expectedPos = self.snapPosition(for: _position),
+            expectedPos != topConstraint.constant
+        {
+            self.setPosition(_position, animated: animated)
+        }
     }
 
     private func setOverlayOpacityForPoint(point: CGFloat) {
@@ -541,6 +581,13 @@ extension Array {
 
     public func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
         return try self.filter(predicate).last
+    }
+}
+
+extension UIGestureRecognizerState {
+
+    var isActive: Bool {
+        return [.began, .changed, .possible, .recognized].contains(self)
     }
 }
 
