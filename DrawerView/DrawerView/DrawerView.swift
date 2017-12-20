@@ -196,6 +196,7 @@ public class DrawerView: UIView {
     func addBlurEffect() {
         backgroundView.frame = self.bounds
         backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        backgroundView.translatesAutoresizingMaskIntoConstraints = true
         backgroundView.layer.cornerRadius = 8
         backgroundView.clipsToBounds = true
 
@@ -257,15 +258,24 @@ public class DrawerView: UIView {
             heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
 
             self.animator?.stopAnimation(true)
-            self.animator = UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.5, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+
+            let velocityVector = CGVector(dx: velocity.x / 100, dy: velocity.y / 100);
+            let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
+
+            self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
+            self.animator?.addAnimations {
                 self.topConstraint?.constant = snapPosition
                 self.superview?.layoutIfNeeded()
-            }, completion: { position in
+            }
+            self.animator?.addCompletion({ position in
                 heightConstraint.constant = -self.topMargin
                 self.superview?.layoutIfNeeded()
             })
+
+            self.animator?.startAnimation()
         } else {
             self.topConstraint?.constant = snapPosition
+            self.superview?.layoutIfNeeded()
         }
     }
 
