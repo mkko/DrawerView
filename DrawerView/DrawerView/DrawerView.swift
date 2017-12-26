@@ -319,11 +319,17 @@ public class DrawerView: UIView {
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.childScrollView {
 
+                // NB: With negative content offset, we don't ask the delegate as
+                // we need to pan the drawer.
                 let shouldCancelChildViewScroll = (childScrollView.contentOffset.y < 0)
-                let shouldScrollChildView = !childScrollView.isScrollEnabled ?
-                    false : (!shouldCancelChildViewScroll && self.shouldScrollChildView())
+                let shouldScrollChildView = childScrollView.isScrollEnabled
+                    ? (!shouldCancelChildViewScroll && self.shouldScrollChildView())
+                    : false
+                let shouldDisableChildScroll = !shouldScrollChildView && childScrollView.isScrollEnabled
 
-                if !shouldScrollChildView || childScrollView.contentOffset.y < 0 {
+                // Disable child view scrolling
+                if shouldDisableChildScroll {
+                    print("!!! (\(childScrollView.isScrollEnabled))")
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
@@ -334,12 +340,12 @@ public class DrawerView: UIView {
                     //print("Animating to target position...")
 
                     self.animator?.stopAnimation(true)
-//                    self.animator = UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.5, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
+                    self.animator = UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.5, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
                         childScrollView.contentOffset.y = 0
                         let pos = self.panOrigin + translation.y
                         self.setPosition(forDragPoint: pos)
                         self.setOverlayOpacityForPoint(point: pos)
-//                    }, completion: nil)
+                    }, completion: nil)
                 } else {
                     //print("Let it scroll...")
                 }
