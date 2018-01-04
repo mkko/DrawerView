@@ -14,7 +14,7 @@ import UIKit
     case collapsed = 3
 }
 
-private extension DrawerPosition {
+fileprivate extension DrawerPosition {
     static let positions: [DrawerPosition] = [
         .open,
         .partiallyOpen,
@@ -33,6 +33,8 @@ private extension DrawerPosition {
 let kVelocityTreshold: CGFloat = 0
 
 let kVerticalLeeway: CGFloat = 100.0
+
+let kDefaultCornerRadius: CGFloat = 10.0
 
 let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
@@ -71,7 +73,7 @@ public class DrawerView: UIView {
 
     private var otherGestureRecognizer: UIGestureRecognizer? = nil
 
-    private var overlay: UIView?
+    private var overlay: CutOutView?
 
     private let border = CALayer()
 
@@ -95,6 +97,8 @@ public class DrawerView: UIView {
         }
     }
 
+    public let backgroundView = UIVisualEffectView(effect: defaultBackgroundEffect)
+
     public func attachTo(view: UIView) {
 
         self.translatesAutoresizingMaskIntoConstraints = false
@@ -108,14 +112,12 @@ public class DrawerView: UIView {
             self.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             topConstraint,
             heightConstraint
-        ];
+        ]
 
         for constraint in constraints {
             constraint?.isActive = true
         }
     }
-
-    public let backgroundView = UIVisualEffectView(effect: defaultBackgroundEffect)
 
     // TODO: Use size classes with the positions.
 
@@ -175,7 +177,7 @@ public class DrawerView: UIView {
         self.addGestureRecognizer(panGesture)
 
         // Using a setup similar to Maps.app.
-        self.layer.cornerRadius = 10
+        self.layer.cornerRadius = kDefaultCornerRadius
         self.layer.shadowRadius = 5
         self.layer.shadowOpacity = 0.1
 
@@ -193,14 +195,34 @@ public class DrawerView: UIView {
         self.layer.addSublayer(border)
     }
 
+    public func foo() {
+        self.layoutSubviews()
+        self.superview?.layoutSubviews()
+        self.backgroundView.layoutSubviews()
+    }
+
+    private var backgroundViewConstraints: [NSLayoutConstraint] = []
+
     func addBlurEffect() {
         backgroundView.frame = self.bounds
-        backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        backgroundView.translatesAutoresizingMaskIntoConstraints = true
+//        backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        backgroundView.translatesAutoresizingMaskIntoConstraints = false
         backgroundView.layer.cornerRadius = 8
         backgroundView.clipsToBounds = true
 
         self.insertSubview(backgroundView, at: 0)
+
+        backgroundViewConstraints = [
+            backgroundView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            backgroundView.heightAnchor.constraint(equalTo: self.heightAnchor),
+            backgroundView.topAnchor.constraint(equalTo: self.topAnchor)
+        ]
+
+        for constraint in backgroundViewConstraints {
+            constraint.isActive = true
+        }
+
         self.backgroundColor = UIColor.clear
     }
 
@@ -217,11 +239,19 @@ public class DrawerView: UIView {
     }
 
     public override func layoutSubviews() {
+        super.layoutSubviews()
+
         // Update snap position, if not dragging.
         let animatorRunning = animator?.isRunning ?? false
         if !animatorRunning && !isDragging {
             // Handle possible layout changes, e.g. rotation.
             self.updateSnapPosition(animated: false)
+        }
+
+        // NB: For some reason the subviews of the blur background
+        // don't keep up with sudden change
+        for view in self.backgroundView.subviews {
+            view.frame.origin.y = 0
         }
     }
 
@@ -259,7 +289,8 @@ public class DrawerView: UIView {
 
             self.animator?.stopAnimation(true)
 
-            let velocityVector = CGVector(dx: velocity.x / 100, dy: velocity.y / 100);
+            let m: CGFloat = 100.0
+            let velocityVector = CGVector(dx: velocity.x / m, dy: velocity.y / m);
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
 
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
@@ -270,6 +301,7 @@ public class DrawerView: UIView {
             self.animator?.addCompletion({ position in
                 heightConstraint.constant = -self.topMargin
                 self.superview?.layoutIfNeeded()
+                self.layoutIfNeeded()
             })
 
             self.animator?.startAnimation()
@@ -329,7 +361,6 @@ public class DrawerView: UIView {
 
                 // Disable child view scrolling
                 if shouldDisableChildScroll {
-                    print("!!! (\(childScrollView.isScrollEnabled))")
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
@@ -480,8 +511,8 @@ public class DrawerView: UIView {
             position = dragPoint
         }
         self.topConstraint?.constant = position
-        //self.setOverlayOpacityForPoint(point: position)
         self.superview?.layoutIfNeeded()
+        self.layoutIfNeeded()
     }
 
     private func updateSnapPosition(animated: Bool) {
@@ -494,28 +525,41 @@ public class DrawerView: UIView {
     }
 
     private func setOverlayOpacityForPoint(point: CGFloat) {
-        guard let superview = self.superview else {
-            return
-        }
 
         let opacityFactor = getOverlayOpacityFactorForPoint(point: point)
         let maxOpacity: CGFloat = 0.5
 
-        self.overlay = self.overlay ?? {
-            let overlay = createOverlay()
-            superview.insertSubview(overlay, belowSubview: self)
-            return overlay
-        }()
+        self.overlay = self.overlay ?? createOverlay()
         self.overlay?.backgroundColor = UIColor.black
         self.overlay?.alpha = opacityFactor * maxOpacity
     }
 
-    private func createOverlay() -> UIView {
-        let overlay = UIView(frame: superview?.bounds ?? CGRect())
+    private func createOverlay() -> CutOutView? {
+        guard let superview = self.superview else {
+            return nil
+        }
+
+        let overlay = CutOutView(frame: superview.bounds)
+        overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.backgroundColor = UIColor.black
         overlay.alpha = 0
+        overlay.bottomCutHeight = self.layer.cornerRadius
         let tap = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
         overlay.addGestureRecognizer(tap)
+
+        superview.insertSubview(overlay, belowSubview: self)
+
+        let constraints = [
+            overlay.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: superview.trailingAnchor),
+            overlay.heightAnchor.constraint(equalTo: superview.heightAnchor),
+            overlay.bottomAnchor.constraint(equalTo: self.topAnchor, constant: self.layer.cornerRadius)
+        ]
+
+        for constraint in constraints {
+            constraint.isActive = true
+        }
+
         return overlay
     }
 
@@ -572,7 +616,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 }
 
-extension CGRect {
+fileprivate extension CGRect {
 
     func insetBy(top: CGFloat = 0, bottom: CGFloat = 0, left: CGFloat = 0, right: CGFloat = 0) -> CGRect {
         return CGRect(
@@ -583,14 +627,14 @@ extension CGRect {
     }
 }
 
-extension Array {
+fileprivate extension Array {
 
-    public func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
+    func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
         return try self.filter(predicate).last
     }
 }
 
-extension DrawerPosition {
+fileprivate extension DrawerPosition {
 
     func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition {
         guard !positions.isEmpty else {
