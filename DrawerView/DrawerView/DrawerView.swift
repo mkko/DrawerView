@@ -92,7 +92,7 @@ public class DrawerView: UIView {
         }
         didSet {
             if let containerView = containerView {
-                self.attachTo(view: containerView)
+                containerView.addSubview(self)
             }
         }
     }
@@ -100,10 +100,6 @@ public class DrawerView: UIView {
     public let backgroundView = UIVisualEffectView(effect: defaultBackgroundEffect)
 
     public func attachTo(view: UIView) {
-
-        self.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(self)
-
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
         heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topMargin)
 
@@ -228,14 +224,11 @@ public class DrawerView: UIView {
 
     // MARK: - View methods
 
-    public override func willMove(toSuperview newSuperview: UIView?) {
-        if let view = newSuperview {
-            self.frame = view.bounds.insetBy(top: topMargin)
-        }
-    }
-
     public override func didMoveToSuperview() {
         self.setPosition(currentPosition, animated: false)
+
+        self.superview.map(self.attachTo)
+        superview?.layoutIfNeeded()
     }
 
     public override func layoutSubviews() {
@@ -286,11 +279,12 @@ public class DrawerView: UIView {
             // Add extra height to make sure that bottom doesn't show up.
 
             heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
+            self.superview?.layoutIfNeeded()
 
             self.animator?.stopAnimation(true)
 
             let m: CGFloat = 100.0
-            let velocityVector = CGVector(dx: velocity.x / m, dy: velocity.y / m);
+            let velocityVector = CGVector(dx: 0, dy: abs(velocity.y) / m);
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
 
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
