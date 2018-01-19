@@ -14,6 +14,14 @@ class ViewController: UIViewController {
     @IBOutlet weak var drawerView: DrawerView!
     @IBOutlet weak var searchBar: UISearchBar!
 
+    @IBAction func expand(_ sender: Any) {
+        drawerView.setPosition(.open, animated: true)
+    }
+
+    @IBAction func collapse(_ sender: Any) {
+        drawerView.setPosition(.collapsed, animated: true)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -49,6 +57,7 @@ extension ViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        drawerView.setPosition(.open, animated: true)
     }
 }
 
