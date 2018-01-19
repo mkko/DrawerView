@@ -229,8 +229,8 @@ public class DrawerView: UIView {
         super.layoutSubviews()
 
         // Update snap position, if not dragging.
-        let animatorRunning = animator?.isRunning ?? false
-        if !animatorRunning && !isDragging {
+        //let animatorRunning = animator?.isRunning ?? false
+        if animator == nil && !isDragging {
             // Handle possible layout changes, e.g. rotation.
             self.updateSnapPosition(animated: false)
         }
@@ -270,18 +270,14 @@ public class DrawerView: UIView {
         }
 
         if animated {
-            // Add extra height to make sure that bottom doesn't show up.
-
-            heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
-            self.superview?.layoutIfNeeded()
-
             self.animator?.stopAnimation(true)
 
             let m: CGFloat = 100.0
             let velocityVector = CGVector(dx: 0, dy: abs(velocity.y) / m);
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
 
-            self.animator = UIViewPropertyAnimator(duration: 2.5, timingParameters: springParameters)
+            // Create the animator
+            self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
             self.animator?.addAnimations {
                 self.setPosition(forDragPoint: snapPosition)
             }
@@ -290,6 +286,10 @@ public class DrawerView: UIView {
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
             })
+
+            // Add extra height to make sure that bottom doesn't show up.
+            heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
+            self.superview?.layoutIfNeeded()
 
             self.animator?.startAnimation()
         } else {
