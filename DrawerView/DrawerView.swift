@@ -191,12 +191,6 @@ public class DrawerView: UIView {
         self.layer.addSublayer(border)
     }
 
-    public func foo() {
-        self.layoutSubviews()
-        self.superview?.layoutSubviews()
-        self.backgroundView.layoutSubviews()
-    }
-
     private var backgroundViewConstraints: [NSLayoutConstraint] = []
 
     func addBlurEffect() {
@@ -287,10 +281,9 @@ public class DrawerView: UIView {
             let velocityVector = CGVector(dx: 0, dy: abs(velocity.y) / m);
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
 
-            self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
+            self.animator = UIViewPropertyAnimator(duration: 2.5, timingParameters: springParameters)
             self.animator?.addAnimations {
                 self.setPosition(forDragPoint: snapPosition)
-                self.setOverlayOpacityForPoint(point: snapPosition)
             }
             self.animator?.addCompletion({ position in
                 heightConstraint.constant = -self.topMargin
@@ -301,7 +294,6 @@ public class DrawerView: UIView {
             self.animator?.startAnimation()
         } else {
             self.setPosition(forDragPoint: snapPosition)
-            self.setOverlayOpacityForPoint(point: snapPosition)
         }
     }
 
@@ -336,7 +328,6 @@ public class DrawerView: UIView {
             self.panOrigin = frame.origin.y
 
             setPosition(forDragPoint: panOrigin)
-            self.setOverlayOpacityForPoint(point: panOrigin)
 
             break
         case .changed:
@@ -369,7 +360,6 @@ public class DrawerView: UIView {
                         childScrollView.contentOffset.y = 0
                         let pos = self.panOrigin + translation.y
                         self.setPosition(forDragPoint: pos)
-                        self.setOverlayOpacityForPoint(point: pos)
                     }, completion: nil)
                 } else {
                     //print("Let it scroll...")
@@ -379,12 +369,10 @@ public class DrawerView: UIView {
                 if !shouldScrollChildView {
                     let pos = panOrigin + translation.y
                     setPosition(forDragPoint: pos)
-                    self.setOverlayOpacityForPoint(point: pos)
                 }
             } else {
                 let pos = panOrigin + translation.y
                 setPosition(forDragPoint: pos)
-                self.setOverlayOpacityForPoint(point: pos)
             }
 
             self.delegate?.drawerDidMove?(self, verticalPosition: panOrigin + translation.y)
@@ -505,8 +493,10 @@ public class DrawerView: UIView {
             position = dragPoint
         }
         self.topConstraint?.constant = position
+        self.setOverlayOpacityForPoint(point: dragPoint)
+
         self.superview?.layoutIfNeeded()
-        self.layoutIfNeeded()
+//        self.layoutIfNeeded()
     }
 
     private func updateSnapPosition(animated: Bool) {
