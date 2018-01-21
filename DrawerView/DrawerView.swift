@@ -73,7 +73,7 @@ public class DrawerView: UIView {
 
     private var otherGestureRecognizer: UIGestureRecognizer? = nil
 
-    private var overlay: CutOutView?
+    private var overlay: Overlay?
 
     private let border = CALayer()
 
@@ -514,20 +514,19 @@ public class DrawerView: UIView {
         let maxOpacity: CGFloat = 0.5
 
         self.overlay = self.overlay ?? createOverlay()
-        self.overlay?.backgroundColor = UIColor.black
         self.overlay?.alpha = opacityFactor * maxOpacity
     }
 
-    private func createOverlay() -> CutOutView? {
+    private func createOverlay() -> Overlay? {
         guard let superview = self.superview else {
             return nil
         }
 
-        let overlay = CutOutView(frame: superview.bounds)
+        let overlay = Overlay(frame: superview.bounds)
         overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.backgroundColor = UIColor.black
         overlay.alpha = 0
-        overlay.bottomCutHeight = self.layer.cornerRadius
+        overlay.cutCornerSize = self.layer.cornerRadius
         let tap = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
         overlay.addGestureRecognizer(tap)
 
@@ -537,7 +536,7 @@ public class DrawerView: UIView {
             overlay.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
             overlay.trailingAnchor.constraint(equalTo: superview.trailingAnchor),
             overlay.heightAnchor.constraint(equalTo: superview.heightAnchor),
-            overlay.bottomAnchor.constraint(equalTo: self.topAnchor, constant: self.layer.cornerRadius)
+            overlay.bottomAnchor.constraint(equalTo: self.topAnchor)
         ]
 
         for constraint in constraints {
