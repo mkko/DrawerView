@@ -28,12 +28,6 @@ class Overlay: UIView {
 
     private var cutCornerSizeConstraint: NSLayoutConstraint? = nil
 
-    private var _mask = CAShapeLayer()
-
-    private var shape = CAShapeLayer()
-
-//    private _height = leftCut.heightAnchor.constraint(equalToConstant: c)
-
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -78,7 +72,5 @@ class Overlay: UIView {
 
         self.clipsToBounds = false
     }
-
-    // MARK: - Drawing
 
 }
