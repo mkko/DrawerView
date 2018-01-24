@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  ScrollTest
+//  DrawerView
 //
-//  Created by Mikko Välimäki on 03/10/2017.
+//  Created by Mikko Välimäki on 24/10/2017.
 //  Copyright © 2017 Mikko Välimäki. All rights reserved.
 //
 
