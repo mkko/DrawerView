@@ -12,7 +12,8 @@
 		2BDAD419201113F100AA7FC2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD417201113F100AA7FC2 /* Main.storyboard */; };
 		2BDAD41B201113F100AA7FC2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD41A201113F100AA7FC2 /* Assets.xcassets */; };
 		2BDAD41E201113F100AA7FC2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD41C201113F100AA7FC2 /* LaunchScreen.storyboard */; };
-		2BDAD42F2011176700AA7FC2 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD42B2011175800AA7FC2 /* DrawerView.framework */; };
+		2BE0B094201CD9EA0065D3B5 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD42B2011175800AA7FC2 /* DrawerView.framework */; };
+		2BE0B095201CD9EA0065D3B5 /* DrawerView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD42B2011175800AA7FC2 /* DrawerView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,7 +31,28 @@
 			remoteGlobalIDString = 2BDAD3B020110F6E00AA7FC2;
 			remoteInfo = DrawerViewTests;
 		};
+		2BE0B096201CD9EA0065D3B5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 2BDAD3A620110F6E00AA7FC2;
+			remoteInfo = DrawerView;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2BE0B098201CD9EA0065D3B5 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2BE0B095201CD9EA0065D3B5 /* DrawerView.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2BDAD410201113F100AA7FC2 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -48,7 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2BDAD42F2011176700AA7FC2 /* DrawerView.framework in Frameworks */,
+				2BE0B094201CD9EA0065D3B5 /* DrawerView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,10 +134,12 @@
 				2BDAD40C201113F100AA7FC2 /* Sources */,
 				2BDAD40D201113F100AA7FC2 /* Frameworks */,
 				2BDAD40E201113F100AA7FC2 /* Resources */,
+				2BE0B098201CD9EA0065D3B5 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2BE0B097201CD9EA0065D3B5 /* PBXTargetDependency */,
 			);
 			name = Example;
 			productName = Example;
@@ -203,6 +227,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2BE0B097201CD9EA0065D3B5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DrawerView;
+			targetProxy = 2BE0B096201CD9EA0065D3B5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		2BDAD417201113F100AA7FC2 /* Main.storyboard */ = {
@@ -334,6 +366,7 @@
 		2BDAD423201113F100AA7FC2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Example/Info.plist;
@@ -348,6 +381,7 @@
 		2BDAD424201113F100AA7FC2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Example/Info.plist;
