@@ -29,8 +29,20 @@
                             <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="zca-w4-fsL">
                                 <rect key="frame" x="0.0" y="20" width="375" height="56"/>
                                 <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NPN-1J-hJq">
+                                        <rect key="frame" x="0.0" y="0.0" width="125" height="56"/>
+                                        <fontDescription key="fontDescription" name="HelveticaNeue-Bold" family="Helvetica Neue" pointSize="38"/>
+                                        <state key="normal" title="0">
+                                            <color key="titleColor" red="0.0" green="0.50196081400000003" blue="1" alpha="0.19951305650000001" colorSpace="calibratedRGB"/>
+                                            <color key="titleShadowColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="firstTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="rIN-ol-PUF"/>
+                                            <action selector="zeroTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="MvJ-p4-fbe"/>
+                                        </connections>
+                                    </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Mrr-sQ-yWu">
-                                        <rect key="frame" x="0.0" y="0.0" width="187.5" height="56"/>
+                                        <rect key="frame" x="125" y="0.0" width="125" height="56"/>
                                         <fontDescription key="fontDescription" name="HelveticaNeue-Bold" family="Helvetica Neue" pointSize="38"/>
                                         <state key="normal" title="1">
                                             <color key="titleColor" red="0.0" green="0.50196081400000003" blue="1" alpha="0.19951305650684931" colorSpace="calibratedRGB"/>
@@ -41,7 +53,7 @@
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Mkt-un-DaA">
-                                        <rect key="frame" x="187.5" y="0.0" width="187.5" height="56"/>
+                                        <rect key="frame" x="250" y="0.0" width="125" height="56"/>
                                         <fontDescription key="fontDescription" name="HelveticaNeue-Bold" family="Helvetica Neue" pointSize="38"/>
                                         <state key="normal" title="2">
                                             <color key="titleColor" red="0.0" green="0.50196081400000003" blue="1" alpha="0.19951305650684931" colorSpace="calibratedRGB"/>

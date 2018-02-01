@@ -16,6 +16,11 @@ class ViewController: UIViewController {
 
     var programmaticDrawerView: DrawerView?
 
+    @IBAction func zeroTapped(_ sender: Any) {
+        drawerView?.setIsClosed(closed: true, animated: true)
+        programmaticDrawerView?.setIsClosed(closed: true, animated: true)
+    }
+
     @IBAction func firstTapped(_ sender: Any) {
         drawerView?.setIsClosed(closed: false, animated: true)
         programmaticDrawerView?.setIsClosed(closed: true, animated: true)
