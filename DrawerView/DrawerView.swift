@@ -77,6 +77,8 @@ public class DrawerView: UIView {
 
     private let border = CALayer()
 
+    private var closed: Bool = false
+
     // MARK: - Public properties
 
     @IBOutlet
@@ -86,13 +88,14 @@ public class DrawerView: UIView {
     @IBOutlet
     public var containerView: UIView? {
         willSet {
+            // TODO: Instead, check if has been initialized from nib.
             if self.superview != nil {
                 abort(reason: "Superview already set, use normal UIView methods to set up the view hierarcy")
             }
         }
         didSet {
             if let containerView = containerView {
-                containerView.addSubview(self)
+                self.attachTo(view: containerView)
             }
         }
     }
@@ -100,6 +103,14 @@ public class DrawerView: UIView {
     public let backgroundView = UIVisualEffectView(effect: defaultBackgroundEffect)
 
     public func attachTo(view: UIView) {
+
+        if self.superview == nil {
+            self.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(self)
+        } else if self.superview !== view {
+            print("Invalid state; superview already set when called attachTo(view:)")
+        }
+
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
         heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topMargin)
 
@@ -116,6 +127,15 @@ public class DrawerView: UIView {
     }
 
     // TODO: Use size classes with the positions.
+
+    public var isClosed: Bool {
+        get {
+            return closed
+        }
+        set {
+            self.setIsClosed(closed: newValue, animated: false)
+        }
+    }
 
     public var topMargin: CGFloat = 68.0 {
         didSet {
@@ -218,13 +238,6 @@ public class DrawerView: UIView {
 
     // MARK: - View methods
 
-    public override func didMoveToSuperview() {
-        self.setPosition(currentPosition, animated: false)
-
-        self.superview.map(self.attachTo)
-        superview?.layoutIfNeeded()
-    }
-
     public override func layoutSubviews() {
         super.layoutSubviews()
 
@@ -251,19 +264,34 @@ public class DrawerView: UIView {
 
     // MARK: - Public methods
 
+    public func setIsClosed(closed: Bool, animated: Bool) {
+        // Animate to/from hidden position
+        self.closed = closed
+        if closed {
+            self.setScrollPosition(self.snapPositionForClosed(), withVelocity: CGPoint(), animated: animated)
+        } else {
+            self.setPosition(self.position, animated: animated)
+        }
+    }
+
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
         self.setPosition(position, withVelocity: CGPoint(), animated: animated)
     }
 
     public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
 
-        currentPosition = position
+        self.currentPosition = position
+        self.closed = false
 
         guard let snapPosition = snapPosition(for: position) else {
             print("Could not evaluate snap position for \(position.visibleName)")
             return
         }
 
+        self.setScrollPosition(snapPosition, withVelocity: velocity, animated: animated)
+    }
+
+    private func setScrollPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, animated: Bool) {
         guard let heightConstraint = self.heightConstraint else {
             print("No height constraint set")
             return
@@ -279,7 +307,7 @@ public class DrawerView: UIView {
             // Create the animator
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
             self.animator?.addAnimations {
-                self.setPosition(forDragPoint: snapPosition)
+                self.setScrollPosition(scrollPosition)
             }
             self.animator?.addCompletion({ position in
                 heightConstraint.constant = -self.topMargin
@@ -293,8 +321,15 @@ public class DrawerView: UIView {
 
             self.animator?.startAnimation()
         } else {
-            self.setPosition(forDragPoint: snapPosition)
+            self.setScrollPosition(scrollPosition)
         }
+    }
+
+    private func setScrollPosition(_ scrollPosition: CGFloat) {
+        self.topConstraint?.constant = scrollPosition
+        self.setOverlayOpacity(forScrollPosition: scrollPosition)
+
+        self.superview?.layoutIfNeeded()
     }
 
     // MARK: - Private methods
@@ -437,6 +472,10 @@ public class DrawerView: UIView {
             .map { $0.pos }
     }
 
+    private func snapPositionForClosed() -> CGFloat {
+        return superview?.bounds.height ?? 0
+    }
+
     private func snapPosition(for position: DrawerPosition) -> CGFloat? {
         guard let superview = self.superview else {
             return nil
@@ -461,10 +500,6 @@ public class DrawerView: UIView {
         case .collapsed:
             return 0
         }
-    }
-
-    private func snapPositionForHidden() -> CGFloat {
-        return superview?.bounds.height ?? 0
     }
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
@@ -493,10 +528,9 @@ public class DrawerView: UIView {
             position = dragPoint
         }
         self.topConstraint?.constant = position
-        self.setOverlayOpacityForPoint(point: dragPoint)
+        self.setOverlayOpacity(forScrollPosition: dragPoint)
 
         self.superview?.layoutIfNeeded()
-//        self.layoutIfNeeded()
     }
 
     private func updateSnapPosition(animated: Bool) {
@@ -504,17 +538,12 @@ public class DrawerView: UIView {
             let expectedPos = self.snapPosition(for: currentPosition),
             expectedPos != topConstraint.constant
         {
-            self.setPosition(currentPosition, animated: animated)
+            if self.isClosed {
+                self.setIsClosed(closed: self.isClosed, animated: animated)
+            } else {
+                self.setPosition(currentPosition, animated: animated)
+            }
         }
-    }
-
-    private func setOverlayOpacityForPoint(point: CGFloat) {
-
-        let opacityFactor = getOverlayOpacityFactorForPoint(point: point)
-        let maxOpacity: CGFloat = 0.5
-
-        self.overlay = self.overlay ?? createOverlay()
-        self.overlay?.alpha = opacityFactor * maxOpacity
     }
 
     private func createOverlay() -> Overlay? {
@@ -546,7 +575,15 @@ public class DrawerView: UIView {
         return overlay
     }
 
-    private func getOverlayOpacityFactorForPoint(point: CGFloat) -> CGFloat {
+    private func setOverlayOpacity(forScrollPosition position: CGFloat) {
+        let opacityFactor = getOverlayOpacityFactor(forScrollPosition: position)
+        let maxOpacity: CGFloat = 0.5
+
+        self.overlay = self.overlay ?? createOverlay()
+        self.overlay?.alpha = opacityFactor * maxOpacity
+    }
+
+    private func getOverlayOpacityFactor(forScrollPosition scrollPosition: CGFloat) -> CGFloat {
         let positions = self.supportedPositions
             // Group the info on position together. For increased
             // robustness, hide the ones without snap position.
@@ -557,11 +594,11 @@ public class DrawerView: UIView {
             }
             .sorted { (p1, p2) -> Bool in p1.snapPosition < p2.snapPosition }
 
-        let prev = positions.last(where: { $0.snapPosition <= point })
-        let next = positions.first(where: { $0.snapPosition > point })
+        let prev = positions.last(where: { $0.snapPosition <= scrollPosition })
+        let next = positions.first(where: { $0.snapPosition > scrollPosition })
 
         if let a = prev, let b = next {
-            let n = (point - a.snapPosition) / (b.snapPosition - a.snapPosition)
+            let n = (scrollPosition - a.snapPosition) / (b.snapPosition - a.snapPosition)
             return a.opacityFactor + (b.opacityFactor - a.opacityFactor) * n
         } else if let a = prev ?? next {
             return a.opacityFactor

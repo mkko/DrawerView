@@ -11,27 +11,41 @@ import DrawerView
 
 class ViewController: UIViewController {
 
-    @IBOutlet weak var drawerView: DrawerView!
+    @IBOutlet weak var drawerView: DrawerView?
     @IBOutlet weak var searchBar: UISearchBar!
 
-    @IBAction func expand(_ sender: Any) {
-        drawerView.setPosition(.open, animated: true)
+    var programmaticDrawerView: DrawerView?
+
+    @IBAction func firstTapped(_ sender: Any) {
+        drawerView?.setIsClosed(closed: false, animated: true)
+        programmaticDrawerView?.setIsClosed(closed: true, animated: true)
+        // TODO: Hide the other drawer
     }
 
-    @IBAction func collapse(_ sender: Any) {
-        drawerView.setPosition(.collapsed, animated: true)
+    @IBAction func secondTapped(_ sender: Any) {
+        drawerView?.setIsClosed(closed: true, animated: true)
+        programmaticDrawerView?.setIsClosed(closed: false, animated: true)
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        drawerView.supportedPositions = [.collapsed, .partiallyOpen, .open]
-        drawerView.position = .collapsed
+        drawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView?.position = .collapsed
+
+        setupTheOtherDrawerView()
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+
+    func setupTheOtherDrawerView() {
+        programmaticDrawerView = DrawerView()
+        programmaticDrawerView?.supportedPositions = [.collapsed, .partiallyOpen]
+        programmaticDrawerView?.isClosed = true
+        programmaticDrawerView?.attachTo(view: self.view)
     }
 }
 
@@ -57,14 +71,14 @@ extension ViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        drawerView.setPosition(.open, animated: true)
+        drawerView?.setPosition(.open, animated: true)
     }
 }
 
 extension ViewController: UISearchBarDelegate {
 
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        drawerView.setPosition(.open, animated: true)
+        drawerView?.setPosition(.open, animated: true)
     }
 }
 
