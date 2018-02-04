@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B3FD3192027B4150045C7BF /* DrawerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3FD3182027B4150045C7BF /* DrawerViewController.swift */; };
 		2BDAD414201113F100AA7FC2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD413201113F100AA7FC2 /* AppDelegate.swift */; };
 		2BDAD416201113F100AA7FC2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD415201113F100AA7FC2 /* ViewController.swift */; };
 		2BDAD419201113F100AA7FC2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD417201113F100AA7FC2 /* Main.storyboard */; };
@@ -55,6 +56,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B3FD3182027B4150045C7BF /* DrawerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerViewController.swift; sourceTree = "<group>"; };
 		2BDAD410201113F100AA7FC2 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BDAD413201113F100AA7FC2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2BDAD415201113F100AA7FC2 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 			children = (
 				2BDAD413201113F100AA7FC2 /* AppDelegate.swift */,
 				2BDAD415201113F100AA7FC2 /* ViewController.swift */,
+				2B3FD3182027B4150045C7BF /* DrawerViewController.swift */,
 				2BDAD417201113F100AA7FC2 /* Main.storyboard */,
 				2BDAD41A201113F100AA7FC2 /* Assets.xcassets */,
 				2BDAD41C201113F100AA7FC2 /* LaunchScreen.storyboard */,
@@ -223,6 +226,7 @@
 			files = (
 				2BDAD416201113F100AA7FC2 /* ViewController.swift in Sources */,
 				2BDAD414201113F100AA7FC2 /* AppDelegate.swift in Sources */,
+				2B3FD3192027B4150045C7BF /* DrawerViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -14,22 +14,33 @@ class ViewController: UIViewController {
     @IBOutlet weak var drawerView: DrawerView?
     @IBOutlet weak var searchBar: UISearchBar!
 
-    var programmaticDrawerView: DrawerView?
+    var secondDrawerView: DrawerView?
+    var thirdDrawerView: DrawerView?
+
+    var drawers: [DrawerView] {
+        return [drawerView, secondDrawerView, thirdDrawerView].flatMap { $0 }
+    }
 
     @IBAction func zeroTapped(_ sender: Any) {
-        drawerView?.setIsClosed(closed: true, animated: true)
-        programmaticDrawerView?.setIsClosed(closed: true, animated: true)
+        showDrawer(drawer: nil)
     }
 
     @IBAction func firstTapped(_ sender: Any) {
-        drawerView?.setIsClosed(closed: false, animated: true)
-        programmaticDrawerView?.setIsClosed(closed: true, animated: true)
-        // TODO: Hide the other drawer
+        showDrawer(drawer: drawerView)
     }
 
     @IBAction func secondTapped(_ sender: Any) {
-        drawerView?.setIsClosed(closed: true, animated: true)
-        programmaticDrawerView?.setIsClosed(closed: false, animated: true)
+        showDrawer(drawer: secondDrawerView)
+    }
+
+    @IBAction func thirdTapped(_ sender: Any) {
+        showDrawer(drawer: thirdDrawerView)
+    }
+
+    func showDrawer(drawer: DrawerView?) {
+        for d in drawers {
+            d.setIsClosed(closed: d != drawer, animated: true)
+        }
     }
 
     override func viewDidLoad() {
@@ -38,7 +49,8 @@ class ViewController: UIViewController {
         drawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
         drawerView?.position = .collapsed
 
-        setupTheOtherDrawerView()
+        setupSecondDrawerView()
+        setupThirdDrawerView()
     }
 
     override func didReceiveMemoryWarning() {
@@ -46,11 +58,20 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    func setupTheOtherDrawerView() {
-        programmaticDrawerView = DrawerView()
-        programmaticDrawerView?.supportedPositions = [.collapsed, .partiallyOpen]
-        programmaticDrawerView?.isClosed = true
-        programmaticDrawerView?.attachTo(view: self.view)
+    func setupSecondDrawerView() {
+        secondDrawerView = DrawerView()
+        secondDrawerView?.supportedPositions = [.collapsed, .partiallyOpen]
+        secondDrawerView?.isClosed = true
+        secondDrawerView?.attachTo(view: self.view)
+    }
+
+    func setupThirdDrawerView() {
+        let vc = self.storyboard!.instantiateViewController(withIdentifier: "DrawerViewController")
+        self.addChildViewController(vc)
+        thirdDrawerView = DrawerView(withView: vc.view)
+        thirdDrawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
+        thirdDrawerView?.isClosed = true
+        thirdDrawerView?.attachTo(view: self.view)
     }
 }
 

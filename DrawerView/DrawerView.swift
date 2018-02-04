@@ -84,6 +84,9 @@ public class DrawerView: UIView {
     @IBOutlet
     public var delegate: DrawerViewDelegate?
 
+    @IBOutlet
+    public var vc: UIViewController?
+
     // IB support, not intended to be used otherwise.
     @IBOutlet
     public var containerView: UIView? {
@@ -175,6 +178,11 @@ public class DrawerView: UIView {
 
     // MARK: - Initialization
 
+    init() {
+        super.init(frame: CGRect())
+        self.setup()
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.setup()
@@ -183,6 +191,24 @@ public class DrawerView: UIView {
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         self.setup()
+    }
+
+    convenience public init(withView view: UIView) {
+        self.init()
+
+        view.frame = self.bounds
+        view.backgroundColor = .clear
+        view.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(view)
+
+        for c in [
+            view.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            view.heightAnchor.constraint(equalTo: self.heightAnchor),
+            view.topAnchor.constraint(equalTo: self.topAnchor)
+        ] {
+            c.isActive = true
+        }
     }
 
     private func setup() {
@@ -672,3 +698,5 @@ func abort(reason: String) -> Never  {
     print(reason)
     abort()
 }
+
+
