@@ -10,6 +10,11 @@ import Foundation
 
 public extension UIViewController {
 
+    public func addDrawerView(withViewController viewController: UIViewController, parentView: UIView? = nil) -> DrawerView {
+        self.addChildViewController(viewController)
+        return DrawerView(withView: viewController.view)
+    }
+
     public var drawer: DrawerView? {
         return findParentDrawerView(view: self.view)
     }

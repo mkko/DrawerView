@@ -67,8 +67,7 @@ class ViewController: UIViewController {
 
     func setupThirdDrawerView() {
         let vc = self.storyboard!.instantiateViewController(withIdentifier: "DrawerViewController")
-        self.addChildViewController(vc)
-        thirdDrawerView = DrawerView(withView: vc.view)
+        thirdDrawerView = self.addDrawerView(withViewController: vc)
         thirdDrawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
         thirdDrawerView?.isClosed = true
         thirdDrawerView?.attachTo(view: self.view)
