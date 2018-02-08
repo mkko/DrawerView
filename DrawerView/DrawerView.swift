@@ -49,7 +49,7 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     @objc optional func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat)
 }
 
-public class DrawerView: UIView {
+@IBDesignable public class DrawerView: UIView {
 
     // MARK: - Private properties
 
