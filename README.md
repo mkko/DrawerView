@@ -21,7 +21,7 @@ Well, this is the next thing I'll be working with.
 You can install DrawerView with Carthage and CocoaPods. For Carthage add the following into your `Cartfile`:
 
 ```
-github "mkko/DrawerView"
+pod "DrawerView"
 ```
 
 With CocoaPods, add the following into your `Podfile`:
