@@ -8,7 +8,7 @@ DrawerView is a view for iOS that mimics the functionality of the drawer introdu
 
 DrawerView is a simple view that you can add to your app. No need to restructure your views or view controllers to add support for it. This also makes it possible to have multiple drawers and switch between them the same way it is done in the iOS Maps.
 
-#### Automatic support fro scroll views
+#### Automatic support for scroll views
 
 DrawerView handles subview interaction so that it adds specialized support for scroll views. What this practically means is that you can add a scroll view (or a table view) inside it and the DrawerView will handle the transition from scrolling the subview to scrolling the drawer.
 
@@ -36,23 +36,49 @@ DrawerView tries automatically to occupy the view it will be added to. It uses a
 
 ### Setting things up
 
-#### Storyboard
+Here's listed the possible ways of setting things up. Hands-on examples of setting things up can be found from the included [example project](./Example).
 
-The easiest way to create a drawer is to create a self-contained view in storyboard:
 
-1. Create empty view in storyboards outside any view controllers.
-2. Set a custom class of the view to `DrawerView`.
-4. Connect the `containerView` IBOutlet to the view where you want it to occupy the space (e.g. the view controller root view).
-5. Optionally implement `DrawerViewDelegate` to gain better control over the functionality.
-5. Add your content to the view.
+#### Set up in storyboards
 
-This method of setup is demonstrated in the included [Example](./Example).
+Storyboard is supported in two ways: as an embedded view and as a child view controller.
 
-#### Programmatically
+##### As child view controller
 
-Programmatic setup is pretty much the same as setting up any `UIView`: you create one, set it up with subviews and add it to some view. When adding the view into the parent, it will automatically set the 
+You can add contents of one view controller as a drawer to another view controller, almost the same way as you would use "Container View".
 
-### TODOs
+1. Create the two view controllers.
+2. Define a storyboard ID for the drawer view controller (eg. "DrawerViewController")
+3. Make the connection in code:
 
-- Make styling of the view possible.
+```
+override func viewDidLoad() {
+    super.viewDidLoad()
 
+    let drawerViewController = self.storyboard!.instantiateViewController(withIdentifier: "DrawerViewController")
+    self.addDrawerView(withViewController: drawerViewController)
+}
+```
+
+##### As embedded view
+
+1. Create a view in storyboard that is not inside the view controller view hierarchy. To do this, you can for instance drag a new view directly to the document outline.
+2. Set a custom class of the view to a `DrawerView`.
+4. Connect the `containerView` IBOutlet of the newly created view to the view where you want it to be added (e.g. the view controller root view).
+
+
+#### Set up programmatically
+
+Programmatic setup is pretty much the same as setting up any `UIView`: you create one, set it up with subviews and add it to a view. Here's an example to do it.
+
+```
+override func viewDidLoad() {
+    super.viewDidLoad()
+
+    let drawerView = DrawerView()
+    drawerView.attachTo(view: self.view)
+
+	// Set up the drawer here
+    drawerView.supportedPositions = [.collapsed, .partiallyOpen]
+}
+```

@@ -90,6 +90,9 @@
                             <constraint firstItem="zca-w4-fsL" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="xr5-li-t21"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <connections>
+                            <outlet property="drawer" destination="mwC-kI-aDG" id="O7i-xc-PVG"/>
+                        </connections>
                     </view>
                     <connections>
                         <outlet property="drawerView" destination="mwC-kI-aDG" id="yhv-8b-J59"/>
@@ -115,8 +118,8 @@
                                 <outlet property="delegate" destination="BYZ-38-t0r" id="c9I-hO-sla"/>
                             </connections>
                         </tableView>
-                        <searchBar contentMode="redraw" misplaced="YES" searchBarStyle="minimal" text="" placeholder="Search for place or address" translatesAutoresizingMaskIntoConstraints="NO" id="Xp7-w4-h2V">
-                            <rect key="frame" x="7" y="0.0" width="361" height="56"/>
+                        <searchBar contentMode="redraw" searchBarStyle="minimal" text="" placeholder="Search for place or address" translatesAutoresizingMaskIntoConstraints="NO" id="Xp7-w4-h2V">
+                            <rect key="frame" x="7" y="5" width="361" height="56"/>
                             <textInputTraits key="textInputTraits"/>
                             <connections>
                                 <outlet property="delegate" destination="BYZ-38-t0r" id="nzq-Xq-S5L"/>

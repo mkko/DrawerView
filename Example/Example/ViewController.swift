@@ -14,8 +14,8 @@ class ViewController: UIViewController {
     @IBOutlet weak var drawerView: DrawerView?
     @IBOutlet weak var searchBar: UISearchBar!
 
-    var secondDrawerView: DrawerView?
-    var thirdDrawerView: DrawerView?
+    var secondDrawerView: DrawerView!
+    var thirdDrawerView: DrawerView!
 
     var drawers: [DrawerView] {
         return [drawerView, secondDrawerView, thirdDrawerView].flatMap { $0 }
@@ -59,18 +59,22 @@ class ViewController: UIViewController {
     }
 
     func setupSecondDrawerView() {
+        // Create the drawer programmatically.
         secondDrawerView = DrawerView()
+        secondDrawerView?.attachTo(view: self.view)
+
         secondDrawerView?.supportedPositions = [.collapsed, .partiallyOpen]
         secondDrawerView?.isClosed = true
-        secondDrawerView?.attachTo(view: self.view)
     }
 
     func setupThirdDrawerView() {
-        let vc = self.storyboard!.instantiateViewController(withIdentifier: "DrawerViewController")
-        thirdDrawerView = self.addDrawerView(withViewController: vc)
-        thirdDrawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
-        thirdDrawerView?.isClosed = true
-        thirdDrawerView?.attachTo(view: self.view)
+        // Attach the drawer with contents of a view controller.
+        thirdDrawerView = self.addDrawerView(withViewController:
+            self.storyboard!.instantiateViewController(withIdentifier: "DrawerViewController")
+        )
+
+        thirdDrawerView.supportedPositions = [.collapsed, .partiallyOpen, .open]
+        thirdDrawerView.isClosed = true
     }
 }
 
