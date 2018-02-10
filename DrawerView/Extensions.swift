@@ -12,19 +12,10 @@ public extension UIViewController {
 
     public func addDrawerView(withViewController viewController: UIViewController, parentView: UIView? = nil) -> DrawerView {
         self.addChildViewController(viewController)
-        return DrawerView(withView: viewController.view)
-    }
-
-    public var drawer: DrawerView? {
-        return findParentDrawerView(view: self.view)
+        let drawer = DrawerView(withView: viewController.view)
+        drawer.attachTo(view: self.view)
+        return drawer
     }
 }
 
-private func findParentDrawerView(view: UIView?) -> DrawerView? {
-    switch view?.superview {
-    case .none:
-        return nil
-    case .some(let parent):
-        return parent as? DrawerView ?? findParentDrawerView(view: view)
-    }
-}
+

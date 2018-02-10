@@ -7,17 +7,15 @@
 //
 
 import UIKit
+import DrawerView
 
 class DrawerViewController: UIViewController {
 
     @IBAction func toggle(_ sender: Any) {
-        self.drawer?.setPosition(.open, animated: true)
+        findParentDrawerView(ofView: self.view)?.setPosition(.open, animated: true)
     }
 
     override func viewDidLoad() {
-        let btn = (self.view.subviews[1] as! UIButton)
-        let x = btn.actions(forTarget: self, forControlEvent: UIControlEvents.touchUpInside)
-
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
@@ -39,4 +37,13 @@ class DrawerViewController: UIViewController {
     }
     */
 
+}
+
+func findParentDrawerView(ofView view: UIView?) -> DrawerView? {
+    switch view?.superview {
+    case .none:
+        return nil
+    case .some(let parent):
+        return parent as? DrawerView ?? findParentDrawerView(ofView: view)
+    }
 }
