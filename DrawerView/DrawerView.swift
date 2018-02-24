@@ -36,7 +36,11 @@ let kVerticalLeeway: CGFloat = 100.0
 
 let kDefaultCornerRadius: CGFloat = 10.0
 
-let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
+let kDefaultShadowRadius: CGFloat = 5.0
+
+let kDefaultShadowOpacity: Float = 0.1
+
+let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 @objc public protocol DrawerViewDelegate {
 
@@ -79,6 +83,34 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     private var closed: Bool = false
 
+    private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
+
+    // MARK: - Visual properties
+
+    @IBInspectable public var cornerRadius: CGFloat = kDefaultCornerRadius {
+        didSet {
+            updateVisuals()
+        }
+    }
+
+    @IBInspectable public var shadowRadius: CGFloat = kDefaultShadowRadius {
+        didSet {
+            updateVisuals()
+        }
+    }
+
+    @IBInspectable public var shadowOpacity: Float = kDefaultShadowOpacity {
+        didSet {
+            updateVisuals()
+        }
+    }
+
+    public var backgroundEffect: UIVisualEffect? = kDefaultBackgroundEffect {
+        didSet {
+            updateVisuals()
+        }
+    }
+
     // MARK: - Public properties
 
     @IBOutlet
@@ -102,8 +134,6 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             }
         }
     }
-
-    public let backgroundView = UIVisualEffectView(effect: defaultBackgroundEffect)
 
     public func attachTo(view: UIView) {
 
@@ -218,22 +248,15 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         panGesture.delegate = self
         self.addGestureRecognizer(panGesture)
 
-        // Using a setup similar to Maps.app.
-        self.layer.cornerRadius = kDefaultCornerRadius
-        self.layer.shadowRadius = 5
-        self.layer.shadowOpacity = 0.1
-
         self.translatesAutoresizingMaskIntoConstraints = false
 
         setupBorder()
         addBlurEffect()
+
+        updateVisuals()
     }
 
     func setupBorder() {
-        border.cornerRadius = self.layer.cornerRadius
-        border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
-        border.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
-        border.borderWidth = 0.5
         self.layer.addSublayer(border)
     }
 
@@ -241,9 +264,7 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     func addBlurEffect() {
         backgroundView.frame = self.bounds
-//        backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
-        backgroundView.layer.cornerRadius = 8
         backgroundView.clipsToBounds = true
 
         self.insertSubview(backgroundView, at: 0)
@@ -260,6 +281,36 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
 
         self.backgroundColor = UIColor.clear
+    }
+
+    private func updateVisuals() {
+        updateLayerVisuals(self.layer)
+        updateBorderVisuals(self.border)
+        updateOverlayVisuals(self.overlay)
+        updateBackgroundVisuals(self.backgroundView)
+    }
+
+    private func updateLayerVisuals(_ layer: CALayer) {
+        layer.shadowRadius = shadowRadius
+        layer.shadowOpacity = shadowOpacity
+        layer.cornerRadius = self.cornerRadius
+    }
+
+    private func updateBorderVisuals(_ border: CALayer) {
+        border.cornerRadius = self.cornerRadius
+        border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
+        border.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
+        border.borderWidth = 0.5
+    }
+
+    private func updateOverlayVisuals(_ overlay: Overlay?) {
+        overlay?.backgroundColor = UIColor.black
+        overlay?.cutCornerSize = self.cornerRadius
+    }
+
+    private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
+        backgroundView.effect = self.backgroundEffect
+        backgroundView.layer.cornerRadius = self.cornerRadius
     }
 
     // MARK: - View methods
@@ -579,9 +630,7 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         let overlay = Overlay(frame: superview.bounds)
         overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black
         overlay.alpha = 0
-        overlay.cutCornerSize = self.layer.cornerRadius
         let tap = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
         overlay.addGestureRecognizer(tap)
 
@@ -597,6 +646,8 @@ let defaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         for constraint in constraints {
             constraint.isActive = true
         }
+
+        updateOverlayVisuals(overlay)
 
         return overlay
     }

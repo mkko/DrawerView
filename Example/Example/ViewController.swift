@@ -13,33 +13,18 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var drawerView: DrawerView?
     @IBOutlet weak var searchBar: UISearchBar!
+    @IBOutlet weak var topPanel: UIStackView!
 
-    var secondDrawerView: DrawerView!
-    var thirdDrawerView: DrawerView!
+    var drawers: [String: DrawerView?] = [:]
 
-    var drawers: [DrawerView] {
-        return [drawerView, secondDrawerView, thirdDrawerView].flatMap { $0 }
+    @objc func toggleTapped(sender: UIButton) {
+        let drawer = sender.titleLabel?.text.flatMap { drawers[$0] } ?? nil
+        showDrawer(drawer: drawer, animated: true)
     }
 
-    @IBAction func zeroTapped(_ sender: Any) {
-        showDrawer(drawer: nil)
-    }
-
-    @IBAction func firstTapped(_ sender: Any) {
-        showDrawer(drawer: drawerView)
-    }
-
-    @IBAction func secondTapped(_ sender: Any) {
-        showDrawer(drawer: secondDrawerView)
-    }
-
-    @IBAction func thirdTapped(_ sender: Any) {
-        showDrawer(drawer: thirdDrawerView)
-    }
-
-    func showDrawer(drawer: DrawerView?) {
-        for d in drawers {
-            d.setIsClosed(closed: d != drawer, animated: true)
+    func showDrawer(drawer: DrawerView?, animated: Bool) {
+        for d in drawers.values {
+            d?.setIsClosed(closed: d != drawer, animated: animated)
         }
     }
 
@@ -49,8 +34,31 @@ class ViewController: UIViewController {
         drawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
         drawerView?.position = .collapsed
 
-        setupSecondDrawerView()
-        setupThirdDrawerView()
+        drawers = [
+            "0": nil,
+            "A": drawerView,
+            "B": setupProgrammaticDrawerView(),
+            "C": setupDarkThemedDrawerView(),
+            "D": setupTabDrawerView()
+        ]
+
+        let toggles = drawers
+            .map { (key: $0.key, value: $0.value) }
+            .sorted { (a, b) in a.key < b.key }
+            .map { (key, value) -> UIButton in
+                let button = UIButton(type: UIButtonType.system)
+                button.addTarget(self, action: #selector(toggleTapped(sender:)), for: .touchUpInside)
+                button.setTitle("\(key)", for: .normal)
+                button.setTitleColor(UIColor(red: 0, green: 0.5, blue: 0.8, alpha: 0.7), for: .normal)
+                button.titleLabel?.font = UIFont(name: "HelveticaNeue-Bold", size: 38)!
+                return button
+        }
+
+        for view in toggles {
+            self.topPanel.addArrangedSubview(view)
+        }
+
+        showDrawer(drawer: drawerView, animated: false)
     }
 
     override func didReceiveMemoryWarning() {
@@ -58,23 +66,35 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    func setupSecondDrawerView() {
+    func setupProgrammaticDrawerView() -> DrawerView {
         // Create the drawer programmatically.
-        secondDrawerView = DrawerView()
-        secondDrawerView?.attachTo(view: self.view)
-
-        secondDrawerView?.supportedPositions = [.collapsed, .partiallyOpen]
-        secondDrawerView?.isClosed = true
+        let drawerView = DrawerView()
+        drawerView.attachTo(view: self.view)
+        drawerView.supportedPositions = [.collapsed, .partiallyOpen]
+        return drawerView
     }
 
-    func setupThirdDrawerView() {
+    func setupDarkThemedDrawerView() -> DrawerView {
+        let drawerView = DrawerView()
+        drawerView.attachTo(view: self.view)
+
+        drawerView.supportedPositions = [.collapsed, .partiallyOpen]
+        drawerView.backgroundEffect = UIBlurEffect(style: .dark)
+        return drawerView
+    }
+
+    func setupTabDrawerView() -> DrawerView {
         // Attach the drawer with contents of a view controller.
-        thirdDrawerView = self.addDrawerView(withViewController:
-            self.storyboard!.instantiateViewController(withIdentifier: "DrawerViewController")
+        let drawerView = self.addDrawerView(withViewController:
+            self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
         )
 
-        thirdDrawerView.supportedPositions = [.collapsed, .partiallyOpen, .open]
-        thirdDrawerView.isClosed = true
+        drawerView.supportedPositions = [.collapsed, .open]
+        drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
+        drawerView.cornerRadius = 0
+        // Set the height to match the default toolbar.
+        drawerView.collapsedHeight = 44
+        return drawerView
     }
 }
 
