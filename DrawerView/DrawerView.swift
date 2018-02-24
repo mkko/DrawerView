@@ -116,9 +116,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     @IBOutlet
     public var delegate: DrawerViewDelegate?
 
-    @IBOutlet
-    public var vc: UIViewController?
-
     // IB support, not intended to be used otherwise.
     @IBOutlet
     public var containerView: UIView? {
