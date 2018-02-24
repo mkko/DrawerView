@@ -465,10 +465,14 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                     //print("Animating to target position...")
 
                     self.animator?.stopAnimation(true)
-                    self.animator = UIViewPropertyAnimator.runningPropertyAnimator(withDuration: 0.5, delay: 0.0, options: [.allowUserInteraction, .beginFromCurrentState], animations: {
-                        childScrollView.contentOffset.y = 0
-                        let pos = self.panOrigin + translation.y
-                        self.setPosition(forDragPoint: pos)
+                    self.animator = UIViewPropertyAnimator.runningPropertyAnimator(
+                        withDuration: 0.5,
+                        delay: 0.0,
+                        options: [.allowUserInteraction, .beginFromCurrentState],
+                        animations: {
+                            childScrollView.contentOffset.y = 0
+                            let pos = self.panOrigin + translation.y
+                            self.setPosition(forDragPoint: pos)
                     }, completion: nil)
                 } else {
                     //print("Let it scroll...")
@@ -491,12 +495,12 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             fallthrough
         case .ended:
             let velocity = sender.velocity(in: self)
-            //print("Ending with vertical velocity \(velocity.y)")
+            // print("Ending with vertical velocity \(velocity.y)")
 
             if let childScrollView = self.childScrollView,
                 childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
                 // Let it scroll.
-                print("Let it scroll.")
+                // print("Let it scroll.")
             } else {
                 // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
