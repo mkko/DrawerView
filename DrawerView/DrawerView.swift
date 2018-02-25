@@ -8,7 +8,7 @@
 
 import UIKit
 
-@objc public enum DrawerPosition: Int {
+public enum DrawerPosition: Int {
     case closed = 0
     case collapsed = 1
     case partiallyOpen = 2
@@ -16,8 +16,7 @@ import UIKit
 }
 
 fileprivate extension DrawerPosition {
-    static let allPositions: [DrawerPosition] = [
-        .closed,
+    static let activePositions: [DrawerPosition] = [
         .open,
         .partiallyOpen,
         .collapsed
@@ -186,7 +185,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
     }
 
-    public var enabledPositions: [DrawerPosition] = DrawerPosition.allPositions {
+    public var enabledPositions: [DrawerPosition] = DrawerPosition.activePositions {
         didSet {
             if !enabledPositions.contains(self.position) {
                 // Current position is not in the given list, default to the most closed one.
