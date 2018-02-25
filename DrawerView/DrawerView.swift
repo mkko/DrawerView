@@ -9,13 +9,15 @@
 import UIKit
 
 @objc public enum DrawerPosition: Int {
-    case open = 1
+    case closed = 0
+    case collapsed = 1
     case partiallyOpen = 2
-    case collapsed = 3
+    case open = 3
 }
 
 fileprivate extension DrawerPosition {
-    static let positions: [DrawerPosition] = [
+    static let allPositions: [DrawerPosition] = [
+        .closed,
         .open,
         .partiallyOpen,
         .collapsed
@@ -23,6 +25,7 @@ fileprivate extension DrawerPosition {
 
     var visibleName: String {
         switch self {
+        case .closed: return "hidden"
         case .open: return "open"
         case .partiallyOpen: return "partiallyOpen"
         case .collapsed: return "collapsed"
@@ -80,8 +83,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     private var overlay: Overlay?
 
     private let border = CALayer()
-
-    private var closed: Bool = false
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
@@ -158,15 +159,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     // TODO: Use size classes with the positions.
 
-    public var isClosed: Bool {
-        get {
-            return closed
-        }
-        set {
-            self.setIsClosed(closed: newValue, animated: false)
-        }
-    }
-
     public var topMargin: CGFloat = 68.0 {
         didSet {
             self.updateSnapPosition(animated: false)
@@ -194,9 +186,9 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
     }
 
-    public var supportedPositions: [DrawerPosition] = DrawerPosition.positions {
+    public var enabledPositions: [DrawerPosition] = DrawerPosition.allPositions {
         didSet {
-            if !supportedPositions.contains(self.position) {
+            if !enabledPositions.contains(self.position) {
                 // Current position is not in the given list, default to the most closed one.
                 self.setInitialPosition()
             }
@@ -338,26 +330,25 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     // MARK: - Public methods
 
-    public func setIsClosed(closed: Bool, animated: Bool) {
-        // Animate to/from hidden position
-        self.closed = closed
-        if closed {
-            self.setScrollPosition(self.snapPositionForClosed(), withVelocity: CGPoint(), animated: animated)
-        } else {
-            self.setPosition(self.position, animated: animated)
-        }
-    }
-
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
         self.setPosition(position, withVelocity: CGPoint(), animated: animated)
     }
 
     public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
 
-        self.currentPosition = position
-        self.closed = false
+        // Get the next available position. Closed position is always supported.
+        let nextPosition: DrawerPosition
+        if position != .closed && !self.enabledPositions.contains(position) {
+            nextPosition = position.advance(by: 1, inPositions: self.enabledPositions)
+                ?? position.advance(by: -1, inPositions: self.enabledPositions)
+                ?? position
+        } else {
+            nextPosition = position
+        }
 
-        guard let snapPosition = snapPosition(for: position) else {
+        self.currentPosition = nextPosition
+
+        guard let snapPosition = snapPosition(for: nextPosition) else {
             print("Could not evaluate snap position for \(position.visibleName)")
             return
         }
@@ -409,7 +400,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     // MARK: - Private methods
 
     private func positionsSorted() -> [DrawerPosition] {
-        return self.sorted(positions: self.supportedPositions)
+        return self.sorted(positions: self.enabledPositions)
     }
 
     private func setInitialPosition() {
@@ -513,8 +504,9 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 let advancement = velocity.y > 0 ? -1 : 1
 
                 let nextPosition: DrawerPosition
-                if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold {
-                    nextPosition = targetPosition.advance(by: advancement, inPositions: self.positionsSorted())
+                if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
+                    let advanced = targetPosition.advance(by: advancement, inPositions: self.positionsSorted()) {
+                    nextPosition = advanced
                 } else {
                     nextPosition = targetPosition
                 }
@@ -535,11 +527,12 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         if sender.state == .ended {
             self.delegate?.drawer?(self, willTransitionFrom: currentPosition)
 
-            let prevPosition = self.position.advance(by: -1, inPositions: self.positionsSorted())
-            self.setPosition(prevPosition, animated: true)
+            if let prevPosition = self.position.advance(by: -1, inPositions: self.positionsSorted()) {
+                self.setPosition(prevPosition, animated: true)
 
-            // Notify
-            self.delegate?.drawer?(self, didTransitionTo: prevPosition)
+                // Notify
+                self.delegate?.drawer?(self, didTransitionTo: prevPosition)
+            }
         }
     }
 
@@ -566,11 +559,15 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             return superview.bounds.height - self.partiallyOpenHeight
         case .collapsed:
             return superview.bounds.height - self.collapsedHeight
+        case .closed:
+            return superview.bounds.height
         }
     }
 
     private func opacityFactor(for position: DrawerPosition) -> CGFloat {
         switch position {
+        case .closed:
+            return 0
         case .open:
             return 1
         case .partiallyOpen:
@@ -581,7 +578,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
-        let distances = self.supportedPositions
+        let distances = self.enabledPositions
             .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
@@ -591,7 +588,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     private func setPosition(forDragPoint dragPoint: CGFloat) {
-        let positions = self.supportedPositions
+        let positions = self.enabledPositions
             .flatMap(snapPosition)
             .sorted()
 
@@ -616,11 +613,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             let expectedPos = self.snapPosition(for: currentPosition),
             expectedPos != topConstraint.constant
         {
-            if self.isClosed {
-                self.setIsClosed(closed: self.isClosed, animated: animated)
-            } else {
-                self.setPosition(currentPosition, animated: animated)
-            }
+            self.setPosition(currentPosition, animated: animated)
         }
     }
 
@@ -662,7 +655,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     private func getOverlayOpacityFactor(forScrollPosition scrollPosition: CGFloat) -> CGFloat {
-        let positions = self.supportedPositions
+        let positions = self.enabledPositions
             // Group the info on position together. For increased
             // robustness, hide the ones without snap position.
             .flatMap { p in self.snapPosition(for: p).map {(
@@ -734,15 +727,14 @@ fileprivate extension Array {
 
 fileprivate extension DrawerPosition {
 
-    func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition {
+    func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition? {
         guard !positions.isEmpty else {
-            return self
+            return nil
         }
 
         let index = (positions.index(of: self) ?? 0)
-        let nextIndex = max(0, min(positions.count - 1, index + by))
-
-        return positions[nextIndex]
+        let nextIndex = index + by
+        return positions.indices.contains(nextIndex) ? positions[nextIndex] : nil
     }
 }
 

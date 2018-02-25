@@ -24,14 +24,14 @@ class ViewController: UIViewController {
 
     func showDrawer(drawer: DrawerView?, animated: Bool) {
         for d in drawers.values {
-            d?.setIsClosed(closed: d != drawer, animated: animated)
+            d?.setPosition(d != drawer ? .closed : .collapsed, animated: animated)
         }
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        drawerView?.supportedPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView?.enabledPositions = [.collapsed, .partiallyOpen, .open]
         drawerView?.position = .collapsed
 
         drawers = [
@@ -70,7 +70,7 @@ class ViewController: UIViewController {
         // Create the drawer programmatically.
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
-        drawerView.supportedPositions = [.collapsed, .partiallyOpen]
+        drawerView.enabledPositions = [.closed, .open]
         return drawerView
     }
 
@@ -78,7 +78,7 @@ class ViewController: UIViewController {
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
 
-        drawerView.supportedPositions = [.collapsed, .partiallyOpen]
+        drawerView.enabledPositions = [.collapsed, .partiallyOpen]
         drawerView.backgroundEffect = UIBlurEffect(style: .dark)
         return drawerView
     }
@@ -89,7 +89,7 @@ class ViewController: UIViewController {
             self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
         )
 
-        drawerView.supportedPositions = [.collapsed, .open]
+        drawerView.enabledPositions = [.collapsed, .open]
         drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
         drawerView.cornerRadius = 0
         // Set the height to match the default toolbar.
