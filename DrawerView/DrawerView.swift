@@ -8,7 +8,7 @@
 
 import UIKit
 
-public enum DrawerPosition: Int {
+@objc public enum DrawerPosition: Int {
     case closed = 0
     case collapsed = 1
     case partiallyOpen = 2
