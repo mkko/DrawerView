@@ -15,9 +15,14 @@ typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
 class ViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
+
     @IBOutlet weak var drawerView: DrawerView?
+
     @IBOutlet weak var searchBar: UISearchBar!
+
     @IBOutlet weak var topPanel: UIStackView!
+
+    @IBOutlet weak var locateButtonContainer: UIView!
 
     var drawers: [DrawerMapEntry] = []
 
@@ -39,15 +44,18 @@ class ViewController: UIViewController {
         drawerView?.position = .collapsed
 
         let locateButton = MKUserTrackingButton(mapView: self.mapView)
-        locateButton.translatesAutoresizingMaskIntoConstraints = false
-        self.mapView.addSubview(locateButton)
-//        self.view.safeAreaLayoutGuide.bottomAnchor
-//        self.additionalSafeAreaInsets
+        //locateButton.translatesAutoresizingMaskIntoConstraints = false
+        locateButton.autoresizingMask = [.flexibleTopMargin, .flexibleLeftMargin]
+        locateButton.frame = self.locateButtonContainer.bounds
+        self.locateButtonContainer.addSubview(locateButton)
 
-        for c in [locateButton.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -8),
-                  locateButton.bottomAnchor.constraint(equalTo: drawerView!.topAnchor, constant: -8)] {
-                    c.isActive = true
-        }
+        self.locateButtonContainer.layer.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
+        self.locateButtonContainer.backgroundColor = UIColor(hue: 0.13, saturation: 0.03, brightness: 0.97, alpha: 1.0)
+        self.locateButtonContainer.layer.borderWidth = 0.5
+        self.locateButtonContainer.layer.cornerRadius = 8
+        self.locateButtonContainer.layer.shadowOffset = CGSize(width: 0, height: 0)
+        self.locateButtonContainer.layer.shadowRadius = 2
+        self.locateButtonContainer.layer.shadowOpacity = 0.1
 
         drawers = [
             ("↓", nil),
@@ -120,7 +128,8 @@ extension ViewController: DrawerViewDelegate {
     }
 
     func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat) {
-        self.additionalSafeAreaInsets.bottom = self.view.bounds.height - verticalPosition
+        let offset = self.view.bounds.height - max(verticalPosition, 150)
+        self.additionalSafeAreaInsets.bottom = offset
     }
 }
 

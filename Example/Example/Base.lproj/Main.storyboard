@@ -30,7 +30,7 @@
                             </stackView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="99Q-cW-ee3">
                                 <rect key="frame" x="315" y="603" width="44" height="44"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" red="0.97217977046966553" green="0.9651491641998291" blue="0.94116991758346558" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="44" id="9Zo-Nt-joT"/>
                                     <constraint firstAttribute="height" constant="44" id="XSI-ib-54E"/>
@@ -53,6 +53,7 @@
                     </view>
                     <connections>
                         <outlet property="drawerView" destination="mwC-kI-aDG" id="yhv-8b-J59"/>
+                        <outlet property="locateButtonContainer" destination="99Q-cW-ee3" id="IvI-sN-hTY"/>
                         <outlet property="mapView" destination="4qA-tI-5pY" id="GL5-0M-ZqH"/>
                         <outlet property="searchBar" destination="Xp7-w4-h2V" id="yB4-eD-NyM"/>
                         <outlet property="topPanel" destination="zca-w4-fsL" id="tGB-PI-6e6"/>

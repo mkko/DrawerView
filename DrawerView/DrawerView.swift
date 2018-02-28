@@ -609,7 +609,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         self.superview?.layoutIfNeeded()
 
-        self.delegate?.drawerDidMove?(self, verticalPosition: dragPoint)
+        self.delegate?.drawerDidMove?(self, verticalPosition: position)
     }
 
     private func updateSnapPosition(animated: Bool) {
