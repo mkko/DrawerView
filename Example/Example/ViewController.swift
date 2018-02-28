@@ -9,13 +9,15 @@
 import UIKit
 import DrawerView
 
+typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
+
 class ViewController: UIViewController {
 
     @IBOutlet weak var drawerView: DrawerView?
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var topPanel: UIStackView!
 
-    var drawers: [String: DrawerView?] = [:]
+    var drawers: [DrawerMapEntry] = []
 
     @objc func toggleTapped(sender: UIButton) {
         let drawer = sender.titleLabel?.text.flatMap { drawers[$0] } ?? nil
@@ -23,8 +25,8 @@ class ViewController: UIViewController {
     }
 
     func showDrawer(drawer: DrawerView?, animated: Bool) {
-        for d in drawers.values {
-            d?.setPosition(d != drawer ? .closed : .collapsed, animated: animated)
+        for d in drawers {
+            d.drawer?.setPosition(d.drawer != drawer ? .closed : .collapsed, animated: animated)
         }
     }
 
@@ -35,22 +37,20 @@ class ViewController: UIViewController {
         drawerView?.position = .collapsed
 
         drawers = [
-            "0": nil,
-            "A": drawerView,
-            "B": setupProgrammaticDrawerView(),
-            "C": setupDarkThemedDrawerView(),
-            "D": setupTabDrawerView()
+            ("↓", nil),
+            ("search", drawerView),
+            ("modal", setupProgrammaticDrawerView()),
+            ("dark", setupDarkThemedDrawerView()),
+            ("toolbar", setupTabDrawerView())
         ]
 
         let toggles = drawers
-            .map { (key: $0.key, value: $0.value) }
-            .sorted { (a, b) in a.key < b.key }
             .map { (key, value) -> UIButton in
                 let button = UIButton(type: UIButtonType.system)
                 button.addTarget(self, action: #selector(toggleTapped(sender:)), for: .touchUpInside)
                 button.setTitle("\(key)", for: .normal)
                 button.setTitleColor(UIColor(red: 0, green: 0.5, blue: 0.8, alpha: 0.7), for: .normal)
-                button.titleLabel?.font = UIFont(name: "HelveticaNeue-Bold", size: 38)!
+                button.titleLabel?.font = UIFont(name: "HelveticaNeue-Bold", size: 18)!
                 return button
         }
 
@@ -137,5 +137,12 @@ extension ViewController: DrawerViewDelegate {
         if position == .open {
             searchBar.resignFirstResponder()
         }
+    }
+}
+
+extension Sequence where Element == DrawerMapEntry {
+
+    subscript(key: String) -> DrawerView? {
+        return self.first { $0.key == key }?.drawer
     }
 }
