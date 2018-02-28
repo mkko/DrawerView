@@ -53,29 +53,44 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="WiJ-yF-cUu">
-                            <rect key="frame" x="0.0" y="66" width="375" height="581"/>
+                            <rect key="frame" x="0.0" y="68" width="375" height="579"/>
                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             <connections>
                                 <outlet property="dataSource" destination="BYZ-38-t0r" id="znT-78-NOp"/>
                                 <outlet property="delegate" destination="BYZ-38-t0r" id="c9I-hO-sla"/>
                             </connections>
                         </tableView>
-                        <searchBar contentMode="redraw" searchBarStyle="minimal" text="" placeholder="Search for place or address" translatesAutoresizingMaskIntoConstraints="NO" id="Xp7-w4-h2V">
-                            <rect key="frame" x="7" y="5" width="361" height="56"/>
+                        <searchBar contentMode="redraw" searchBarStyle="minimal" text="" placeholder="Search for a place or address" translatesAutoresizingMaskIntoConstraints="NO" id="Xp7-w4-h2V">
+                            <rect key="frame" x="7" y="7" width="361" height="56"/>
                             <textInputTraits key="textInputTraits"/>
                             <connections>
                                 <outlet property="delegate" destination="BYZ-38-t0r" id="nzq-Xq-S5L"/>
                             </connections>
                         </searchBar>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6Ze-S9-yAW">
+                            <rect key="frame" x="169.5" y="6" width="36" height="5"/>
+                            <color key="backgroundColor" white="0.25" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="5" id="G9E-r5-AWp"/>
+                                <constraint firstAttribute="width" constant="36" id="Qbq-dO-dbd"/>
+                            </constraints>
+                            <userDefinedRuntimeAttributes>
+                                <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                    <real key="value" value="2.5"/>
+                                </userDefinedRuntimeAttribute>
+                            </userDefinedRuntimeAttributes>
+                        </view>
                     </subviews>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     <constraints>
-                        <constraint firstItem="Xp7-w4-h2V" firstAttribute="top" secondItem="mwC-kI-aDG" secondAttribute="top" constant="5" id="HTw-lS-Pmo"/>
+                        <constraint firstItem="6Ze-S9-yAW" firstAttribute="top" secondItem="mwC-kI-aDG" secondAttribute="top" constant="6" id="KQI-7Q-2BE"/>
                         <constraint firstAttribute="trailing" secondItem="WiJ-yF-cUu" secondAttribute="trailing" id="Ssa-8v-B0D"/>
+                        <constraint firstItem="Xp7-w4-h2V" firstAttribute="top" secondItem="mwC-kI-aDG" secondAttribute="top" constant="7" id="Xz9-tM-nL8"/>
                         <constraint firstItem="Xp7-w4-h2V" firstAttribute="leading" secondItem="COF-0K-5WI" secondAttribute="leading" constant="7" id="ecF-FW-vDS"/>
                         <constraint firstItem="WiJ-yF-cUu" firstAttribute="top" secondItem="Xp7-w4-h2V" secondAttribute="bottom" constant="5" id="jzP-mf-JzS"/>
                         <constraint firstItem="WiJ-yF-cUu" firstAttribute="leading" secondItem="mwC-kI-aDG" secondAttribute="leading" id="lrw-lw-Fsc"/>
                         <constraint firstItem="Xp7-w4-h2V" firstAttribute="trailing" secondItem="COF-0K-5WI" secondAttribute="trailing" constant="-7" id="maw-Qh-TOk"/>
+                        <constraint firstItem="6Ze-S9-yAW" firstAttribute="centerX" secondItem="mwC-kI-aDG" secondAttribute="centerX" id="pbB-JE-wMn"/>
                         <constraint firstAttribute="bottom" secondItem="WiJ-yF-cUu" secondAttribute="bottom" id="sdJ-WM-Lw9"/>
                     </constraints>
                     <viewLayoutGuide key="safeArea" id="COF-0K-5WI"/>

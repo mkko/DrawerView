@@ -36,11 +36,11 @@ let kVelocityTreshold: CGFloat = 0
 
 let kVerticalLeeway: CGFloat = 100.0
 
-let kDefaultCornerRadius: CGFloat = 10.0
+let kDefaultCornerRadius: CGFloat = 9.0
 
-let kDefaultShadowRadius: CGFloat = 5.0
+let kDefaultShadowRadius: CGFloat = 1.0
 
-let kDefaultShadowOpacity: Float = 0.1
+let kDefaultShadowOpacity: Float = 0.05
 
 let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
