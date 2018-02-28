@@ -28,12 +28,22 @@
                                     <constraint firstAttribute="height" constant="56" id="meS-bE-fcS"/>
                                 </constraints>
                             </stackView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="99Q-cW-ee3">
+                                <rect key="frame" x="315" y="603" width="44" height="44"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="44" id="9Zo-Nt-joT"/>
+                                    <constraint firstAttribute="height" constant="44" id="XSI-ib-54E"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="zca-w4-fsL" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="4ib-DJ-rub"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="99Q-cW-ee3" secondAttribute="bottom" constant="20" id="CXO-YU-DHr"/>
                             <constraint firstItem="zca-w4-fsL" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="24" id="UgC-Q5-LPE"/>
                             <constraint firstItem="4qA-tI-5pY" firstAttribute="bottom" secondItem="8bC-Xf-vdC" secondAttribute="bottom" id="aRz-FQ-QFv"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="99Q-cW-ee3" secondAttribute="trailing" constant="16" id="b2z-7x-Db2"/>
                             <constraint firstAttribute="trailing" secondItem="4qA-tI-5pY" secondAttribute="trailing" id="hFn-NY-jaq"/>
                             <constraint firstItem="4qA-tI-5pY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="jTb-Il-Wa8"/>
                             <constraint firstItem="4qA-tI-5pY" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="tYi-IZ-Egi"/>
@@ -43,6 +53,7 @@
                     </view>
                     <connections>
                         <outlet property="drawerView" destination="mwC-kI-aDG" id="yhv-8b-J59"/>
+                        <outlet property="mapView" destination="4qA-tI-5pY" id="GL5-0M-ZqH"/>
                         <outlet property="searchBar" destination="Xp7-w4-h2V" id="yB4-eD-NyM"/>
                         <outlet property="topPanel" destination="zca-w4-fsL" id="tGB-PI-6e6"/>
                     </connections>

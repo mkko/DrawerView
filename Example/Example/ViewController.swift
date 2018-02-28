@@ -7,12 +7,14 @@
 //
 
 import UIKit
+import MapKit
 import DrawerView
 
 typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var drawerView: DrawerView?
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var topPanel: UIStackView!
@@ -35,6 +37,17 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         drawerView?.enabledPositions = [.collapsed, .partiallyOpen, .open]
         drawerView?.position = .collapsed
+
+        let locateButton = MKUserTrackingButton(mapView: self.mapView)
+        locateButton.translatesAutoresizingMaskIntoConstraints = false
+        self.mapView.addSubview(locateButton)
+//        self.view.safeAreaLayoutGuide.bottomAnchor
+//        self.additionalSafeAreaInsets
+
+        for c in [locateButton.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -8),
+                  locateButton.bottomAnchor.constraint(equalTo: drawerView!.topAnchor, constant: -8)] {
+                    c.isActive = true
+        }
 
         drawers = [
             ("↓", nil),
@@ -98,6 +111,19 @@ class ViewController: UIViewController {
     }
 }
 
+extension ViewController: DrawerViewDelegate {
+
+    func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
+        if position == .open {
+            searchBar.resignFirstResponder()
+        }
+    }
+
+    func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat) {
+        self.additionalSafeAreaInsets.bottom = self.view.bounds.height - verticalPosition
+    }
+}
+
 extension ViewController: UITableViewDataSource {
 
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -130,16 +156,6 @@ extension ViewController: UISearchBarDelegate {
         drawerView?.setPosition(.open, animated: true)
     }
 }
-
-extension ViewController: DrawerViewDelegate {
-
-    func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
-        if position == .open {
-            searchBar.resignFirstResponder()
-        }
-    }
-}
-
 extension Sequence where Element == DrawerMapEntry {
 
     subscript(key: String) -> DrawerView? {

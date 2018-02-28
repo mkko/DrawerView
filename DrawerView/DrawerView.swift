@@ -394,6 +394,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forPosition: position)
 
+        self.delegate?.drawerDidMove?(self, verticalPosition: scrollPosition)
+
         self.superview?.layoutIfNeeded()
     }
 
@@ -427,7 +429,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             let frame = self.layer.presentation()?.frame ?? self.frame
             self.panOrigin = frame.origin.y
 
-            setPosition(forDragPoint: panOrigin)
+            setPosition(whileDraggingAtPoint: panOrigin)
 
             break
         case .changed:
@@ -463,7 +465,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                         animations: {
                             childScrollView.contentOffset.y = 0
                             let pos = self.panOrigin + translation.y
-                            self.setPosition(forDragPoint: pos)
+                            self.setPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
                 } else {
                     //print("Let it scroll...")
@@ -472,14 +474,12 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 // Scroll only if we're not scrolling the subviews.
                 if !shouldScrollChildView {
                     let pos = panOrigin + translation.y
-                    setPosition(forDragPoint: pos)
+                    setPosition(whileDraggingAtPoint: pos)
                 }
             } else {
                 let pos = panOrigin + translation.y
-                setPosition(forDragPoint: pos)
+                setPosition(whileDraggingAtPoint: pos)
             }
-
-            self.delegate?.drawerDidMove?(self, verticalPosition: panOrigin + translation.y)
 
         case.failed:
             print("ERROR: UIPanGestureRecognizer failed")
@@ -587,7 +587,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         return distances.first.map { $0.pos } ?? DrawerPosition.collapsed
     }
 
-    private func setPosition(forDragPoint dragPoint: CGFloat) {
+    private func setPosition(whileDraggingAtPoint dragPoint: CGFloat) {
         let positions = self.enabledPositions
             .flatMap(snapPosition)
             .sorted()
@@ -608,6 +608,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         // called only while user is scrolling.
 
         self.superview?.layoutIfNeeded()
+
+        self.delegate?.drawerDidMove?(self, verticalPosition: dragPoint)
     }
 
     private func updateSnapPosition(animated: Bool) {
