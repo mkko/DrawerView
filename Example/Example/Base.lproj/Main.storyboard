@@ -22,8 +22,8 @@
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="4qA-tI-5pY">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                             </mapView>
-                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="zca-w4-fsL">
-                                <rect key="frame" x="0.0" y="20" width="375" height="56"/>
+                            <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="zca-w4-fsL">
+                                <rect key="frame" x="24" y="20" width="327" height="56"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="56" id="meS-bE-fcS"/>
                                 </constraints>
@@ -32,12 +32,12 @@
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="zca-w4-fsL" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="4ib-DJ-rub"/>
-                            <constraint firstItem="zca-w4-fsL" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="UgC-Q5-LPE"/>
+                            <constraint firstItem="zca-w4-fsL" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="24" id="UgC-Q5-LPE"/>
                             <constraint firstItem="4qA-tI-5pY" firstAttribute="bottom" secondItem="8bC-Xf-vdC" secondAttribute="bottom" id="aRz-FQ-QFv"/>
                             <constraint firstAttribute="trailing" secondItem="4qA-tI-5pY" secondAttribute="trailing" id="hFn-NY-jaq"/>
                             <constraint firstItem="4qA-tI-5pY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="jTb-Il-Wa8"/>
                             <constraint firstItem="4qA-tI-5pY" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="tYi-IZ-Egi"/>
-                            <constraint firstItem="zca-w4-fsL" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="xr5-li-t21"/>
+                            <constraint firstItem="zca-w4-fsL" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" constant="-24" id="xr5-li-t21"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>

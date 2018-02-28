@@ -13,28 +13,26 @@
 		2BDAD419201113F100AA7FC2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD417201113F100AA7FC2 /* Main.storyboard */; };
 		2BDAD41B201113F100AA7FC2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD41A201113F100AA7FC2 /* Assets.xcassets */; };
 		2BDAD41E201113F100AA7FC2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD41C201113F100AA7FC2 /* LaunchScreen.storyboard */; };
-		2BE0B094201CD9EA0065D3B5 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD42B2011175800AA7FC2 /* DrawerView.framework */; };
-		2BE0B095201CD9EA0065D3B5 /* DrawerView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD42B2011175800AA7FC2 /* DrawerView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		2BDAD42A2011175800AA7FC2 /* PBXContainerItemProxy */ = {
+		2BBE9F332047123200FF6F09 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */;
+			containerPortal = 2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 2BDAD3A720110F6E00AA7FC2;
 			remoteInfo = DrawerView;
 		};
-		2BDAD42C2011175800AA7FC2 /* PBXContainerItemProxy */ = {
+		2BBE9F352047123200FF6F09 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */;
+			containerPortal = 2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 2BDAD3B020110F6E00AA7FC2;
 			remoteInfo = DrawerViewTests;
 		};
-		2BE0B096201CD9EA0065D3B5 /* PBXContainerItemProxy */ = {
+		2BBE9F372047124200FF6F09 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */;
+			containerPortal = 2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 2BDAD3A620110F6E00AA7FC2;
 			remoteInfo = DrawerView;
@@ -48,7 +46,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2BE0B095201CD9EA0065D3B5 /* DrawerView.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -57,6 +54,7 @@
 
 /* Begin PBXFileReference section */
 		2B3FD3182027B4150045C7BF /* DrawerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerViewController.swift; sourceTree = "<group>"; };
+		2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DrawerView.xcodeproj; path = ../DrawerView.xcodeproj; sourceTree = "<group>"; };
 		2BDAD410201113F100AA7FC2 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BDAD413201113F100AA7FC2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2BDAD415201113F100AA7FC2 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -64,7 +62,6 @@
 		2BDAD41A201113F100AA7FC2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2BDAD41D201113F100AA7FC2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		2BDAD41F201113F100AA7FC2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DrawerView.xcodeproj; path = ../DrawerView.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,17 +69,24 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2BE0B094201CD9EA0065D3B5 /* DrawerView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2BBE9F2F2047123200FF6F09 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2BBE9F342047123200FF6F09 /* DrawerView.framework */,
+				2BBE9F362047123200FF6F09 /* DrawerViewTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		2BDAD407201113F100AA7FC2 = {
 			isa = PBXGroup;
 			children = (
-				2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */,
 				2BDAD412201113F100AA7FC2 /* Example */,
 				2BDAD411201113F100AA7FC2 /* Products */,
 				2BDAD42E2011176700AA7FC2 /* Frameworks */,
@@ -111,18 +115,10 @@
 			path = Example;
 			sourceTree = "<group>";
 		};
-		2BDAD4262011175800AA7FC2 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				2BDAD42B2011175800AA7FC2 /* DrawerView.framework */,
-				2BDAD42D2011175800AA7FC2 /* DrawerViewTests.xctest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		2BDAD42E2011176700AA7FC2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -142,7 +138,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				2BE0B097201CD9EA0065D3B5 /* PBXTargetDependency */,
+				2BBE9F382047124200FF6F09 /* PBXTargetDependency */,
 			);
 			name = Example;
 			productName = Example;
@@ -178,8 +174,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 2BDAD4262011175800AA7FC2 /* Products */;
-					ProjectRef = 2BDAD4252011175800AA7FC2 /* DrawerView.xcodeproj */;
+					ProductGroup = 2BBE9F2F2047123200FF6F09 /* Products */;
+					ProjectRef = 2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -190,18 +186,18 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		2BDAD42B2011175800AA7FC2 /* DrawerView.framework */ = {
+		2BBE9F342047123200FF6F09 /* DrawerView.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = DrawerView.framework;
-			remoteRef = 2BDAD42A2011175800AA7FC2 /* PBXContainerItemProxy */;
+			remoteRef = 2BBE9F332047123200FF6F09 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		2BDAD42D2011175800AA7FC2 /* DrawerViewTests.xctest */ = {
+		2BBE9F362047123200FF6F09 /* DrawerViewTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
 			path = DrawerViewTests.xctest;
-			remoteRef = 2BDAD42C2011175800AA7FC2 /* PBXContainerItemProxy */;
+			remoteRef = 2BBE9F352047123200FF6F09 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -233,10 +229,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		2BE0B097201CD9EA0065D3B5 /* PBXTargetDependency */ = {
+		2BBE9F382047124200FF6F09 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = DrawerView;
-			targetProxy = 2BE0B096201CD9EA0065D3B5 /* PBXContainerItemProxy */;
+			targetProxy = 2BBE9F372047124200FF6F09 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
