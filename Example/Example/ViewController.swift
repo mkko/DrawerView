@@ -39,23 +39,6 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        drawerView?.enabledPositions = [.collapsed, .partiallyOpen, .open]
-        drawerView?.position = .collapsed
-
-        let locateButton = MKUserTrackingButton(mapView: self.mapView)
-        //locateButton.translatesAutoresizingMaskIntoConstraints = false
-        locateButton.autoresizingMask = [.flexibleTopMargin, .flexibleLeftMargin]
-        locateButton.frame = self.locateButtonContainer.bounds
-        self.locateButtonContainer.addSubview(locateButton)
-
-        self.locateButtonContainer.layer.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
-        self.locateButtonContainer.backgroundColor = UIColor(hue: 0.13, saturation: 0.03, brightness: 0.97, alpha: 1.0)
-        self.locateButtonContainer.layer.borderWidth = 0.5
-        self.locateButtonContainer.layer.cornerRadius = 8
-        self.locateButtonContainer.layer.shadowOffset = CGSize(width: 0, height: 0)
-        self.locateButtonContainer.layer.shadowRadius = 2
-        self.locateButtonContainer.layer.shadowOpacity = 0.1
 
         drawers = [
             ("↓", nil),
@@ -65,6 +48,19 @@ class ViewController: UIViewController {
             ("toolbar", setupTabDrawerView())
         ]
 
+        self.setupDrawer()
+        self.setupToggles()
+        self.setupLocateButton()
+
+        showDrawer(drawer: drawerView, animated: false)
+    }
+
+    private func setupDrawer() {
+        drawerView?.enabledPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView?.position = .collapsed
+    }
+
+    private func setupToggles() {
         let toggles = drawers
             .map { (key, value) -> UIButton in
                 let button = UIButton(type: UIButtonType.system)
@@ -78,8 +74,21 @@ class ViewController: UIViewController {
         for view in toggles {
             self.topPanel.addArrangedSubview(view)
         }
+    }
 
-        showDrawer(drawer: drawerView, animated: false)
+    private func setupLocateButton() {
+        let locateButton = MKUserTrackingButton(mapView: self.mapView)
+        locateButton.autoresizingMask = [.flexibleTopMargin, .flexibleLeftMargin]
+        locateButton.frame = self.locateButtonContainer.bounds
+        self.locateButtonContainer.addSubview(locateButton)
+
+        self.locateButtonContainer.layer.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
+        self.locateButtonContainer.backgroundColor = UIColor(hue: 0.13, saturation: 0.03, brightness: 0.97, alpha: 1.0)
+        self.locateButtonContainer.layer.borderWidth = 0.5
+        self.locateButtonContainer.layer.cornerRadius = 8
+        self.locateButtonContainer.layer.shadowOffset = CGSize(width: 0, height: 0)
+        self.locateButtonContainer.layer.shadowRadius = 2
+        self.locateButtonContainer.layer.shadowOpacity = 0.1
     }
 
     override func didReceiveMemoryWarning() {
