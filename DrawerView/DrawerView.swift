@@ -52,7 +52,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     @objc optional func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition)
 
-    @objc optional func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat)
+    @objc optional func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat)
 }
 
 @IBDesignable public class DrawerView: UIView {
@@ -115,6 +115,10 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     @IBOutlet
     public var delegate: DrawerViewDelegate?
+
+    public var drawerOffset: CGFloat {
+        return 0
+    }
 
     // IB support, not intended to be used otherwise.
     @IBOutlet
@@ -352,10 +356,10 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             return
         }
 
-        self.setScrollPosition(snapPosition, withVelocity: velocity, observedPosition: nextPosition, animated: animated)
+        self.scrollToPosition(snapPosition, withVelocity: velocity, observedPosition: nextPosition, animated: animated)
     }
 
-    private func setScrollPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, observedPosition position: DrawerPosition, animated: Bool) {
+    private func scrollToPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, observedPosition position: DrawerPosition, animated: Bool) {
         guard let heightConstraint = self.heightConstraint else {
             print("No height constraint set")
             return
@@ -389,17 +393,17 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
     }
 
+    // MARK: - Private methods
+
     private func setScrollPosition(_ scrollPosition: CGFloat, observedPosition position: DrawerPosition) {
         self.topConstraint?.constant = scrollPosition
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
-        self.setShadowOpacity(forPosition: position)
+        self.setShadowOpacity(forScrollPosition: scrollPosition)
 
-        self.delegate?.drawerDidMove?(self, verticalPosition: scrollPosition)
+        self.delegate?.drawerDidMove?(self, drawerOffset: scrollPosition)
 
         self.superview?.layoutIfNeeded()
     }
-
-    // MARK: - Private methods
 
     private func positionsSorted() -> [DrawerPosition] {
         return self.sorted(positions: self.enabledPositions)
@@ -543,8 +547,16 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             .map { $0.pos }
     }
 
-    private func snapPositionForClosed() -> CGFloat {
-        return superview?.bounds.height ?? 0
+
+    private func snapPositions(for positions: [DrawerPosition]) -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
+        return positions
+            // Group the info on position together. For the sake of
+            // robustness, hide the ones without snap position.
+            .flatMap { p in self.snapPosition(for: p).map {(
+                position: p,
+                snapPosition: $0
+                )}
+        }
     }
 
     private func snapPosition(for position: DrawerPosition) -> CGFloat? {
@@ -566,13 +578,26 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     private func opacityFactor(for position: DrawerPosition) -> CGFloat {
         switch position {
-        case .closed:
-            return 0
         case .open:
             return 1
         case .partiallyOpen:
             return 0
         case .collapsed:
+            return 0
+        case .closed:
+            return 0
+        }
+    }
+
+    private func shadowOpacityFactor(for position: DrawerPosition) -> Float {
+        switch position {
+        case .open:
+            return self.shadowOpacity
+        case .partiallyOpen:
+            return self.shadowOpacity
+        case .collapsed:
+            return self.shadowOpacity
+        case .closed:
             return 0
         }
     }
@@ -602,14 +627,16 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         } else {
             position = dragPoint
         }
-        self.topConstraint?.constant = position
-        self.setOverlayOpacity(forScrollPosition: dragPoint)
-        // Ignore shadow opacity update here, as this is expected to be
-        // called only while user is scrolling.
 
-        self.superview?.layoutIfNeeded()
-
-        self.delegate?.drawerDidMove?(self, verticalPosition: position)
+        self.setScrollPosition(position, observedPosition: .closed) // FIXME!!!
+//        self.topConstraint?.constant = position
+//        self.setOverlayOpacity(forScrollPosition: dragPoint)
+//        // Ignore shadow opacity update here, as this is expected to be
+//        // called only while user is scrolling.
+//
+//        self.superview?.layoutIfNeeded()
+//
+//        self.delegate?.drawerDidMove?(self, drawerOffset: position)
     }
 
     private func updateSnapPosition(animated: Bool) {
@@ -651,44 +678,42 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     private func setOverlayOpacity(forScrollPosition position: CGFloat) {
-        let opacityFactor = getOverlayOpacityFactor(forScrollPosition: position)
+        let values = snapPositions(for: enabledPositions + [.closed])
+            .map {(
+                position: $0.snapPosition,
+                value: self.opacityFactor(for: $0.position)
+                )}
+
+        let opacityFactor = interpolate(
+            values: values,
+            position: position)
+
         let maxOpacity: CGFloat = 0.5
 
         self.overlay = self.overlay ?? createOverlay()
         self.overlay?.alpha = opacityFactor * maxOpacity
     }
 
-    private func setShadowOpacity(forPosition position: DrawerPosition) {
-        // Hide the shadow if closed.
-        if self.position == .closed {
-            self.layer.shadowOpacity = 0
-        } else {
-            self.layer.shadowOpacity = self.shadowOpacity
-        }
+    private func setShadowOpacity(forScrollPosition position: CGFloat) {
+        let values = snapPositions(for: enabledPositions + [.closed])
+            .map {(
+                position: $0.snapPosition,
+                value: CGFloat(self.shadowOpacityFactor(for: $0.position))
+                )}
+
+        let shadowOpacity = interpolate(
+            values: values,
+            position: position)
+
+        self.layer.shadowOpacity = Float(shadowOpacity)
     }
 
-    private func getOverlayOpacityFactor(forScrollPosition scrollPosition: CGFloat) -> CGFloat {
-        let positions = self.enabledPositions
-            // Group the info on position together. For increased
-            // robustness, hide the ones without snap position.
-            .flatMap { p in self.snapPosition(for: p).map {(
-                snapPosition: $0,
-                opacityFactor: opacityFactor(for: p)
-                )}
-            }
-            .sorted { (p1, p2) -> Bool in p1.snapPosition < p2.snapPosition }
-
-        let prev = positions.last(where: { $0.snapPosition <= scrollPosition })
-        let next = positions.first(where: { $0.snapPosition > scrollPosition })
-
-        if let a = prev, let b = next {
-            let n = (scrollPosition - a.snapPosition) / (b.snapPosition - a.snapPosition)
-            return a.opacityFactor + (b.opacityFactor - a.opacityFactor) * n
-        } else if let a = prev ?? next {
-            return a.opacityFactor
-        } else {
+    private func translatePositionToOffset(_ position: CGFloat) -> CGFloat {
+        guard let superview = self.superview else {
             return 0
         }
+
+        return superview.bounds.height - position
     }
 
     private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
@@ -731,13 +756,6 @@ fileprivate extension CGRect {
     }
 }
 
-fileprivate extension Array {
-
-    func last(where predicate: (Element) throws -> Bool) rethrows -> Element? {
-        return try self.filter(predicate).last
-    }
-}
-
 fileprivate extension DrawerPosition {
 
     func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition? {
@@ -755,5 +773,6 @@ func abort(reason: String) -> Never  {
     print(reason)
     abort()
 }
+
 
 
