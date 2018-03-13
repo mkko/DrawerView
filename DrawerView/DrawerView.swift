@@ -117,7 +117,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     public var delegate: DrawerViewDelegate?
 
     public var drawerOffset: CGFloat {
-        return 0
+        return scrollPositionToOffset(self.topConstraint?.constant ?? 0)
     }
 
     // IB support, not intended to be used otherwise.
@@ -375,7 +375,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             // Create the animator
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
             self.animator?.addAnimations {
-                self.setScrollPosition(scrollPosition, observedPosition: position)
+                self.setScrollPosition(scrollPosition)
             }
             self.animator?.addCompletion({ position in
                 heightConstraint.constant = -self.topMargin
@@ -389,18 +389,19 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
             self.animator?.startAnimation()
         } else {
-            self.setScrollPosition(scrollPosition, observedPosition: position)
+            self.setScrollPosition(scrollPosition)
         }
     }
 
     // MARK: - Private methods
 
-    private func setScrollPosition(_ scrollPosition: CGFloat, observedPosition position: DrawerPosition) {
+    private func setScrollPosition(_ scrollPosition: CGFloat) {
         self.topConstraint?.constant = scrollPosition
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forScrollPosition: scrollPosition)
 
-        self.delegate?.drawerDidMove?(self, drawerOffset: scrollPosition)
+//        self.drawerOffset = scrollPositionToOffset(scrollPosition)
+        self.delegate?.drawerDidMove?(self, drawerOffset: scrollPositionToOffset(scrollPosition))
 
         self.superview?.layoutIfNeeded()
     }
@@ -628,15 +629,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             position = dragPoint
         }
 
-        self.setScrollPosition(position, observedPosition: .closed) // FIXME!!!
-//        self.topConstraint?.constant = position
-//        self.setOverlayOpacity(forScrollPosition: dragPoint)
-//        // Ignore shadow opacity update here, as this is expected to be
-//        // called only while user is scrolling.
-//
-//        self.superview?.layoutIfNeeded()
-//
-//        self.delegate?.drawerDidMove?(self, drawerOffset: position)
+        self.setScrollPosition(position)
     }
 
     private func updateSnapPosition(animated: Bool) {
@@ -708,7 +701,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.layer.shadowOpacity = Float(shadowOpacity)
     }
 
-    private func translatePositionToOffset(_ position: CGFloat) -> CGFloat {
+    private func scrollPositionToOffset(_ position: CGFloat) -> CGFloat {
         guard let superview = self.superview else {
             return 0
         }

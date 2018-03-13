@@ -16,7 +16,7 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
 
-    @IBOutlet weak var drawerView: DrawerView?
+    @IBOutlet weak var drawerView: DrawerView!
 
     @IBOutlet weak var searchBar: UISearchBar!
 
@@ -42,25 +42,26 @@ class ViewController: UIViewController {
 
         drawers = [
             ("↓", nil),
-            ("search", drawerView),
+            ("search", setupDrawer()),
             ("modal", setupProgrammaticDrawerView()),
             ("dark", setupDarkThemedDrawerView()),
             ("toolbar", setupTabDrawerView())
         ]
 
-        self.setupDrawer()
-        self.setupToggles()
+        self.setupDrawers()
         self.setupLocateButton()
 
         showDrawer(drawer: drawerView, animated: false)
     }
 
-    private func setupDrawer() {
-        drawerView?.enabledPositions = [.collapsed, .partiallyOpen, .open]
-        drawerView?.position = .collapsed
+    private func setupDrawer() -> DrawerView {
+        drawerView.enabledPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView.delegate = self
+        drawerView.position = .collapsed
+        return drawerView
     }
 
-    private func setupToggles() {
+    private func setupDrawers() {
         let toggles = drawers
             .map { (key, value) -> UIButton in
                 let button = UIButton(type: UIButtonType.system)
@@ -100,6 +101,7 @@ class ViewController: UIViewController {
         // Create the drawer programmatically.
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
+        drawerView.delegate = self
         drawerView.enabledPositions = [.closed, .open]
         return drawerView
     }
@@ -107,6 +109,7 @@ class ViewController: UIViewController {
     func setupDarkThemedDrawerView() -> DrawerView {
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
+        drawerView.delegate = self
 
         drawerView.enabledPositions = [.collapsed, .partiallyOpen]
         drawerView.backgroundEffect = UIBlurEffect(style: .dark)
@@ -118,6 +121,7 @@ class ViewController: UIViewController {
         let drawerView = self.addDrawerView(withViewController:
             self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
         )
+        drawerView.delegate = self
 
         drawerView.enabledPositions = [.collapsed, .open]
         drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
@@ -136,9 +140,9 @@ extension ViewController: DrawerViewDelegate {
         }
     }
 
-    func drawerDidMove(_ drawerView: DrawerView, verticalPosition: CGFloat) {
-        let offset = self.view.bounds.height - max(verticalPosition, 150)
-        self.additionalSafeAreaInsets.bottom = offset
+    func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat) {
+        let maxOffset = drawers.flatMap({ $0.drawer?.drawerOffset }).max()
+        self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
     }
 }
 
