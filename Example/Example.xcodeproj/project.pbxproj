@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		2B3FD3192027B4150045C7BF /* DrawerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3FD3182027B4150045C7BF /* DrawerViewController.swift */; };
+		2BBE9F3F204ABD9600FF6F09 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BBE9F342047123200FF6F09 /* DrawerView.framework */; };
+		2BBE9F40204ABD9600FF6F09 /* DrawerView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2BBE9F342047123200FF6F09 /* DrawerView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2BDAD414201113F100AA7FC2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD413201113F100AA7FC2 /* AppDelegate.swift */; };
 		2BDAD416201113F100AA7FC2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD415201113F100AA7FC2 /* ViewController.swift */; };
 		2BDAD419201113F100AA7FC2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAD417201113F100AA7FC2 /* Main.storyboard */; };
@@ -37,6 +39,13 @@
 			remoteGlobalIDString = 2BDAD3A620110F6E00AA7FC2;
 			remoteInfo = DrawerView;
 		};
+		2BBE9F41204ABD9600FF6F09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2BBE9F2E2047123200FF6F09 /* DrawerView.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 2BDAD3A620110F6E00AA7FC2;
+			remoteInfo = DrawerView;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -46,6 +55,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				2BBE9F40204ABD9600FF6F09 /* DrawerView.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -69,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BBE9F3F204ABD9600FF6F09 /* DrawerView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,6 +150,7 @@
 			);
 			dependencies = (
 				2BBE9F382047124200FF6F09 /* PBXTargetDependency */,
+				2BBE9F42204ABD9600FF6F09 /* PBXTargetDependency */,
 			);
 			name = Example;
 			productName = Example;
@@ -233,6 +245,11 @@
 			isa = PBXTargetDependency;
 			name = DrawerView;
 			targetProxy = 2BBE9F372047124200FF6F09 /* PBXContainerItemProxy */;
+		};
+		2BBE9F42204ABD9600FF6F09 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DrawerView;
+			targetProxy = 2BBE9F41204ABD9600FF6F09 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

@@ -7,15 +7,22 @@
 //
 
 import UIKit
+import MapKit
 import DrawerView
 
 typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
 
 class ViewController: UIViewController {
 
-    @IBOutlet weak var drawerView: DrawerView?
+    @IBOutlet weak var mapView: MKMapView!
+
+    @IBOutlet weak var drawerView: DrawerView!
+
     @IBOutlet weak var searchBar: UISearchBar!
+
     @IBOutlet weak var topPanel: UIStackView!
+
+    @IBOutlet weak var locateButtonContainer: UIView!
 
     var drawers: [DrawerMapEntry] = []
 
@@ -32,18 +39,29 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        drawerView?.enabledPositions = [.collapsed, .partiallyOpen, .open]
-        drawerView?.position = .collapsed
 
         drawers = [
             ("↓", nil),
-            ("search", drawerView),
+            ("search", setupDrawer()),
             ("modal", setupProgrammaticDrawerView()),
             ("dark", setupDarkThemedDrawerView()),
             ("toolbar", setupTabDrawerView())
         ]
 
+        self.setupDrawers()
+        self.setupLocateButton()
+
+        showDrawer(drawer: drawerView, animated: false)
+    }
+
+    private func setupDrawer() -> DrawerView {
+        drawerView.enabledPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView.delegate = self
+        drawerView.position = .collapsed
+        return drawerView
+    }
+
+    private func setupDrawers() {
         let toggles = drawers
             .map { (key, value) -> UIButton in
                 let button = UIButton(type: UIButtonType.system)
@@ -57,8 +75,21 @@ class ViewController: UIViewController {
         for view in toggles {
             self.topPanel.addArrangedSubview(view)
         }
+    }
 
-        showDrawer(drawer: drawerView, animated: false)
+    private func setupLocateButton() {
+        let locateButton = MKUserTrackingButton(mapView: self.mapView)
+        locateButton.autoresizingMask = [.flexibleTopMargin, .flexibleLeftMargin]
+        locateButton.frame = self.locateButtonContainer.bounds
+        self.locateButtonContainer.addSubview(locateButton)
+
+        self.locateButtonContainer.layer.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
+        self.locateButtonContainer.backgroundColor = UIColor(hue: 0.13, saturation: 0.03, brightness: 0.97, alpha: 1.0)
+        self.locateButtonContainer.layer.borderWidth = 0.5
+        self.locateButtonContainer.layer.cornerRadius = 8
+        self.locateButtonContainer.layer.shadowOffset = CGSize(width: 0, height: 0)
+        self.locateButtonContainer.layer.shadowRadius = 2
+        self.locateButtonContainer.layer.shadowOpacity = 0.1
     }
 
     override func didReceiveMemoryWarning() {
@@ -70,6 +101,7 @@ class ViewController: UIViewController {
         // Create the drawer programmatically.
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
+        drawerView.delegate = self
         drawerView.enabledPositions = [.closed, .open]
         return drawerView
     }
@@ -77,6 +109,7 @@ class ViewController: UIViewController {
     func setupDarkThemedDrawerView() -> DrawerView {
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
+        drawerView.delegate = self
 
         drawerView.enabledPositions = [.collapsed, .partiallyOpen]
         drawerView.backgroundEffect = UIBlurEffect(style: .dark)
@@ -88,6 +121,7 @@ class ViewController: UIViewController {
         let drawerView = self.addDrawerView(withViewController:
             self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
         )
+        drawerView.delegate = self
 
         drawerView.enabledPositions = [.collapsed, .open]
         drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
@@ -95,6 +129,20 @@ class ViewController: UIViewController {
         // Set the height to match the default toolbar.
         drawerView.collapsedHeight = 44
         return drawerView
+    }
+}
+
+extension ViewController: DrawerViewDelegate {
+
+    func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
+        if position == .open {
+            searchBar.resignFirstResponder()
+        }
+    }
+
+    func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat) {
+        let maxOffset = drawers.flatMap({ $0.drawer?.drawerOffset }).max()
+        self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
     }
 }
 
@@ -130,16 +178,6 @@ extension ViewController: UISearchBarDelegate {
         drawerView?.setPosition(.open, animated: true)
     }
 }
-
-extension ViewController: DrawerViewDelegate {
-
-    func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
-        if position == .open {
-            searchBar.resignFirstResponder()
-        }
-    }
-}
-
 extension Sequence where Element == DrawerMapEntry {
 
     subscript(key: String) -> DrawerView? {
