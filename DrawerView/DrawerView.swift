@@ -8,6 +8,17 @@
 
 import UIKit
 
+let LOGGING = false
+
+let dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
+let dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = dateFormat
+    formatter.locale = Locale.current
+    formatter.timeZone = TimeZone.current
+    return formatter
+}()
+
 @objc public enum DrawerPosition: Int {
     case closed = 0
     case collapsed = 1
@@ -142,7 +153,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             self.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(self)
         } else if self.superview !== view {
-            print("Invalid state; superview already set when called attachTo(view:)")
+            log("Invalid state; superview already set when called attachTo(view:)")
         }
 
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
@@ -352,7 +363,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.currentPosition = nextPosition
 
         guard let snapPosition = snapPosition(for: nextPosition) else {
-            print("Could not evaluate snap position for \(position.visibleName)")
+            log("Could not evaluate snap position for \(position.visibleName)")
             return
         }
 
@@ -361,7 +372,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     private func scrollToPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, observedPosition position: DrawerPosition, animated: Bool) {
         guard let heightConstraint = self.heightConstraint else {
-            print("No height constraint set")
+            log("No height constraint set")
             return
         }
 
@@ -400,8 +411,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forScrollPosition: scrollPosition)
 
-//        self.drawerOffset = scrollPositionToOffset(scrollPosition)
-        self.delegate?.drawerDidMove?(self, drawerOffset: scrollPositionToOffset(scrollPosition))
+        let drawerOffset = scrollPositionToOffset(scrollPosition)
+        self.delegate?.drawerDidMove?(self, drawerOffset: drawerOffset)
 
         self.superview?.layoutIfNeeded()
     }
@@ -456,24 +467,23 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
-                    childScrollView.isScrollEnabled = false
-                    //print("Disabled child scrolling")
 
                     // Also animate to the proper scroll position.
-                    //print("Animating to target position...")
+                    log("Animating to target position...")
 
                     self.animator?.stopAnimation(true)
                     self.animator = UIViewPropertyAnimator.runningPropertyAnimator(
-                        withDuration: 0.5,
+                        withDuration: 0.2,
                         delay: 0.0,
                         options: [.allowUserInteraction, .beginFromCurrentState],
                         animations: {
-                            childScrollView.contentOffset.y = 0
+                            // Disabling the scroll removes negative content offset
+                            // in the scroll view, so make it animate here.
+                            log("Disabled child scrolling")
+                            childScrollView.isScrollEnabled = false
                             let pos = self.panOrigin + translation.y
                             self.setPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
-                } else {
-                    //print("Let it scroll...")
                 }
 
                 // Scroll only if we're not scrolling the subviews.
@@ -487,16 +497,15 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             }
 
         case.failed:
-            print("ERROR: UIPanGestureRecognizer failed")
+            log("ERROR: UIPanGestureRecognizer failed")
             fallthrough
         case .ended:
             let velocity = sender.velocity(in: self)
-            // print("Ending with vertical velocity \(velocity.y)")
+            log("Ending with vertical velocity \(velocity.y)")
 
-            if let childScrollView = self.childScrollView,
-                childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
+            if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
                 // Let it scroll.
-                // print("Let it scroll.")
+                log("Let child view scroll.")
             } else {
                 // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
@@ -763,9 +772,12 @@ fileprivate extension DrawerPosition {
 }
 
 func abort(reason: String) -> Never  {
-    print(reason)
+    NSLog("DrawerView: \(reason)")
     abort()
 }
 
-
-
+func log(_ message: String) {
+    if LOGGING {
+        print("\(dateFormatter.string(from: Date())): \(message)")
+    }
+}
