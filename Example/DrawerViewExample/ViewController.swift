@@ -18,6 +18,8 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var drawerView: DrawerView!
 
+    @IBOutlet weak var tableView: UITableView!
+
     @IBOutlet weak var searchBar: UISearchBar!
 
     @IBOutlet weak var topPanel: UIStackView!
@@ -39,6 +41,10 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        // We're using safe area insets to reposition the user location
+        // button, so remove automatic inset adjustment in the table view.
+        tableView.contentInsetAdjustmentBehavior = .never
 
         drawers = [
             ("↓", nil),
@@ -167,6 +173,7 @@ extension ViewController: UITableViewDataSource {
 extension ViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print("\(tableView.adjustedContentInset)")
         tableView.deselectRow(at: indexPath, animated: true)
         drawerView?.setPosition(.open, animated: true)
     }
