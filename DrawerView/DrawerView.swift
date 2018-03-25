@@ -429,8 +429,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         if let canScrollContent = self.delegate?.canScrollContent {
             return canScrollContent(self)
         }
-        // By default, child scrolling is enabled only when fully open.
-        return self.position == .open
+        // By default, child scrolling is enabled when open.
+        return self.position == .open || self.position == .partiallyOpen
     }
 
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
@@ -451,22 +451,37 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         case .changed:
 
             let translation = sender.translation(in: self)
+            let velocity = sender.velocity(in: self)
+
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.childScrollView {
 
                 // NB: With negative content offset, we don't ask the delegate as
                 // we need to pan the drawer.
-                let shouldCancelChildViewScroll = (childScrollView.contentOffset.y < 0)
-                let shouldScrollChildView = childScrollView.isScrollEnabled
-                    ? (!shouldCancelChildViewScroll && self.shouldScrollChildView())
-                    : false
-                let shouldDisableChildScroll = !shouldScrollChildView && childScrollView.isScrollEnabled
+                let childReachedTheTop = (childScrollView.contentOffset.y < 0)
+                let isFullyOpen = self.positionsSorted().last == self.position
+                let scrollingToBottom = sender.velocity(in: self).y < 0
+
+                let shouldScrollChildView: Bool
+                if !childScrollView.isScrollEnabled {
+                    shouldScrollChildView = false
+                } else if childReachedTheTop {
+                    shouldScrollChildView = false
+                } else if !scrollingToBottom {
+                    shouldScrollChildView = true
+                } else if !isFullyOpen {
+                    shouldScrollChildView = false
+                } else {
+                    shouldScrollChildView = true
+                }
 
                 // Disable child view scrolling
-                if shouldDisableChildScroll {
+                if !shouldScrollChildView && childScrollView.isScrollEnabled {
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
-                    self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
+                    if childScrollView.contentOffset.y < 0 {
+                        self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
+                    }
 
                     // Also animate to the proper scroll position.
                     log("Animating to target position...")
@@ -484,10 +499,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                             let pos = self.panOrigin + translation.y
                             self.setPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
-                }
-
-                // Scroll only if we're not scrolling the subviews.
-                if !shouldScrollChildView {
+                } else if !shouldScrollChildView {
+                    // Scroll only if we're not scrolling the subviews.
                     let pos = panOrigin + translation.y
                     setPosition(whileDraggingAtPoint: pos)
                 }
@@ -742,7 +755,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
         if self.position == .open {
             return false
         } else {
-            return !self.shouldScrollChildView() && otherGestureRecognizer.view is UIScrollView
+            return otherGestureRecognizer.view is UIScrollView && !self.shouldScrollChildView()
         }
     }
 }
