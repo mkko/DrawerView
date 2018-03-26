@@ -57,8 +57,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 @objc public protocol DrawerViewDelegate {
 
-    @objc optional func canScrollContent(drawerView: DrawerView) -> Bool
-
     @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
 
     @objc optional func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition)
@@ -425,14 +423,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.position = self.positionsSorted().last ?? .collapsed
     }
 
-    private func shouldScrollChildView() -> Bool {
-        if let canScrollContent = self.delegate?.canScrollContent {
-            return canScrollContent(self)
-        }
-        // By default, child scrolling is enabled when open.
-        return self.position == .open || self.position == .partiallyOpen
-    }
-
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
@@ -451,7 +441,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         case .changed:
 
             let translation = sender.translation(in: self)
-            let velocity = sender.velocity(in: self)
 
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.childScrollView {
@@ -516,7 +505,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             let velocity = sender.velocity(in: self)
             log("Ending with vertical velocity \(velocity.y)")
 
-            if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
+            if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else {
@@ -755,7 +744,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
         if self.position == .open {
             return false
         } else {
-            return otherGestureRecognizer.view is UIScrollView && !self.shouldScrollChildView()
+            return otherGestureRecognizer.view is UIScrollView
         }
     }
 }
