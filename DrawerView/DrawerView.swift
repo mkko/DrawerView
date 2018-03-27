@@ -8,7 +8,7 @@
 
 import UIKit
 
-let LOGGING = false
+let LOGGING = true
 
 let dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
 let dateFormatter: DateFormatter = {
@@ -441,26 +441,34 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         case .changed:
 
             let translation = sender.translation(in: self)
+            let velocity = sender.velocity(in: self)
+            if velocity.y == 0 {
+                break
+            }
 
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.childScrollView {
 
                 // NB: With negative content offset, we don't ask the delegate as
                 // we need to pan the drawer.
-                let childReachedTheTop = (childScrollView.contentOffset.y < 0)
+                let childReachedTheTop = (childScrollView.contentOffset.y <= 0)
                 let isFullyOpen = self.positionsSorted().last == self.position
-                let scrollingToBottom = sender.velocity(in: self).y < 0
+                let scrollingToBottom = velocity.y < 0
 
                 let shouldScrollChildView: Bool
                 if !childScrollView.isScrollEnabled {
+                    log("!childScrollView.isScrollEnabled")
                     shouldScrollChildView = false
-                } else if childReachedTheTop {
-                    shouldScrollChildView = false
-                } else if !scrollingToBottom {
+                } else if !childReachedTheTop && !scrollingToBottom {
+                    log("!childReachedTheTop && !scrollingToBottom")
                     shouldScrollChildView = true
+                } else if childReachedTheTop && !scrollingToBottom {
+                    shouldScrollChildView = false
                 } else if !isFullyOpen {
+                    log("!isFullyOpen")
                     shouldScrollChildView = false
                 } else {
+                    log("else")
                     shouldScrollChildView = true
                 }
 
@@ -738,14 +746,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
             self.childScrollWasEnabled = sv.isScrollEnabled
         }
         return true
-    }
-
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        if self.position == .open {
-            return false
-        } else {
-            return otherGestureRecognizer.view is UIScrollView
-        }
     }
 }
 
