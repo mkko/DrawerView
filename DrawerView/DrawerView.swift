@@ -741,6 +741,12 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if let sv = otherGestureRecognizer.view as? UIScrollView {
+            // Safety check: if we haven't resumed the previous child scroll,
+            // do it now. This is bound to happen on the simulator at least, when
+            // the gesture recognizer is interrupted.
+            if let childScrollView = self.childScrollView {
+                childScrollView.isScrollEnabled = self.childScrollWasEnabled
+            }
             self.otherGestureRecognizer = otherGestureRecognizer
             self.childScrollView = sv
             self.childScrollWasEnabled = sv.isScrollEnabled
