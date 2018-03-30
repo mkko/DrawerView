@@ -33,6 +33,11 @@ fileprivate extension DrawerPosition {
         .collapsed
     ]
 
+    static let openPositions: [DrawerPosition] = [
+        .open,
+        .partiallyOpen
+    ]
+
     var visibleName: String {
         switch self {
         case .closed: return "hidden"
@@ -145,6 +150,15 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
     }
 
+    private var topSpace: CGFloat {
+        // Use only the open positions for determining the top space.
+        let topPosition = self.sorted(positions: DrawerPosition.openPositions)
+            .first(where: self.enabledPositions.contains)
+            ?? .open
+
+        return self.snapPosition(for: topPosition) ?? 0
+    }
+
     public func attachTo(view: UIView) {
 
         if self.superview == nil {
@@ -155,7 +169,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
 
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
-        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topMargin)
+        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topSpace)
 
         let constraints = [
             self.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -387,7 +401,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 self.setScrollPosition(scrollPosition)
             }
             self.animator?.addCompletion({ position in
-                heightConstraint.constant = -self.topMargin
+                heightConstraint.constant = -self.topSpace
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
             })
@@ -413,10 +427,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.delegate?.drawerDidMove?(self, drawerOffset: drawerOffset)
 
         self.superview?.layoutIfNeeded()
-    }
-
-    private func positionsSorted() -> [DrawerPosition] {
-        return self.sorted(positions: self.enabledPositions)
     }
 
     private func setInitialPosition() {
@@ -560,6 +570,10 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
     }
 
+    private func positionsSorted() -> [DrawerPosition] {
+        return self.sorted(positions: self.enabledPositions)
+    }
+
     private func sorted(positions: [DrawerPosition]) -> [DrawerPosition] {
         return positions
             .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
@@ -641,7 +655,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         if let lowerBound = positions.first, dragPoint < lowerBound {
             let stretch = damp(value: lowerBound - dragPoint, factor: 50)
             position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
-            self.heightConstraint?.constant = -self.topMargin + stretch
+            self.heightConstraint?.constant = -self.topSpace + stretch
         } else if let upperBound = positions.last, dragPoint > upperBound {
             position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
