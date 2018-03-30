@@ -170,12 +170,15 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
         heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topSpace)
+        heightConstraint?.priority = .defaultLow
+        let bottomConstraint = self.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
 
         let constraints = [
             self.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             self.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             topConstraint,
-            heightConstraint
+            heightConstraint,
+            bottomConstraint
         ]
 
         for constraint in constraints {
@@ -303,6 +306,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         updateBorderVisuals(self.border)
         updateOverlayVisuals(self.overlay)
         updateBackgroundVisuals(self.backgroundView)
+        heightConstraint?.constant = -self.topSpace
     }
 
     private func updateLayerVisuals(_ layer: CALayer) {
@@ -383,10 +387,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     private func scrollToPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, observedPosition position: DrawerPosition, animated: Bool) {
-        guard let heightConstraint = self.heightConstraint else {
-            log("No height constraint set")
-            return
-        }
 
         if animated {
             self.animator?.stopAnimation(true)
@@ -401,13 +401,11 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 self.setScrollPosition(scrollPosition)
             }
             self.animator?.addCompletion({ position in
-                heightConstraint.constant = -self.topSpace
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
             })
 
             // Add extra height to make sure that bottom doesn't show up.
-            heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
             self.superview?.layoutIfNeeded()
 
             self.animator?.startAnimation()
@@ -653,9 +651,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         let position: CGFloat
         if let lowerBound = positions.first, dragPoint < lowerBound {
-            let stretch = damp(value: lowerBound - dragPoint, factor: 50)
             position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
-            self.heightConstraint?.constant = -self.topSpace + stretch
         } else if let upperBound = positions.last, dragPoint > upperBound {
             position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
