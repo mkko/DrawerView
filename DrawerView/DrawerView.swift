@@ -361,10 +361,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        self.setPosition(position, withVelocity: CGPoint(), animated: animated)
-    }
-
-    public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
 
         // Get the next available position. Closed position is always supported.
         let nextPosition: DrawerPosition
@@ -383,19 +379,16 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             return
         }
 
-        self.scrollToPosition(snapPosition, withVelocity: velocity, observedPosition: nextPosition, animated: animated)
+        self.scrollToPosition(snapPosition, observedPosition: nextPosition, animated: animated)
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, observedPosition position: DrawerPosition, animated: Bool) {
+    private func scrollToPosition(_ scrollPosition: CGFloat, observedPosition position: DrawerPosition, animated: Bool) {
 
         if animated {
             self.animator?.stopAnimation(true)
 
-            let m: CGFloat = 100.0
-            let velocityVector = CGVector(dx: 0, dy: abs(velocity.y) / m);
-            let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
-
-            // Create the animator
+            // Create the animator.
+            let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
             self.animator?.addAnimations {
                 self.setScrollPosition(scrollPosition)
@@ -542,7 +535,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 } else {
                     nextPosition = targetPosition
                 }
-                self.setPosition(nextPosition, withVelocity: velocity, animated: true)
+                self.setPosition(nextPosition, animated: true)
             }
 
             self.childScrollView?.isScrollEnabled = childScrollWasEnabled
