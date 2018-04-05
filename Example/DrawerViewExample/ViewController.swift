@@ -154,8 +154,19 @@ extension ViewController: DrawerViewDelegate {
     }
 
     func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat) {
-        let maxOffset = drawers.flatMap({ $0.drawer?.drawerOffset }).max()
+
+        let maxOffset = drawers
+            // Ignore modal for safe area insets.
+            .filter { $0.drawer !== drawers["modal"] }
+            .flatMap { $0.drawer?.drawerOffset }
+            .max()
         self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
+
+        // Round the corners of the toolbar view when open.
+        if drawerView === drawers["toolbar"] {
+            let offset = drawerView.drawerOffset - drawerView.collapsedHeight
+            drawerView.cornerRadius = min(offset / 5, 9)
+        }
     }
 }
 
