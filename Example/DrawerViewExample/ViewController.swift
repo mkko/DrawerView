@@ -28,6 +28,8 @@ class ViewController: UIViewController {
 
     var drawers: [DrawerMapEntry] = []
 
+    let locationManager = CLLocationManager()
+
     @objc func toggleTapped(sender: UIButton) {
         let drawer = sender.titleLabel?.text.flatMap { drawers[$0] } ?? nil
         showDrawer(drawer: drawer, animated: true)
@@ -58,6 +60,11 @@ class ViewController: UIViewController {
         self.setupLocateButton()
 
         showDrawer(drawer: drawerView, animated: false)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
     }
 
     private func setupDrawer() -> DrawerView {

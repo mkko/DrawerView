@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2BCCE91520764BDE00130C4D /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BCCE91420764BDE00130C4D /* MapKit.framework */; };
 		2BF0591F205DD19C00D336DE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF0591E205DD19C00D336DE /* AppDelegate.swift */; };
 		2BF05921205DD19C00D336DE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF05920205DD19C00D336DE /* ViewController.swift */; };
 		2BF05924205DD19C00D336DE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BF05922205DD19C00D336DE /* Main.storyboard */; };
@@ -32,6 +33,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2BCCE91420764BDE00130C4D /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		2BF0591B205DD19C00D336DE /* DrawerViewExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrawerViewExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BF0591E205DD19C00D336DE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2BF05920205DD19C00D336DE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -48,6 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BCCE91520764BDE00130C4D /* MapKit.framework in Frameworks */,
 				2BF05931205DD1F100D336DE /* DrawerView.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -55,12 +58,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2BCCE91320764BDE00130C4D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2BCCE91420764BDE00130C4D /* MapKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2BF05912205DD19C00D336DE = {
 			isa = PBXGroup;
 			children = (
 				2BF05930205DD1F100D336DE /* DrawerView.framework */,
 				2BF0591D205DD19C00D336DE /* DrawerViewExample */,
 				2BF0591C205DD19C00D336DE /* Products */,
+				2BCCE91320764BDE00130C4D /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -120,6 +132,11 @@
 					2BF0591A205DD19C00D336DE = {
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Maps.iOS = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
