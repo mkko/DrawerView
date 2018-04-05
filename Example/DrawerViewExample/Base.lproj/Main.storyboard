@@ -14,7 +14,7 @@
         <!--Delegate-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Example" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="DrawerViewExample" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -56,6 +56,7 @@
                         <outlet property="locateButtonContainer" destination="99Q-cW-ee3" id="IvI-sN-hTY"/>
                         <outlet property="mapView" destination="4qA-tI-5pY" id="GL5-0M-ZqH"/>
                         <outlet property="searchBar" destination="Xp7-w4-h2V" id="yB4-eD-NyM"/>
+                        <outlet property="tableView" destination="WiJ-yF-cUu" id="Qks-xe-0Pc"/>
                         <outlet property="topPanel" destination="zca-w4-fsL" id="tGB-PI-6e6"/>
                     </connections>
                 </viewController>

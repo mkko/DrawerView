@@ -8,7 +8,7 @@
 
 import UIKit
 
-let LOGGING = false
+let LOGGING = true
 
 let dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
 let dateFormatter: DateFormatter = {
@@ -31,6 +31,11 @@ fileprivate extension DrawerPosition {
         .open,
         .partiallyOpen,
         .collapsed
+    ]
+
+    static let openPositions: [DrawerPosition] = [
+        .open,
+        .partiallyOpen
     ]
 
     var visibleName: String {
@@ -56,8 +61,6 @@ let kDefaultShadowOpacity: Float = 0.05
 let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 @objc public protocol DrawerViewDelegate {
-
-    @objc optional func canScrollContent(drawerView: DrawerView) -> Bool
 
     @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
 
@@ -147,6 +150,15 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
     }
 
+    private var topSpace: CGFloat {
+        // Use only the open positions for determining the top space.
+        let topPosition = self.sorted(positions: DrawerPosition.openPositions)
+            .first(where: self.enabledPositions.contains)
+            ?? .open
+
+        return self.snapPosition(for: topPosition) ?? 0
+    }
+
     public func attachTo(view: UIView) {
 
         if self.superview == nil {
@@ -157,13 +169,16 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
 
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
-        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topMargin)
+        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topSpace)
+        heightConstraint?.priority = .defaultLow
+        let bottomConstraint = self.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
 
         let constraints = [
             self.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             self.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             topConstraint,
-            heightConstraint
+            heightConstraint,
+            bottomConstraint
         ]
 
         for constraint in constraints {
@@ -291,6 +306,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         updateBorderVisuals(self.border)
         updateOverlayVisuals(self.overlay)
         updateBackgroundVisuals(self.backgroundView)
+        heightConstraint?.constant = -self.topSpace
     }
 
     private func updateLayerVisuals(_ layer: CALayer) {
@@ -323,7 +339,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         // Update snap position, if not dragging.
         //let animatorRunning = animator?.isRunning ?? false
-        if animator == nil && !isDragging {
+        let isAnimating = animator?.isRunning ?? false
+        if !isAnimating && !isDragging {
             // Handle possible layout changes, e.g. rotation.
             self.updateSnapPosition(animated: false)
         }
@@ -345,10 +362,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        self.setPosition(position, withVelocity: CGPoint(), animated: animated)
-    }
-
-    public func setPosition(_ position: DrawerPosition, withVelocity velocity: CGPoint, animated: Bool) {
 
         // Get the next available position. Closed position is always supported.
         let nextPosition: DrawerPosition
@@ -367,35 +380,26 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             return
         }
 
-        self.scrollToPosition(snapPosition, withVelocity: velocity, observedPosition: nextPosition, animated: animated)
+        self.scrollToPosition(snapPosition, observedPosition: nextPosition, animated: animated)
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, withVelocity velocity: CGPoint, observedPosition position: DrawerPosition, animated: Bool) {
-        guard let heightConstraint = self.heightConstraint else {
-            log("No height constraint set")
-            return
-        }
+    private func scrollToPosition(_ scrollPosition: CGFloat, observedPosition position: DrawerPosition, animated: Bool) {
 
         if animated {
             self.animator?.stopAnimation(true)
 
-            let m: CGFloat = 100.0
-            let velocityVector = CGVector(dx: 0, dy: abs(velocity.y) / m);
-            let springParameters = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
-
-            // Create the animator
+            // Create the animator.
+            let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
             self.animator?.addAnimations {
                 self.setScrollPosition(scrollPosition)
             }
             self.animator?.addCompletion({ position in
-                heightConstraint.constant = -self.topMargin
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
             })
 
             // Add extra height to make sure that bottom doesn't show up.
-            heightConstraint.constant = heightConstraint.constant + kVerticalLeeway
             self.superview?.layoutIfNeeded()
 
             self.animator?.startAnimation()
@@ -417,20 +421,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.superview?.layoutIfNeeded()
     }
 
-    private func positionsSorted() -> [DrawerPosition] {
-        return self.sorted(positions: self.enabledPositions)
-    }
-
     private func setInitialPosition() {
         self.position = self.positionsSorted().last ?? .collapsed
-    }
-
-    private func shouldScrollChildView() -> Bool {
-        if let canScrollContent = self.delegate?.canScrollContent {
-            return canScrollContent(self)
-        }
-        // By default, child scrolling is enabled only when fully open.
-        return self.position == .open
     }
 
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
@@ -451,22 +443,44 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         case .changed:
 
             let translation = sender.translation(in: self)
+            let velocity = sender.velocity(in: self)
+            if velocity.y == 0 {
+                break
+            }
+
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.childScrollView {
 
                 // NB: With negative content offset, we don't ask the delegate as
                 // we need to pan the drawer.
-                let shouldCancelChildViewScroll = (childScrollView.contentOffset.y < 0)
-                let shouldScrollChildView = childScrollView.isScrollEnabled
-                    ? (!shouldCancelChildViewScroll && self.shouldScrollChildView())
-                    : false
-                let shouldDisableChildScroll = !shouldScrollChildView && childScrollView.isScrollEnabled
+                let childReachedTheTop = (childScrollView.contentOffset.y <= 0)
+                let isFullyOpen = self.positionsSorted().last == self.position
+                let scrollingToBottom = velocity.y < 0
+
+                let shouldScrollChildView: Bool
+                if !childScrollView.isScrollEnabled {
+                    log("!childScrollView.isScrollEnabled")
+                    shouldScrollChildView = false
+                } else if !childReachedTheTop && !scrollingToBottom {
+                    log("!childReachedTheTop && !scrollingToBottom")
+                    shouldScrollChildView = true
+                } else if childReachedTheTop && !scrollingToBottom {
+                    shouldScrollChildView = false
+                } else if !isFullyOpen {
+                    log("!isFullyOpen")
+                    shouldScrollChildView = false
+                } else {
+                    log("else")
+                    shouldScrollChildView = true
+                }
 
                 // Disable child view scrolling
-                if shouldDisableChildScroll {
+                if !shouldScrollChildView && childScrollView.isScrollEnabled {
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
-                    self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
+                    if childScrollView.contentOffset.y < 0 {
+                        self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
+                    }
 
                     // Also animate to the proper scroll position.
                     log("Animating to target position...")
@@ -484,10 +498,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                             let pos = self.panOrigin + translation.y
                             self.setPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
-                }
-
-                // Scroll only if we're not scrolling the subviews.
-                if !shouldScrollChildView {
+                } else if !shouldScrollChildView {
+                    // Scroll only if we're not scrolling the subviews.
                     let pos = panOrigin + translation.y
                     setPosition(whileDraggingAtPoint: pos)
                 }
@@ -503,7 +515,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             let velocity = sender.velocity(in: self)
             log("Ending with vertical velocity \(velocity.y)")
 
-            if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 && self.shouldScrollChildView() {
+            if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else {
@@ -524,7 +536,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 } else {
                     nextPosition = targetPosition
                 }
-                self.setPosition(nextPosition, withVelocity: velocity, animated: true)
+                self.setPosition(nextPosition, animated: true)
             }
 
             self.childScrollView?.isScrollEnabled = childScrollWasEnabled
@@ -548,6 +560,10 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
                 self.delegate?.drawer?(self, didTransitionTo: prevPosition)
             }
         }
+    }
+
+    private func positionsSorted() -> [DrawerPosition] {
+        return self.sorted(positions: self.enabledPositions)
     }
 
     private func sorted(positions: [DrawerPosition]) -> [DrawerPosition] {
@@ -629,9 +645,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         let position: CGFloat
         if let lowerBound = positions.first, dragPoint < lowerBound {
-            let stretch = damp(value: lowerBound - dragPoint, factor: 50)
             position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
-            self.heightConstraint?.constant = -self.topMargin + stretch
         } else if let upperBound = positions.last, dragPoint > upperBound {
             position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
         } else {
@@ -731,19 +745,17 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if let sv = otherGestureRecognizer.view as? UIScrollView {
+            // Safety check: if we haven't resumed the previous child scroll,
+            // do it now. This is bound to happen on the simulator at least, when
+            // the gesture recognizer is interrupted.
+            if let childScrollView = self.childScrollView {
+                childScrollView.isScrollEnabled = self.childScrollWasEnabled
+            }
             self.otherGestureRecognizer = otherGestureRecognizer
             self.childScrollView = sv
             self.childScrollWasEnabled = sv.isScrollEnabled
         }
         return true
-    }
-
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        if self.position == .open {
-            return false
-        } else {
-            return !self.shouldScrollChildView() && otherGestureRecognizer.view is UIScrollView
-        }
     }
 }
 
