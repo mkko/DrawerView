@@ -339,7 +339,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         // Update snap position, if not dragging.
         //let animatorRunning = animator?.isRunning ?? false
-        if animator == nil && !isDragging {
+        let isAnimating = animator?.isRunning ?? false
+        if !isAnimating && !isDragging {
             // Handle possible layout changes, e.g. rotation.
             self.updateSnapPosition(animated: false)
         }
