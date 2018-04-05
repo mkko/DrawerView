@@ -8,7 +8,7 @@
 
 import UIKit
 
-let LOGGING = true
+let LOGGING = false
 
 let dateFormat = "yyyy-MM-dd hh:mm:ss.SSS"
 let dateFormatter: DateFormatter = {
@@ -459,18 +459,14 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
                 let shouldScrollChildView: Bool
                 if !childScrollView.isScrollEnabled {
-                    log("!childScrollView.isScrollEnabled")
                     shouldScrollChildView = false
                 } else if !childReachedTheTop && !scrollingToBottom {
-                    log("!childReachedTheTop && !scrollingToBottom")
                     shouldScrollChildView = true
                 } else if childReachedTheTop && !scrollingToBottom {
                     shouldScrollChildView = false
                 } else if !isFullyOpen {
-                    log("!isFullyOpen")
                     shouldScrollChildView = false
                 } else {
-                    log("else")
                     shouldScrollChildView = true
                 }
 
