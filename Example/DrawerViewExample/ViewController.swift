@@ -16,12 +16,6 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
 
-    @IBOutlet weak var drawerView: DrawerView!
-
-    @IBOutlet weak var tableView: UITableView!
-
-    @IBOutlet weak var searchBar: UISearchBar!
-
     @IBOutlet weak var topPanel: UIStackView!
 
     @IBOutlet weak var locateButtonContainer: UIView!
@@ -46,32 +40,26 @@ class ViewController: UIViewController {
 
         // We're using safe area insets to reposition the user location
         // button, so remove automatic inset adjustment in the table view.
-        tableView.contentInsetAdjustmentBehavior = .never
 
         drawers = [
             ("↓", nil),
-            ("search", setupDrawer()),
-            ("modal", setupProgrammaticDrawerView()),
-            ("dark", setupDarkThemedDrawerView()),
-            ("toolbar", setupTabDrawerView())
+//            ("search", setupDrawer()),
+//            ("modal", setupProgrammaticDrawerView()),
+            ("toolbar", setupDarkThemedDrawerView()),
+            ("dark", setupTabDrawerView())
+//            ("toolbar2", setupTabDrawerView()),
+//            ("toolbar3", setupTabDrawerView())
         ]
 
         self.setupDrawers()
         self.setupLocateButton()
 
-        showDrawer(drawer: drawerView, animated: false)
+        showDrawer(drawer: drawers["dark"]!, animated: false)
     }
 
     override func viewDidAppear(_ animated: Bool) {
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
-    }
-
-    private func setupDrawer() -> DrawerView {
-        drawerView.enabledPositions = [.collapsed, .partiallyOpen, .open]
-        drawerView.delegate = self
-        drawerView.position = .collapsed
-        return drawerView
     }
 
     private func setupDrawers() {
@@ -131,16 +119,22 @@ class ViewController: UIViewController {
 
     func setupTabDrawerView() -> DrawerView {
         // Attach the drawer with contents of a view controller.
-        let drawerView = self.addDrawerView(withViewController:
-            self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
-        )
+//        let drawerView = self.addDrawerView(withViewController:
+//            self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
+//        )
+
+//        let viewController = self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
+//        self.addChildViewController(viewController)
+
+        let drawerView = DrawerView()
+        drawerView.attachTo(view: self.view)
         drawerView.delegate = self
 
-        drawerView.enabledPositions = [.collapsed, .open]
-        drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
-        drawerView.cornerRadius = 0
+        drawerView.enabledPositions = [.collapsed, .partiallyOpen]
+        drawerView.backgroundEffect = UIBlurEffect(style: .dark)
+//        drawerView.cornerRadius = 0
         // Set the height to match the default toolbar.
-        drawerView.collapsedHeight = 44
+//        drawerView.collapsedHeight = 44
         return drawerView
     }
 }
@@ -149,7 +143,7 @@ extension ViewController: DrawerViewDelegate {
 
     func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
         if position == .open {
-            searchBar.resignFirstResponder()
+//            searchBar.resignFirstResponder()
         }
     }
 
@@ -193,14 +187,14 @@ extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("\(tableView.adjustedContentInset)")
         tableView.deselectRow(at: indexPath, animated: true)
-        drawerView?.setPosition(.open, animated: true)
+//        drawerView?.setPosition(.open, animated: true)
     }
 }
 
 extension ViewController: UISearchBarDelegate {
 
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        drawerView?.setPosition(.open, animated: true)
+//        drawerView?.setPosition(.open, animated: true)
     }
 }
 extension Sequence where Element == DrawerMapEntry {

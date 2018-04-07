@@ -50,7 +50,8 @@ fileprivate extension DrawerPosition {
 
 let kVelocityTreshold: CGFloat = 0
 
-let kVerticalLeeway: CGFloat = 100.0
+// Vertical leeway is used to cover the bottom with springy animations.
+let kVerticalLeeway: CGFloat = 50.0
 
 let kDefaultCornerRadius: CGFloat = 9.0
 
@@ -97,7 +98,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     private let border = CALayer()
 
-    private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
+    private let backgroundView = UIView() // UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
     // MARK: - Visual properties
 
@@ -169,9 +170,9 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
 
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
-        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topSpace)
+        heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topSpace - 20)
         heightConstraint?.priority = .defaultLow
-        let bottomConstraint = self.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
+        let bottomConstraint = self.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor, constant: -10)
 
         let constraints = [
             self.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -271,6 +272,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         setupBorder()
         addBlurEffect()
 
+//        addTemp()
+
         updateVisuals()
     }
 
@@ -283,14 +286,16 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     func addBlurEffect() {
         backgroundView.frame = self.bounds
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
-        backgroundView.clipsToBounds = true
+        backgroundView.clipsToBounds = false
+        self.clipsToBounds = false
 
         self.insertSubview(backgroundView, at: 0)
 
         backgroundViewConstraints = [
             backgroundView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             backgroundView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            backgroundView.heightAnchor.constraint(equalTo: self.heightAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: 10),
+            // backgroundView.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 1, constant: kVerticalLeeway),
             backgroundView.topAnchor.constraint(equalTo: self.topAnchor)
         ]
 
@@ -298,7 +303,29 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
             constraint.isActive = true
         }
 
-        self.backgroundColor = UIColor.clear
+        backgroundView.backgroundColor = UIColor.red
+    }
+
+    func addTemp() {
+        let view = UIView()
+        view.frame = self.bounds
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.clipsToBounds = true
+        view.backgroundColor = UIColor.blue
+
+        self.addSubview(view)
+
+        backgroundViewConstraints = [
+            view.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            view.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            view.heightAnchor.constraint(equalToConstant: 10)
+//            view.topAnchor.constraint(equalTo: self.topAnchor)
+        ]
+
+        for constraint in backgroundViewConstraints {
+            constraint.isActive = true
+        }
     }
 
     private func updateVisuals() {
@@ -327,9 +354,25 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         overlay?.cutCornerSize = self.cornerRadius
     }
 
-    private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
-        backgroundView.effect = self.backgroundEffect
-        backgroundView.layer.cornerRadius = self.cornerRadius
+    private func updateBackgroundVisuals(_ backgroundView: UIView) {
+
+        // backgroundView.effect = self.backgroundEffect
+        if false /*#available(iOS 11.0, *)*/ {
+//            backgroundView.layer.cornerRadius = self.cornerRadius
+//            backgroundView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
+        } else {
+            // Fallback on earlier versions
+            let mask: CAShapeLayer = {
+                let m = CAShapeLayer()
+//                let path = UIBezierPath(ovalIn: backgroundView.bounds)
+                let frame = backgroundView.bounds.insetBy(top: 0, bottom: -kVerticalLeeway, left: 0, right: 0)
+                let path = UIBezierPath(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
+                m.path = path.cgPath
+                return m
+            }()
+            backgroundView.layer.mask = mask
+        }
+        backgroundView.backgroundColor = UIColor.red
     }
 
     // MARK: - View methods
@@ -357,12 +400,20 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         if layer == self.layer {
             border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
         }
+
+        backgroundView.layer.mask?.frame = backgroundView.bounds
+        // backgroundView.layer.frame = backgroundView.bounds
+
+        NSLog("\(backgroundView.layer.bounds)")
+        NSLog("\(backgroundView.bounds)")
+        NSLog("\(backgroundView.layer.mask?.frame)")
+        NSLog("")
     }
 
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-
+        updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
         let nextPosition: DrawerPosition
         if position != .closed && !self.enabledPositions.contains(position) {
