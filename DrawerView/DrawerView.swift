@@ -374,12 +374,6 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         }
 
         backgroundView.layer.mask?.frame = backgroundView.bounds
-        // backgroundView.layer.frame = backgroundView.bounds
-
-        NSLog("\(backgroundView.layer.bounds)")
-        NSLog("\(backgroundView.bounds)")
-        NSLog("\(backgroundView.layer.mask?.frame)")
-        NSLog("")
     }
 
     // MARK: - Public methods
