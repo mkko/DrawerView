@@ -50,7 +50,8 @@ fileprivate extension DrawerPosition {
 
 let kVelocityTreshold: CGFloat = 0
 
-let kVerticalLeeway: CGFloat = 100.0
+// Vertical leeway is used to cover the bottom with springy animations.
+let kVerticalLeeway: CGFloat = 10.0
 
 let kDefaultCornerRadius: CGFloat = 9.0
 
@@ -290,7 +291,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         backgroundViewConstraints = [
             backgroundView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             backgroundView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            backgroundView.heightAnchor.constraint(equalTo: self.heightAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: kVerticalLeeway),
             backgroundView.topAnchor.constraint(equalTo: self.topAnchor)
         ]
 
@@ -328,8 +329,22 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
-        backgroundView.effect = self.backgroundEffect
-        backgroundView.layer.cornerRadius = self.cornerRadius
+
+         backgroundView.effect = self.backgroundEffect
+        if #available(iOS 11.0, *) {
+            backgroundView.layer.cornerRadius = self.cornerRadius
+            backgroundView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
+        } else {
+            // Fallback on earlier versions
+            let mask: CAShapeLayer = {
+                let m = CAShapeLayer()
+                let frame = backgroundView.bounds.insetBy(top: 0, bottom: -kVerticalLeeway, left: 0, right: 0)
+                let path = UIBezierPath(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
+                m.path = path.cgPath
+                return m
+            }()
+            backgroundView.layer.mask = mask
+        }
     }
 
     // MARK: - View methods
@@ -357,12 +372,14 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         if layer == self.layer {
             border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
         }
+
+        backgroundView.layer.mask?.frame = backgroundView.bounds
     }
 
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-
+        updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
         let nextPosition: DrawerPosition
         if position != .closed && !self.enabledPositions.contains(position) {
