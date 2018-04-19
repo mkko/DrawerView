@@ -12,9 +12,10 @@ class Overlay: UIView {
 
     public var cutCornerSize: CGFloat = 0 {
         didSet {
-            cutCornerSizeConstraint?.constant = cutCornerSize
+            cutCornerSizeConstraint?.constant = max(cutCornerSize, 0)
         }
     }
+
     override var backgroundColor: UIColor? {
         didSet {
             leftCut.backgroundColor = self.backgroundColor
