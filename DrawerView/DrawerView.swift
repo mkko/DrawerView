@@ -61,6 +61,8 @@ let kDefaultShadowOpacity: Float = 0.05
 
 let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
+let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
+
 @objc public protocol DrawerViewDelegate {
 
     @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
@@ -88,6 +90,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     private var heightConstraint: NSLayoutConstraint? = nil
 
+//    private var backgroundViewConstraints: [NSLayoutConstraint] = []
+
     private var childScrollView: UIScrollView? = nil
 
     private var childScrollWasEnabled: Bool = true
@@ -96,7 +100,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
     private var overlay: Overlay?
 
-    private let border = CALayer()
+    private let borderView = UIView()
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
@@ -121,6 +125,12 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
     }
 
     public var backgroundEffect: UIVisualEffect? = kDefaultBackgroundEffect {
+        didSet {
+            updateVisuals()
+        }
+    }
+
+    public var borderColor: UIColor = kDefaultBorderColor {
         didSet {
             updateVisuals()
         }
@@ -185,6 +195,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         for constraint in constraints {
             constraint?.isActive = true
         }
+
+        updateVisuals()
     }
 
     // TODO: Use size classes with the positions.
@@ -269,26 +281,20 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
         self.translatesAutoresizingMaskIntoConstraints = false
 
-        setupBorder()
-        addBlurEffect()
+        setupBackgroundView()
+        setupBorderView()
 
         updateVisuals()
     }
 
-    func setupBorder() {
-        self.layer.addSublayer(border)
-    }
-
-    private var backgroundViewConstraints: [NSLayoutConstraint] = []
-
-    func addBlurEffect() {
+    func setupBackgroundView() {
         backgroundView.frame = self.bounds
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         backgroundView.clipsToBounds = true
 
         self.insertSubview(backgroundView, at: 0)
 
-        backgroundViewConstraints = [
+        let backgroundViewConstraints = [
             backgroundView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             backgroundView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
             backgroundView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: kVerticalLeeway),
@@ -302,12 +308,35 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         self.backgroundColor = UIColor.clear
     }
 
+    func setupBorderView() {
+        borderView.translatesAutoresizingMaskIntoConstraints = false
+        borderView.clipsToBounds = true
+        borderView.isUserInteractionEnabled = false
+        borderView.backgroundColor = UIColor.clear
+        borderView.layer.cornerRadius = 10
+
+        self.addSubview(borderView)
+
+        let borderViewConstraints = [
+            borderView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: -0.5),
+            borderView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 0.5),
+            borderView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: kVerticalLeeway),
+            borderView.topAnchor.constraint(equalTo: self.topAnchor, constant: -0.5)
+        ]
+
+        for constraint in borderViewConstraints {
+            constraint.isActive = true
+        }
+    }
+
     private func updateVisuals() {
         updateLayerVisuals(self.layer)
-        updateBorderVisuals(self.border)
+        updateBorderVisuals(self.borderView)
         updateOverlayVisuals(self.overlay)
         updateBackgroundVisuals(self.backgroundView)
         heightConstraint?.constant = -self.topSpace
+
+        self.setNeedsDisplay()
     }
 
     private func updateLayerVisuals(_ layer: CALayer) {
@@ -316,11 +345,10 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         layer.cornerRadius = self.cornerRadius
     }
 
-    private func updateBorderVisuals(_ border: CALayer) {
-        border.cornerRadius = self.cornerRadius
-        border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
-        border.borderColor = UIColor(white: 0.2, alpha: 0.2).cgColor
-        border.borderWidth = 0.5
+    private func updateBorderVisuals(_ borderView: UIView) {
+        borderView.layer.cornerRadius = self.cornerRadius
+        borderView.layer.borderColor = self.borderColor.cgColor
+        borderView.layer.borderWidth = 0.5
     }
 
     private func updateOverlayVisuals(_ overlay: Overlay?) {
@@ -353,28 +381,32 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
         super.layoutSubviews()
 
         // Update snap position, if not dragging.
-        //let animatorRunning = animator?.isRunning ?? false
         let isAnimating = animator?.isRunning ?? false
         if !isAnimating && !isDragging {
             // Handle possible layout changes, e.g. rotation.
             self.updateSnapPosition(animated: false)
         }
 
-        // NB: For some reason the subviews of the blur background
-        // don't keep up with sudden change
+        // NB: For some reason the subviews of the blur
+        // background don't keep up with sudden change.
         for view in self.backgroundView.subviews {
             view.frame.origin.y = 0
         }
     }
 
-    public override func layoutSublayers(of layer: CALayer) {
-        super.layoutSublayers(of: layer)
-        if layer == self.layer {
-            border.frame = self.bounds.insetBy(dx: -0.5, dy: -0.5)
-        }
-
-        backgroundView.layer.mask?.frame = backgroundView.bounds
-    }
+//    public override func draw(_ rect: CGRect) {
+//        super.draw(rect)
+//
+////        let p ath = UIBezierPath(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
+////
+////        UIColor.red.set()
+////        path.stroke()
+//
+//        let rect = UIBezierPath(roundedRect: CGRect(x: 150, y: 150, width: 100, height: 100), cornerRadius: 5.0)
+//        UIColor.green.set()
+//        rect.fill()
+//
+//    }
 
     // MARK: - Public methods
 
