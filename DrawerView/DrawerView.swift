@@ -483,6 +483,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
             self.animator?.stopAnimation(true)
 
+            // Get the actual position of the view.
             let frame = self.layer.presentation()?.frame ?? self.frame
             self.panOrigin = frame.origin.y
 
@@ -521,10 +522,16 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
                 // Disable child view scrolling
                 if !shouldScrollChildView && childScrollView.isScrollEnabled {
+
+                    sender.setTranslation(CGPoint.zero, in: self)
+
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
+                    let frame = self.layer.presentation()?.frame ?? self.frame
                     if childScrollView.contentOffset.y < 0 {
-                        self.panOrigin = self.panOrigin - childScrollView.contentOffset.y
+                        self.panOrigin = frame.origin.y - childScrollView.contentOffset.y
+                    } else {
+                        self.panOrigin = frame.origin.y
                     }
 
                     // Also animate to the proper scroll position.
@@ -540,7 +547,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                             // in the scroll view, so make it animate here.
                             log("Disabled child scrolling")
                             childScrollView.isScrollEnabled = false
-                            let pos = self.panOrigin + translation.y
+                            let pos = self.panOrigin
                             self.setPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
                 } else if !shouldScrollChildView {
