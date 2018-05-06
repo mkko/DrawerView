@@ -90,8 +90,6 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     private var heightConstraint: NSLayoutConstraint? = nil
 
-//    private var backgroundViewConstraints: [NSLayoutConstraint] = []
-
     private var childScrollView: UIScrollView? = nil
 
     private var childScrollWasEnabled: Bool = true
@@ -393,20 +391,6 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             view.frame.origin.y = 0
         }
     }
-
-//    public override func draw(_ rect: CGRect) {
-//        super.draw(rect)
-//
-////        let p ath = UIBezierPath(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
-////
-////        UIColor.red.set()
-////        path.stroke()
-//
-//        let rect = UIBezierPath(roundedRect: CGRect(x: 150, y: 150, width: 100, height: 100), cornerRadius: 5.0)
-//        UIColor.green.set()
-//        rect.fill()
-//
-//    }
 
     // MARK: - Public methods
 
