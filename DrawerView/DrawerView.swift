@@ -80,7 +80,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     private var panOrigin: CGFloat = 0.0
 
-    private var isDragging: Bool = false
+    private var startedDragging: Bool = false
 
     private var animator: UIViewPropertyAnimator? = nil
 
@@ -380,7 +380,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
         // Update snap position, if not dragging.
         let isAnimating = animator?.isRunning ?? false
-        if !isAnimating && !isDragging {
+        if !isAnimating && !startedDragging {
             // Handle possible layout changes, e.g. rotation.
             self.updateSnapPosition(animated: false)
         }
@@ -461,8 +461,6 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
-            isDragging = true
-
             self.delegate?.drawer?(self, willTransitionFrom: self.position)
 
             self.animator?.stopAnimation(true)
@@ -507,6 +505,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 // Disable child view scrolling
                 if !shouldScrollChildView && childScrollView.isScrollEnabled {
 
+                    startedDragging = true
+
                     sender.setTranslation(CGPoint.zero, in: self)
 
                     // Scrolling downwards and content was consumed, so disable
@@ -536,10 +536,12 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                     }, completion: nil)
                 } else if !shouldScrollChildView {
                     // Scroll only if we're not scrolling the subviews.
+                    startedDragging = true
                     let pos = panOrigin + translation.y
                     setPosition(whileDraggingAtPoint: pos)
                 }
             } else {
+                startedDragging = true
                 let pos = panOrigin + translation.y
                 setPosition(whileDraggingAtPoint: pos)
             }
@@ -554,7 +556,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
                 log("Let child view scroll.")
-            } else {
+            } else if startedDragging {
                 // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
                 // 2) A prediction that estimates the next position based on target offset.
@@ -578,7 +580,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             self.childScrollView?.isScrollEnabled = childScrollWasEnabled
             self.childScrollView = nil
 
-            isDragging = false
+            startedDragging = false
 
         default:
             break
