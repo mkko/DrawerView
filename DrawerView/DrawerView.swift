@@ -94,7 +94,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     private var childScrollWasEnabled: Bool = true
 
-    private var otherGestureRecognizer: UIGestureRecognizer? = nil
+    private var simultaneousGestureRecognizers: [UIGestureRecognizer] = []
 
     private var overlay: Overlay?
 
@@ -459,6 +459,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     @objc private func onPan(_ sender: UIPanGestureRecognizer) {
+
+
         switch sender.state {
         case .began:
             self.delegate?.drawer?(self, willTransitionFrom: self.position)
@@ -482,6 +484,18 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
             // If scrolling upwards a scroll view, ignore the events.
             if let childScrollView = self.childScrollView {
+
+                // Detect if directional lock should be respected.
+                let simultaneousPanGestures = simultaneousGestureRecognizers
+                    .flatMap { $0 as? UIPanGestureRecognizer }
+
+                let verticalScrollEnabled = simultaneousPanGestures.count == 0
+                    || simultaneousPanGestures.contains(where: { $0.velocity(in: self).y != 0 })
+
+                // If vertical scroll is disabled due to
+                if !verticalScrollEnabled {
+                    break
+                }
 
                 // NB: With negative content offset, we don't ask the delegate as
                 // we need to pan the drawer.
@@ -579,6 +593,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
             self.childScrollView?.isScrollEnabled = childScrollWasEnabled
             self.childScrollView = nil
+            self.simultaneousGestureRecognizers = []
 
             startedDragging = false
 
@@ -782,6 +797,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+//        print("gestureRecognizer(shouldRecognizeSimultaneouslyWith:): \(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
             // Safety check: if we haven't resumed the previous child scroll,
             // do it now. This is bound to happen on the simulator at least, when
@@ -789,7 +805,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
             if let childScrollView = self.childScrollView {
                 childScrollView.isScrollEnabled = self.childScrollWasEnabled
             }
-            self.otherGestureRecognizer = otherGestureRecognizer
+            self.simultaneousGestureRecognizers.append(otherGestureRecognizer)
             self.childScrollView = sv
             self.childScrollWasEnabled = sv.isScrollEnabled
         }
