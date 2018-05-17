@@ -271,7 +271,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func setup() {
-        panGesture = UIPanGestureRecognizer(target: self, action: #selector(onPan))
+        panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         panGesture.maximumNumberOfTouches = 2
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
@@ -458,9 +458,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         self.position = self.positionsSorted().last ?? .collapsed
     }
 
-    @objc private func onPan(_ sender: UIPanGestureRecognizer) {
-
-
+    @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
             self.delegate?.drawer?(self, willTransitionFrom: self.position)
@@ -489,11 +487,21 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 let simultaneousPanGestures = simultaneousGestureRecognizers
                     .flatMap { $0 as? UIPanGestureRecognizer }
 
-                let verticalScrollEnabled = simultaneousPanGestures.count == 0
-                    || simultaneousPanGestures.contains(where: { $0.velocity(in: self).y != 0 })
+                let horizontalPanOnly = simultaneousPanGestures
+                    .map { $0.velocity(in: self) }
+                    .all { v in
+                        print(v)
+                        return v.y == 0 && v.x != 0
+                }
+
+                let verticalScrollPossible = simultaneousPanGestures.count == 0
+                    || horizontalPanOnly
 
                 // If vertical scroll is disabled due to
-                if !verticalScrollEnabled {
+                if !verticalScrollPossible {
+                    log("Vertical pan cancelled due to direction lock")
+                    sender.isEnabled = false
+                    sender.isEnabled = true
                     break
                 }
 
@@ -845,5 +853,12 @@ func abort(reason: String) -> Never  {
 func log(_ message: String) {
     if LOGGING {
         print("\(dateFormatter.string(from: Date())): \(message)")
+    }
+}
+
+extension Collection {
+
+    func all(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
+        return try self.contains(where: { try !predicate($0) })
     }
 }
