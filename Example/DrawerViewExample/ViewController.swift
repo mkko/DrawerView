@@ -131,9 +131,10 @@ class ViewController: UIViewController {
 
     func setupTabDrawerView() -> DrawerView {
         // Attach the drawer with contents of a view controller.
-        let drawerView = self.addDrawerView(withViewController:
-            self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController")
-        )
+        let vc = self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController") as! DrawerTabViewController
+        let drawerView = self.addDrawerView(withViewController: vc)
+        vc.drawerView = drawerView
+
         drawerView.delegate = self
 
         drawerView.enabledPositions = [.collapsed, .open]
@@ -191,7 +192,6 @@ extension ViewController: UITableViewDataSource {
 extension ViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("\(tableView.adjustedContentInset)")
         tableView.deselectRow(at: indexPath, animated: true)
         drawerView?.setPosition(.open, animated: true)
     }
@@ -203,6 +203,7 @@ extension ViewController: UISearchBarDelegate {
         drawerView?.setPosition(.open, animated: true)
     }
 }
+
 extension Sequence where Element == DrawerMapEntry {
 
     subscript(key: String) -> DrawerView? {

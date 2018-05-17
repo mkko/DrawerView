@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B39FC7220AAB1F50099D712 /* DrawerTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B39FC7120AAB1F50099D712 /* DrawerTabViewController.swift */; };
 		2BCCE91520764BDE00130C4D /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BCCE91420764BDE00130C4D /* MapKit.framework */; };
 		2BF0591F205DD19C00D336DE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF0591E205DD19C00D336DE /* AppDelegate.swift */; };
 		2BF05921205DD19C00D336DE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF05920205DD19C00D336DE /* ViewController.swift */; };
@@ -33,6 +34,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B39FC7120AAB1F50099D712 /* DrawerTabViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerTabViewController.swift; sourceTree = "<group>"; };
 		2BCCE91420764BDE00130C4D /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		2BF0591B205DD19C00D336DE /* DrawerViewExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrawerViewExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BF0591E205DD19C00D336DE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 				2BF0591E205DD19C00D336DE /* AppDelegate.swift */,
 				2BF05920205DD19C00D336DE /* ViewController.swift */,
 				2BF05936205DD6AB00D336DE /* DrawerViewController.swift */,
+				2B39FC7120AAB1F50099D712 /* DrawerTabViewController.swift */,
 				2BF05922205DD19C00D336DE /* Main.storyboard */,
 				2BF05925205DD19C00D336DE /* Assets.xcassets */,
 				2BF05927205DD19C00D336DE /* LaunchScreen.storyboard */,
@@ -179,6 +182,7 @@
 				2BF05921205DD19C00D336DE /* ViewController.swift in Sources */,
 				2BF0591F205DD19C00D336DE /* AppDelegate.swift in Sources */,
 				2BF05937205DD6AB00D336DE /* DrawerViewController.swift in Sources */,
+				2B39FC7220AAB1F50099D712 /* DrawerTabViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
