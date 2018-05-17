@@ -161,11 +161,13 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     private var topSpace: CGFloat {
         // Use only the open positions for determining the top space.
-        let topPosition = self.sorted(positions: DrawerPosition.openPositions)
+        let topPosition = DrawerPosition.openPositions
+            .sorted(by: compareSnapPositions)
+            .reversed()
             .first(where: self.enabledPositions.contains)
             ?? .open
 
-        return self.snapPosition(for: topPosition) ?? 0
+        return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
     }
 
     public func attachTo(view: UIView) {
@@ -179,7 +181,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
         topConstraint = self.topAnchor.constraint(equalTo: view.topAnchor, constant: self.topMargin)
         heightConstraint = self.heightAnchor.constraint(equalTo: view.heightAnchor, constant: -self.topSpace)
-        heightConstraint?.priority = .defaultLow
+        heightConstraint = self.heightAnchor.constraint(greaterThanOrEqualTo: view.heightAnchor, multiplier: 1, constant: -self.topSpace)
         let bottomConstraint = self.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
 
         let constraints = [
@@ -233,6 +235,10 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 self.setInitialPosition()
             }
         }
+    }
+
+    private var enabledPositionsSorted: [DrawerPosition] {
+        return self.enabledPositions.sorted(by: compareSnapPositions)
     }
 
     // MARK: - Initialization
@@ -395,6 +401,12 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     // MARK: - Public methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
+        guard let superview = self.superview else {
+            log("ERROR: Not contained in a view.")
+            log("ERROR: Could not evaluate snap position for \(position.visibleName)")
+            return
+        }
+
         updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
         let nextPosition: DrawerPosition
@@ -408,12 +420,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
         self.currentPosition = nextPosition
 
-        guard let snapPosition = snapPosition(for: nextPosition) else {
-            log("Could not evaluate snap position for \(position.visibleName)")
-            return
-        }
-
-        self.scrollToPosition(snapPosition, observedPosition: nextPosition, animated: animated)
+        let nextSnapPosition = snapPosition(for: nextPosition, in: superview)
+        self.scrollToPosition(nextSnapPosition, observedPosition: nextPosition, animated: animated)
     }
 
     private func scrollToPosition(_ scrollPosition: CGFloat, observedPosition position: DrawerPosition, animated: Bool) {
@@ -455,7 +463,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func setInitialPosition() {
-        self.position = self.positionsSorted().last ?? .collapsed
+        self.position = self.enabledPositionsSorted.last ?? .collapsed
     }
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
@@ -508,7 +516,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 // NB: With negative content offset, we don't ask the delegate as
                 // we need to pan the drawer.
                 let childReachedTheTop = (childScrollView.contentOffset.y <= 0)
-                let isFullyOpen = self.positionsSorted().last == self.position
+                let isFullyOpen = self.enabledPositionsSorted.last == self.position
+
                 let scrollingToBottom = velocity.y < 0
 
                 let shouldScrollChildView: Bool
@@ -591,7 +600,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
                 let nextPosition: DrawerPosition
                 if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
-                    let advanced = targetPosition.advance(by: advancement, inPositions: self.positionsSorted()) {
+                    let advanced = targetPosition.advance(by: advancement, inPositions: self.enabledPositionsSorted) {
                     nextPosition = advanced
                 } else {
                     nextPosition = targetPosition
@@ -614,7 +623,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         if sender.state == .ended {
             self.delegate?.drawer?(self, willTransitionFrom: currentPosition)
 
-            if let prevPosition = self.position.advance(by: -1, inPositions: self.positionsSorted()) {
+            if let prevPosition = self.position.advance(by: -1, inPositions: self.enabledPositionsSorted) {
                 self.setPosition(prevPosition, animated: true)
 
                 // Notify
@@ -623,34 +632,27 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         }
     }
 
-    private func positionsSorted() -> [DrawerPosition] {
-        return self.sorted(positions: self.enabledPositions)
+    private func compareSnapPositions(first: DrawerPosition, second: DrawerPosition) -> Bool {
+        if let superview = superview {
+            return snapPosition(for: first, in: superview) > snapPosition(for: second, in: superview)
+        } else {
+            // Fall back to comparison between the enumerations.
+            return first.rawValue > second.rawValue
+        }
     }
 
-    private func sorted(positions: [DrawerPosition]) -> [DrawerPosition] {
-        return positions
-            .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
-            .sorted { $0.y > $1.y }
-            .map { $0.pos }
-    }
-
-
-    private func snapPositions(for positions: [DrawerPosition]) -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
+    private func snapPositions(for positions: [DrawerPosition], in superview: UIView) -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
         return positions
             // Group the info on position together. For the sake of
             // robustness, hide the ones without snap position.
-            .flatMap { p in self.snapPosition(for: p).map {(
+            .map { p in (
                 position: p,
-                snapPosition: $0
-                )}
+                snapPosition: self.snapPosition(for: p, in: superview)
+                )
         }
     }
 
-    private func snapPosition(for position: DrawerPosition) -> CGFloat? {
-        guard let superview = self.superview else {
-            return nil
-        }
-
+    private func snapPosition(for position: DrawerPosition, in superview: UIView) -> CGFloat {
         switch position {
         case .open:
             return self.topMargin
@@ -690,8 +692,11 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func positionFor(offset: CGFloat) -> DrawerPosition {
+        guard let superview = superview else {
+            return DrawerPosition.collapsed
+        }
         let distances = self.enabledPositions
-            .flatMap { pos in snapPosition(for: pos).map { (pos: pos, y: $0) } }
+            .flatMap { pos in (pos: pos, y: snapPosition(for: pos, in: superview)) }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
         }
@@ -700,8 +705,12 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func setPosition(whileDraggingAtPoint dragPoint: CGFloat) {
+        guard let superview = superview else {
+            log("ERROR: Cannot set position, no superview defined")
+            return
+        }
         let positions = self.enabledPositions
-            .flatMap(snapPosition)
+            .flatMap { self.snapPosition(for: $0, in: superview) }
             .sorted()
 
         let position: CGFloat
@@ -717,16 +726,19 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func updateSnapPosition(animated: Bool) {
-        if let topConstraint = self.topConstraint,
-            let expectedPos = self.snapPosition(for: currentPosition),
-            expectedPos != topConstraint.constant
-        {
+        guard let superview = superview else {
+            log("ERROR: Cannot update snap position, no superview defined")
+            return
+        }
+        let expectedPos = self.snapPosition(for: currentPosition, in: superview)
+        if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
             self.setPosition(currentPosition, animated: animated)
         }
     }
 
     private func createOverlay() -> Overlay? {
         guard let superview = self.superview else {
+            log("ERROR: Could not create overlay.")
             return nil
         }
 
@@ -755,7 +767,12 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func setOverlayOpacity(forScrollPosition position: CGFloat) {
-        let values = snapPositions(for: enabledPositions + [.closed])
+        guard let superview = self.superview else {
+            log("ERROR: Could not set up overlay.")
+            return
+        }
+
+        let values = snapPositions(for: enabledPositions + [.closed], in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: self.opacityFactor(for: $0.position)
@@ -772,7 +789,12 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     }
 
     private func setShadowOpacity(forScrollPosition position: CGFloat) {
-        let values = snapPositions(for: enabledPositions + [.closed])
+        guard let superview = self.superview else {
+            log("ERROR: Could not set up shadow.")
+            return
+        }
+
+        let values = snapPositions(for: enabledPositions + [.closed], in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: CGFloat(self.shadowOpacityFactor(for: $0.position))
