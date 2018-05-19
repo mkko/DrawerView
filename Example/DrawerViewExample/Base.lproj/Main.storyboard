@@ -130,25 +130,16 @@
                                         <rect key="frame" x="0.0" y="0.0" width="114.5" height="44"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <state key="normal" title="A"/>
-                                        <connections>
-                                            <action selector="toggleA:" destination="cjP-q8-GrB" eventType="touchUpInside" id="kCf-L5-iC1"/>
-                                        </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OFK-AU-0a8">
                                         <rect key="frame" x="122.5" y="0.0" width="114" height="44"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <state key="normal" title="B"/>
-                                        <connections>
-                                            <action selector="toggleB:" destination="cjP-q8-GrB" eventType="touchUpInside" id="B2S-2W-LLv"/>
-                                        </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bLi-Mw-H7o">
                                         <rect key="frame" x="244.5" y="0.0" width="98.5" height="44"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <state key="normal" title="C"/>
-                                        <connections>
-                                            <action selector="toggleC:" destination="cjP-q8-GrB" eventType="touchUpInside" id="iJL-UR-n9f"/>
-                                        </connections>
                                     </button>
                                 </subviews>
                                 <constraints>
@@ -157,42 +148,6 @@
                             </stackView>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" directionalLockEnabled="YES" pagingEnabled="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9XQ-fj-XiM">
                                 <rect key="frame" x="0.0" y="52" width="375" height="615"/>
-                                <subviews>
-                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="pt5-Ak-fyD">
-                                        <rect key="frame" x="0.0" y="0.0" width="375" height="615"/>
-                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </tableView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="B" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ncC-nA-0MB">
-                                        <rect key="frame" x="374.5" y="0.0" width="374.5" height="615"/>
-                                        <fontDescription key="fontDescription" style="UICTFontTextStyleTitle1"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="C" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DxB-GC-udZ">
-                                        <rect key="frame" x="749" y="0.0" width="374.5" height="615"/>
-                                        <fontDescription key="fontDescription" style="UICTFontTextStyleTitle1"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                </subviews>
-                                <constraints>
-                                    <constraint firstItem="ncC-nA-0MB" firstAttribute="width" secondItem="pt5-Ak-fyD" secondAttribute="width" id="0Du-xQ-9Fr"/>
-                                    <constraint firstItem="DxB-GC-udZ" firstAttribute="leading" secondItem="ncC-nA-0MB" secondAttribute="trailing" id="8dl-0C-lag"/>
-                                    <constraint firstItem="pt5-Ak-fyD" firstAttribute="height" secondItem="9XQ-fj-XiM" secondAttribute="height" id="DCd-uh-n3K"/>
-                                    <constraint firstAttribute="bottom" secondItem="pt5-Ak-fyD" secondAttribute="bottom" id="GJp-Hy-Fqh"/>
-                                    <constraint firstItem="ncC-nA-0MB" firstAttribute="top" secondItem="9XQ-fj-XiM" secondAttribute="top" id="GuQ-Nf-Dau"/>
-                                    <constraint firstAttribute="bottom" secondItem="ncC-nA-0MB" secondAttribute="bottom" id="M1F-5s-P9V"/>
-                                    <constraint firstAttribute="bottom" secondItem="DxB-GC-udZ" secondAttribute="bottom" id="TEA-fT-399"/>
-                                    <constraint firstItem="pt5-Ak-fyD" firstAttribute="width" secondItem="9XQ-fj-XiM" secondAttribute="width" id="Ytq-v9-B1s"/>
-                                    <constraint firstItem="DxB-GC-udZ" firstAttribute="top" secondItem="9XQ-fj-XiM" secondAttribute="top" id="ajU-vF-yHa"/>
-                                    <constraint firstItem="pt5-Ak-fyD" firstAttribute="top" secondItem="9XQ-fj-XiM" secondAttribute="top" id="pRT-8r-yLf"/>
-                                    <constraint firstAttribute="trailing" secondItem="DxB-GC-udZ" secondAttribute="trailing" id="sgo-Z6-MhU"/>
-                                    <constraint firstItem="pt5-Ak-fyD" firstAttribute="leading" secondItem="9XQ-fj-XiM" secondAttribute="leading" id="sqH-r2-CLT"/>
-                                    <constraint firstItem="ncC-nA-0MB" firstAttribute="height" secondItem="pt5-Ak-fyD" secondAttribute="height" id="vGd-Q0-FYX"/>
-                                    <constraint firstItem="ncC-nA-0MB" firstAttribute="leading" secondItem="pt5-Ak-fyD" secondAttribute="trailing" constant="-0.5" id="xu4-0W-Uuj"/>
-                                    <constraint firstItem="DxB-GC-udZ" firstAttribute="height" secondItem="pt5-Ak-fyD" secondAttribute="height" id="yBJ-r2-5ub"/>
-                                    <constraint firstItem="DxB-GC-udZ" firstAttribute="width" secondItem="pt5-Ak-fyD" secondAttribute="width" id="z2j-x7-muf"/>
-                                </constraints>
                                 <connections>
                                     <outlet property="delegate" destination="cjP-q8-GrB" id="ZxD-Py-Vai"/>
                                 </connections>
@@ -217,6 +172,7 @@
                         <outlet property="buttonB" destination="OFK-AU-0a8" id="vcs-wd-Vag"/>
                         <outlet property="buttonC" destination="bLi-Mw-H7o" id="FqL-oU-Aka"/>
                         <outlet property="contentView" destination="9XQ-fj-XiM" id="gzv-Zt-Sdw"/>
+                        <outlet property="stackView" destination="ftt-Ba-IFd" id="EJk-qA-Ozg"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Wcm-NP-ax5" userLabel="First Responder" sceneMemberID="firstResponder"/>

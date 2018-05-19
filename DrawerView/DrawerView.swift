@@ -63,6 +63,7 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
+
 @objc public protocol DrawerViewDelegate {
 
     @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
@@ -71,6 +72,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     @objc optional func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat)
 }
+
 
 @IBDesignable public class DrawerView: UIView {
 
@@ -581,7 +583,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             let velocity = sender.velocity(in: self)
             log("Ending with vertical velocity \(velocity.y)")
 
-            if let childScrollView = self.childScrollView, childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 {
+            if let childScrollView = self.childScrollView,
+                childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else if startedDragging {
@@ -824,7 +827,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-//        print("gestureRecognizer(shouldRecognizeSimultaneouslyWith:): \(otherGestureRecognizer)")
         if let sv = otherGestureRecognizer.view as? UIScrollView {
             // Safety check: if we haven't resumed the previous child scroll,
             // do it now. This is bound to happen on the simulator at least, when
@@ -864,6 +866,13 @@ fileprivate extension DrawerPosition {
     }
 }
 
+fileprivate extension Collection {
+
+    func all(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
+        return try self.contains(where: { try !predicate($0) })
+    }
+}
+
 func abort(reason: String) -> Never  {
     NSLog("DrawerView: \(reason)")
     abort()
@@ -875,9 +884,3 @@ func log(_ message: String) {
     }
 }
 
-extension Collection {
-
-    func all(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
-        return try self.contains(where: { try !predicate($0) })
-    }
-}

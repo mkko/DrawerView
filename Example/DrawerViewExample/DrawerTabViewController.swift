@@ -19,18 +19,12 @@ class DrawerTabViewController: UIViewController {
 
     @IBOutlet weak var buttonC: UIButton!
 
+    @IBOutlet weak var stackView: UIStackView!
+
     public var drawerView: DrawerView!
 
-    @IBAction func toggleA(_ sender: Any) {
-        goToPage(0)
-    }
-
-    @IBAction func toggleB(_ sender: Any) {
-        goToPage(1)
-    }
-
-    @IBAction func toggleC(_ sender: Any) {
-        goToPage(2)
+    @IBAction func jumpToPage(_ sender: UIButton) {
+        goToPage(sender.tag)
     }
 
     func goToPage(_ pageNumber: Int) {
@@ -44,51 +38,35 @@ class DrawerTabViewController: UIViewController {
 
         contentView.contentInsetAdjustmentBehavior = .never
 
-        contentView.subviews.forEach {
-            $0.removeFromSuperview()
-        }
-
         // Create the content programmatically.
 
         // Please note that it is crucial that the sizes of the
-        // subitems are handled dynamically by the autolayout,
-        // since the size of the content view will change during
-        // the interaction.
+        // subitems are matched to the content size by the autolayout,
+        // since the this will change during the drawer interaction.
 
-        let labels = ["A", "B", "C"]
-            .map { name -> UILabel in
-                let label = UILabel()
-                label.text = name
-                label.font = UIFont(name: "HelveticaNeue-UltraLight", size: 256)
-                label.textColor = UIColor(white: 0, alpha: 0.7)
-                label.textAlignment = .center
-                label.translatesAutoresizingMaskIntoConstraints = false
-                return label
+        let stackButtons = stackView.subviews
+            .flatMap { $0 as? UIButton }
+            .sorted { a, b in a.title(for: .normal)! < b.title(for: .normal)! }
+
+        // Set up toolbar buttons' targets.
+        stackButtons.enumerated().map { (index: $0, element: $1) }
+            .forEach {
+                $0.element.tag = $0.index
+                $0.element.addTarget(self, action: #selector(jumpToPage(_:)), for: .touchUpInside)
         }
 
-        labels.forEach(self.contentView.addSubview)
-
-        let results = labels.reduce((prev: nil, constraints: [])) { (result, label) -> (prev: UILabel?, constraints: [NSLayoutConstraint]) in
-
-            let newConstraints = [
-                label.widthAnchor.constraint(equalTo: (result.prev ?? contentView).widthAnchor),
-                label.heightAnchor.constraint(equalTo: (result.prev ?? contentView).heightAnchor),
-                label.leftAnchor.constraint(equalTo: result.prev?.rightAnchor ?? contentView.leftAnchor),
-                label.topAnchor.constraint(equalTo: contentView.topAnchor),
-                label.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-                ]
-
-            return (prev: label, constraints: result.constraints + newConstraints)
+        let labels = stackButtons
+            .map { button -> UILabel in
+            let label = UILabel()
+            label.text = button.title(for: .normal)!
+            label.font = UIFont(name: "HelveticaNeue-UltraLight", size: 256)
+            label.textColor = UIColor(white: 0, alpha: 0.7)
+            label.textAlignment = .center
+            label.translatesAutoresizingMaskIntoConstraints = false
+            return label
         }
 
-        let constraints = results.constraints
-            + [labels.last!.rightAnchor.constraint(equalTo: contentView.rightAnchor)]
-
-        constraints.forEach { $0.isActive = true }
-
-        self.contentView.contentSize = CGSize(
-            width: self.contentView.bounds.width * CGFloat(labels.count),
-            height: self.contentView.bounds.height)
+        contentView.setupAsPager(withViews: labels)
     }
 
     override func didReceiveMemoryWarning() {
@@ -107,9 +85,35 @@ class DrawerTabViewController: UIViewController {
     */
 }
 
-extension DrawerTabViewController: UIScrollViewDelegate {
+fileprivate extension UIScrollView {
 
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    func setupAsPager(withViews views: [UIView]) {
+        self.isPagingEnabled = true
+
+        views.forEach(self.addSubview)
+
+        let results = views.reduce((prev: nil, constraints: [])) { (result, label) -> (prev: UIView?, constraints: [NSLayoutConstraint]) in
+
+            let newConstraints = [
+                label.widthAnchor.constraint(equalTo: (result.prev ?? self).widthAnchor),
+                label.heightAnchor.constraint(equalTo: (result.prev ?? self).heightAnchor),
+                label.leftAnchor.constraint(equalTo: result.prev?.rightAnchor ?? self.leftAnchor),
+                label.topAnchor.constraint(equalTo: self.topAnchor),
+                label.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+                ]
+
+            return (prev: label, constraints: result.constraints + newConstraints)
+        }
+
+        let constraints = results.constraints
+            + [views.last!.rightAnchor.constraint(equalTo: self.rightAnchor)]
+
+        constraints.forEach { $0.isActive = true }
+
+        self.contentSize = CGSize(
+            width: self.bounds.width * CGFloat(views.count),
+            height: self.bounds.height)
 
     }
+
 }
