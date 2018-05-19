@@ -497,10 +497,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
                 let horizontalPanOnly = simultaneousPanGestures
                     .map { $0.velocity(in: self) }
-                    .all { v in
-                        print(v)
-                        return v.y == 0 && v.x != 0
-                }
+                    .all { $0.y == 0 && $0.x != 0 }
 
                 let verticalScrollPossible = simultaneousPanGestures.count == 0
                     || horizontalPanOnly
