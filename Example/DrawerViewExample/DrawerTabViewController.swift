@@ -92,17 +92,17 @@ fileprivate extension UIScrollView {
 
         views.forEach(self.addSubview)
 
-        let results = views.reduce((prev: nil, constraints: [])) { (result, label) -> (prev: UIView?, constraints: [NSLayoutConstraint]) in
+        let results = views.reduce((prev: nil, constraints: [])) { (result, view) -> (prev: UIView?, constraints: [NSLayoutConstraint]) in
 
             let newConstraints = [
-                label.widthAnchor.constraint(equalTo: (result.prev ?? self).widthAnchor),
-                label.heightAnchor.constraint(equalTo: (result.prev ?? self).heightAnchor),
-                label.leftAnchor.constraint(equalTo: result.prev?.rightAnchor ?? self.leftAnchor),
-                label.topAnchor.constraint(equalTo: self.topAnchor),
-                label.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+                view.widthAnchor.constraint(equalTo: (result.prev ?? self).widthAnchor),
+                view.heightAnchor.constraint(equalTo: (result.prev ?? self).heightAnchor),
+                view.leftAnchor.constraint(equalTo: result.prev?.rightAnchor ?? self.leftAnchor),
+                view.topAnchor.constraint(equalTo: self.topAnchor),
+                view.bottomAnchor.constraint(equalTo: self.bottomAnchor),
                 ]
 
-            return (prev: label, constraints: result.constraints + newConstraints)
+            return (prev: view, constraints: result.constraints + newConstraints)
         }
 
         let constraints = results.constraints
