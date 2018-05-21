@@ -26,7 +26,20 @@ let dateFormatter: DateFormatter = {
     case open = 3
 }
 
+extension DrawerPosition: CustomStringConvertible {
+
+    public var description: String {
+        switch self {
+        case .closed: return "closed"
+        case .collapsed: return "collapsed"
+        case .partiallyOpen: return "partiallyOpen"
+        case .open: return "open"
+        }
+    }
+}
+
 fileprivate extension DrawerPosition {
+
     static let activePositions: [DrawerPosition] = [
         .open,
         .partiallyOpen,
@@ -66,11 +79,15 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
 @objc public protocol DrawerViewDelegate {
 
-    @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition)
+    @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom fromPosition: DrawerPosition, to toPosition: DrawerPosition)
 
     @objc optional func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition)
 
     @objc optional func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat)
+
+    @objc optional func drawerWillBeginDragging(_ drawerView: DrawerView)
+
+    @objc optional func drawerWillEndDragging(_ drawerView: DrawerView)
 }
 
 
@@ -359,17 +376,25 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             nextPosition = position
         }
 
+        // Notify only if position changed.
+        let notify = (currentPosition != nextPosition)
+        if notify {
+            self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: nextPosition)
+        }
+
         self.currentPosition = nextPosition
 
         let nextSnapPosition = snapPosition(for: nextPosition, in: superview)
-        self.scrollToPosition(nextSnapPosition, observedPosition: nextPosition, animated: animated)
+        self.scrollToPosition(nextSnapPosition, animated: animated) {
+            if notify {
+                self.delegate?.drawer?(self, didTransitionTo: position)
+            }
+        }
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, observedPosition position: DrawerPosition, animated: Bool) {
-
+    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, completion: @escaping () -> Void) {
         if animated {
             self.animator?.stopAnimation(true)
-
             // Create the animator.
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
             self.animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
@@ -379,6 +404,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             self.animator?.addCompletion({ _ in
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
+                completion()
             })
 
             // Add extra height to make sure that bottom doesn't show up.
@@ -437,12 +463,12 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         self.position = self.enabledPositionsSorted.last ?? .collapsed
     }
 
-    // MARK: -
+    // MARK: - Pan handling
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
-            self.delegate?.drawer?(self, willTransitionFrom: self.position)
+            self.delegate?.drawerWillBeginDragging?(self)
 
             self.animator?.stopAnimation(true)
 
@@ -559,6 +585,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 // Let it scroll.
                 log("Let child view scroll.")
             } else if startedDragging {
+                self.delegate?.drawerWillEndDragging?(self)
+
                 // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
                 // 2) A prediction that estimates the next position based on target offset.
@@ -592,12 +620,13 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
-            self.delegate?.drawer?(self, willTransitionFrom: currentPosition)
 
             if let prevPosition = self.position.advance(by: -1, inPositions: self.enabledPositionsSorted) {
+
+                self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: prevPosition)
+
                 self.setPosition(prevPosition, animated: true)
 
-                // Notify
                 self.delegate?.drawer?(self, didTransitionTo: prevPosition)
             }
         }

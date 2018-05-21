@@ -148,14 +148,26 @@ class ViewController: UIViewController {
 
 extension ViewController: DrawerViewDelegate {
 
-    func drawer(_ drawerView: DrawerView, willTransitionFrom position: DrawerPosition) {
-        if position == .open {
+    func drawer(_ drawerView: DrawerView, willTransitionFrom fromPosition: DrawerPosition, to toPosition: DrawerPosition) {
+        print("drawer(_:willTransitionFrom: \(fromPosition) to: \(toPosition))")
+        if fromPosition == .open {
             searchBar.resignFirstResponder()
         }
     }
 
-    func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat) {
+    func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition) {
+        print("drawerView(_:didTransitionTo: \(position))")
+    }
 
+    func drawerWillBeginDragging(_ drawerView: DrawerView) {
+        print("drawerWillBeginDragging")
+    }
+
+    func drawerWillEndDragging(_ drawerView: DrawerView) {
+        print("drawerWillEndDragging")
+    }
+
+    func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat) {
         let maxOffset = drawers
             // Ignore modal for safe area insets.
             .filter { $0.drawer !== drawers["modal"] }
