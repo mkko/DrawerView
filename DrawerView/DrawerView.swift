@@ -142,7 +142,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     public var delegate: DrawerViewDelegate?
 
     public var drawerOffset: CGFloat {
-        return scrollPositionToOffset(self.topConstraint?.constant ?? 0)
+        return convertScrollPositionToOffset(self.topConstraint?.constant ?? 0)
     }
 
     // IB support, not intended to be used otherwise.
@@ -159,17 +159,6 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 self.attachTo(view: containerView)
             }
         }
-    }
-
-    private var topSpace: CGFloat {
-        // Use only the open positions for determining the top space.
-        let topPosition = DrawerPosition.openPositions
-            .sorted(by: compareSnapPositions)
-            .reversed()
-            .first(where: self.enabledPositions.contains)
-            ?? .open
-
-        return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
     }
 
     public func attachTo(view: UIView) {
@@ -237,10 +226,6 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 self.setInitialPosition()
             }
         }
-    }
-
-    private var enabledPositionsSorted: [DrawerPosition] {
-        return self.enabledPositions.sorted(by: compareSnapPositions)
     }
 
     // MARK: - Initialization
@@ -335,52 +320,6 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         }
     }
 
-    private func updateVisuals() {
-        updateLayerVisuals(self.layer)
-        updateBorderVisuals(self.borderView)
-        updateOverlayVisuals(self.overlay)
-        updateBackgroundVisuals(self.backgroundView)
-        heightConstraint?.constant = -self.topSpace
-
-        self.setNeedsDisplay()
-    }
-
-    private func updateLayerVisuals(_ layer: CALayer) {
-        layer.shadowRadius = shadowRadius
-        layer.shadowOpacity = shadowOpacity
-        layer.cornerRadius = self.cornerRadius
-    }
-
-    private func updateBorderVisuals(_ borderView: UIView) {
-        borderView.layer.cornerRadius = self.cornerRadius
-        borderView.layer.borderColor = self.borderColor.cgColor
-        borderView.layer.borderWidth = 0.5
-    }
-
-    private func updateOverlayVisuals(_ overlay: Overlay?) {
-        overlay?.backgroundColor = UIColor.black
-        overlay?.cutCornerSize = self.cornerRadius
-    }
-
-    private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
-
-         backgroundView.effect = self.backgroundEffect
-        if #available(iOS 11.0, *) {
-            backgroundView.layer.cornerRadius = self.cornerRadius
-            backgroundView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
-        } else {
-            // Fallback on earlier versions
-            let mask: CAShapeLayer = {
-                let m = CAShapeLayer()
-                let frame = backgroundView.bounds.insetBy(top: 0, bottom: -kVerticalLeeway, left: 0, right: 0)
-                let path = UIBezierPath(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
-                m.path = path.cgPath
-                return m
-            }()
-            backgroundView.layer.mask = mask
-        }
-    }
-
     // MARK: - View methods
 
     public override func layoutSubviews() {
@@ -400,7 +339,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         }
     }
 
-    // MARK: - Public methods
+    // MARK: - Scroll position methods
 
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
         guard let superview = self.superview else {
@@ -437,7 +376,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             self.animator?.addAnimations {
                 self.setScrollPosition(scrollPosition)
             }
-            self.animator?.addCompletion({ position in
+            self.animator?.addCompletion({ _ in
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
             })
@@ -451,14 +390,44 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         }
     }
 
-    // MARK: - Private methods
+    private func updateScrollPosition(whileDraggingAtPoint dragPoint: CGFloat) {
+        guard let superview = superview else {
+            log("ERROR: Cannot set position, no superview defined")
+            return
+        }
+        let positions = self.enabledPositions
+            .flatMap { self.snapPosition(for: $0, in: superview) }
+            .sorted()
+
+        let position: CGFloat
+        if let lowerBound = positions.first, dragPoint < lowerBound {
+            position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
+        } else if let upperBound = positions.last, dragPoint > upperBound {
+            position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
+        } else {
+            position = dragPoint
+        }
+
+        self.setScrollPosition(position)
+    }
+
+    private func updateSnapPosition(animated: Bool) {
+        guard let superview = superview else {
+            log("ERROR: Cannot update snap position, no superview defined")
+            return
+        }
+        let expectedPos = self.snapPosition(for: currentPosition, in: superview)
+        if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
+            self.setPosition(currentPosition, animated: animated)
+        }
+    }
 
     private func setScrollPosition(_ scrollPosition: CGFloat) {
         self.topConstraint?.constant = scrollPosition
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forScrollPosition: scrollPosition)
 
-        let drawerOffset = scrollPositionToOffset(scrollPosition)
+        let drawerOffset = convertScrollPositionToOffset(scrollPosition)
         self.delegate?.drawerDidMove?(self, drawerOffset: drawerOffset)
 
         self.superview?.layoutIfNeeded()
@@ -467,6 +436,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     private func setInitialPosition() {
         self.position = self.enabledPositionsSorted.last ?? .collapsed
     }
+
+    // MARK: -
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
@@ -479,7 +450,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             let frame = self.layer.presentation()?.frame ?? self.frame
             self.panOrigin = frame.origin.y
 
-            setPosition(whileDraggingAtPoint: panOrigin)
+            updateScrollPosition(whileDraggingAtPoint: panOrigin)
 
             break
         case .changed:
@@ -562,18 +533,18 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                             log("Disabled child scrolling")
                             childScrollView.isScrollEnabled = false
                             let pos = self.panOrigin
-                            self.setPosition(whileDraggingAtPoint: pos)
+                            self.updateScrollPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
                 } else if !shouldScrollChildView {
                     // Scroll only if we're not scrolling the subviews.
                     startedDragging = true
                     let pos = panOrigin + translation.y
-                    setPosition(whileDraggingAtPoint: pos)
+                    updateScrollPosition(whileDraggingAtPoint: pos)
                 }
             } else {
                 startedDragging = true
                 let pos = panOrigin + translation.y
-                setPosition(whileDraggingAtPoint: pos)
+                updateScrollPosition(whileDraggingAtPoint: pos)
             }
 
         case.failed:
@@ -632,14 +603,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         }
     }
 
-    private func compareSnapPositions(first: DrawerPosition, second: DrawerPosition) -> Bool {
-        if let superview = superview {
-            return snapPosition(for: first, in: superview) > snapPosition(for: second, in: superview)
-        } else {
-            // Fall back to comparison between the enumerations.
-            return first.rawValue > second.rawValue
-        }
-    }
+    // MARK: - Dynamically evaluated properties
 
     private func snapPositions(for positions: [DrawerPosition], in superview: UIView) -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
         return positions
@@ -704,35 +668,51 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         return distances.first.map { $0.pos } ?? DrawerPosition.collapsed
     }
 
-    private func setPosition(whileDraggingAtPoint dragPoint: CGFloat) {
-        guard let superview = superview else {
-            log("ERROR: Cannot set position, no superview defined")
-            return
-        }
-        let positions = self.enabledPositions
-            .flatMap { self.snapPosition(for: $0, in: superview) }
-            .sorted()
+    // MARK: - Visuals handling
 
-        let position: CGFloat
-        if let lowerBound = positions.first, dragPoint < lowerBound {
-            position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
-        } else if let upperBound = positions.last, dragPoint > upperBound {
-            position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
-        } else {
-            position = dragPoint
-        }
+    private func updateVisuals() {
+        updateLayerVisuals(self.layer)
+        updateBorderVisuals(self.borderView)
+        updateOverlayVisuals(self.overlay)
+        updateBackgroundVisuals(self.backgroundView)
+        heightConstraint?.constant = -self.topSpace
 
-        self.setScrollPosition(position)
+        self.setNeedsDisplay()
     }
 
-    private func updateSnapPosition(animated: Bool) {
-        guard let superview = superview else {
-            log("ERROR: Cannot update snap position, no superview defined")
-            return
-        }
-        let expectedPos = self.snapPosition(for: currentPosition, in: superview)
-        if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
-            self.setPosition(currentPosition, animated: animated)
+    private func updateLayerVisuals(_ layer: CALayer) {
+        layer.shadowRadius = shadowRadius
+        layer.shadowOpacity = shadowOpacity
+        layer.cornerRadius = self.cornerRadius
+    }
+
+    private func updateBorderVisuals(_ borderView: UIView) {
+        borderView.layer.cornerRadius = self.cornerRadius
+        borderView.layer.borderColor = self.borderColor.cgColor
+        borderView.layer.borderWidth = 0.5
+    }
+
+    private func updateOverlayVisuals(_ overlay: Overlay?) {
+        overlay?.backgroundColor = UIColor.black
+        overlay?.cutCornerSize = self.cornerRadius
+    }
+
+    private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
+
+        backgroundView.effect = self.backgroundEffect
+        if #available(iOS 11.0, *) {
+            backgroundView.layer.cornerRadius = self.cornerRadius
+            backgroundView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
+        } else {
+            // Fallback on earlier versions
+            let mask: CAShapeLayer = {
+                let m = CAShapeLayer()
+                let frame = backgroundView.bounds.insetBy(top: 0, bottom: -kVerticalLeeway, left: 0, right: 0)
+                let path = UIBezierPath(roundedRect: frame, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
+                m.path = path.cgPath
+                return m
+            }()
+            backgroundView.layer.mask = mask
         }
     }
 
@@ -807,7 +787,33 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         self.layer.shadowOpacity = Float(shadowOpacity)
     }
 
-    private func scrollPositionToOffset(_ position: CGFloat) -> CGFloat {
+    // MARK: - Helpers
+
+    private var topSpace: CGFloat {
+        // Use only the open positions for determining the top space.
+        let topPosition = DrawerPosition.openPositions
+            .sorted(by: compareSnapPositions)
+            .reversed()
+            .first(where: self.enabledPositions.contains)
+            ?? .open
+
+        return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
+    }
+
+    private var enabledPositionsSorted: [DrawerPosition] {
+        return self.enabledPositions.sorted(by: compareSnapPositions)
+    }
+
+    private func compareSnapPositions(first: DrawerPosition, second: DrawerPosition) -> Bool {
+        if let superview = superview {
+            return snapPosition(for: first, in: superview) > snapPosition(for: second, in: superview)
+        } else {
+            // Fall back to comparison between the enumerations.
+            return first.rawValue > second.rawValue
+        }
+    }
+
+    private func convertScrollPositionToOffset(_ position: CGFloat) -> CGFloat {
         guard let superview = self.superview else {
             return 0
         }
