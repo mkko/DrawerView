@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "DrawerView"
-  s.version      = "0.4.3"
+  s.version      = "0.4.4"
   s.summary      = "An iOS 10 Maps.app style drawer to be used anywhere in your app"
 
 
@@ -30,7 +30,7 @@ DrawerView is a view for iOS that mimics the functionality of the drawer introdu
                       DESC
 
   s.homepage     = "https://github.com/mkko/DrawerView"
-  s.screenshots  = "https://github.com/mkko/DrawerView/raw/0.4.3/Resources/sample.gif"
+  s.screenshots  = "https://github.com/mkko/DrawerView/raw/0.4.4/Resources/sample.gif"
 
 
   # ―――  Spec License  ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
