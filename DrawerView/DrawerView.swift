@@ -101,6 +101,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     private var panOrigin: CGFloat = 0.0
 
+    private var horizontalPanOnly: Bool = true
+
     private var startedDragging: Bool = false
 
     private var animator: UIViewPropertyAnimator? = nil
@@ -479,6 +481,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             // Get the actual position of the view.
             let frame = self.layer.presentation()?.frame ?? self.frame
             self.panOrigin = frame.origin.y
+            self.horizontalPanOnly = true
 
             updateScrollPosition(whileDraggingAtPoint: panOrigin)
 
@@ -497,19 +500,21 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 // Detect if directional lock should be respected.
                 let simultaneousPanGestures = simultaneousGestureRecognizers
                     .flatMap { $0 as? UIPanGestureRecognizer }
+                    .filter {
+                        $0.isEnabled && ($0.state == .changed || $0.state == .began)
+                }
 
-                let horizontalPanOnly = simultaneousPanGestures
-                    .map { $0.velocity(in: self) }
-                    .all { $0.y == 0 && $0.x != 0 }
+                let panningHorizontally = simultaneousPanGestures.count > 0
+                    && simultaneousPanGestures
+                        .map { $0.translation(in: self) }
+                        .all { p in p.x != 0 && p.y == 0 }
 
-                let verticalScrollPossible = simultaneousPanGestures.count == 0
-                    || horizontalPanOnly
+                if !panningHorizontally {
+                    self.horizontalPanOnly = false
+                }
 
-                // If vertical scroll is disabled due to
-                if !verticalScrollPossible {
+                if self.horizontalPanOnly {
                     log("Vertical pan cancelled due to direction lock")
-                    sender.isEnabled = false
-                    sender.isEnabled = true
                     break
                 }
 
@@ -595,7 +600,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 // 1) A treshold for velocity that makes drawer slide to the next state
                 // 2) A prediction that estimates the next position based on target offset.
                 // If 2 doesn't evaluate to the current position, use that.
-                let targetOffset = self.frame.origin.y + velocity.y * 0.15
+                let targetOffset = self.frame.origin.y + velocity.y / 100
                 let targetPosition = positionFor(offset: targetOffset)
 
                 // The positions are reversed, reverse the sign.
@@ -873,9 +878,10 @@ extension DrawerView: UIGestureRecognizerDelegate {
             // Safety check: if we haven't resumed the previous child scroll,
             // do it now. This is bound to happen on the simulator at least, when
             // the gesture recognizer is interrupted.
-            if let childScrollView = self.childScrollView {
-                childScrollView.isScrollEnabled = self.childScrollWasEnabled
-            }
+//            if let childScrollView = self.childScrollView {
+//                childScrollView.isScrollEnabled = self.childScrollWasEnabled
+////                self.simultaneousGestureRecognizers = []
+//            }
             self.simultaneousGestureRecognizers.append(otherGestureRecognizer)
             self.childScrollView = sv
             self.childScrollWasEnabled = sv.isScrollEnabled
@@ -911,7 +917,7 @@ fileprivate extension DrawerPosition {
 fileprivate extension Collection {
 
     func all(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
-        return try self.contains(where: { try !predicate($0) })
+        return try !self.contains(where: { try !predicate($0) })
     }
 }
 

@@ -55,18 +55,17 @@ class DrawerTabViewController: UIViewController {
                 $0.element.addTarget(self, action: #selector(jumpToPage(_:)), for: .touchUpInside)
         }
 
-        let labels = stackButtons
-            .map { button -> UILabel in
-            let label = UILabel()
-            label.text = button.title(for: .normal)!
-            label.font = UIFont(name: "HelveticaNeue-UltraLight", size: 256)
-            label.textColor = UIColor(white: 0, alpha: 0.7)
-            label.textAlignment = .center
-            label.translatesAutoresizingMaskIntoConstraints = false
-            return label
+        let views = stackButtons
+            .map { button -> UIView in
+                let view = UITableView()
+                view.delegate = self
+                view.dataSource = self
+                view.backgroundColor = UIColor.clear
+                view.translatesAutoresizingMaskIntoConstraints = false
+            return view
         }
 
-        contentView.setupAsPager(withViews: labels)
+        contentView.setupAsPager(withViews: views)
     }
 
     override func didReceiveMemoryWarning() {
@@ -116,4 +115,26 @@ fileprivate extension UIScrollView {
 
     }
 
+}
+
+extension DrawerTabViewController: UITableViewDelegate, UITableViewDataSource {
+
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 15
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "Cell")
+        cell.textLabel?.text = "Row \(indexPath.row)"
+        cell.backgroundColor = UIColor.clear
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
 }
