@@ -95,7 +95,9 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     // MARK: - Private properties
 
-    private var panGesture: UIPanGestureRecognizer! = nil
+    private var panGesture: UIPanGestureRecognizer!
+
+    private var overlayTapRecognizer: UITapGestureRecognizer!
 
     private var panOrigin: CGFloat = 0.0
 
@@ -157,6 +159,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     @IBOutlet
     public var delegate: DrawerViewDelegate?
+
+    public var enabled: Bool = true
 
     public var drawerOffset: CGFloat {
         return convertScrollPositionToOffset(self.topConstraint?.constant ?? 0)
@@ -754,8 +758,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
         let overlay = Overlay(frame: superview.bounds)
         overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.alpha = 0
-        let tap = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
-        overlay.addGestureRecognizer(tap)
+        overlayTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
+        overlay.addGestureRecognizer(overlayTapRecognizer)
 
         superview.insertSubview(overlay, belowSubview: self)
 
@@ -858,6 +862,9 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 extension DrawerView: UIGestureRecognizerDelegate {
 
     override public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer === panGesture || gestureRecognizer === overlayTapRecognizer {
+            return enabled
+        }
         return true
     }
 
