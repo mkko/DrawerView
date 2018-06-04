@@ -171,7 +171,7 @@ extension ViewController: DrawerViewDelegate {
         let maxOffset = drawers
             // Ignore modal for safe area insets.
             .filter { $0.drawer !== drawers["modal"] }
-            .flatMap { $0.drawer?.drawerOffset }
+            .compactMap { $0.drawer?.drawerOffset }
             .max()
         self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
 

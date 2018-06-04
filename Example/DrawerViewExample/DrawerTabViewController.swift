@@ -13,15 +13,11 @@ class DrawerTabViewController: UIViewController {
 
     @IBOutlet weak var contentView: UIScrollView!
 
-    @IBOutlet weak var buttonA: UIButton!
-
-    @IBOutlet weak var buttonB: UIButton!
-
-    @IBOutlet weak var buttonC: UIButton!
-
     @IBOutlet weak var stackView: UIStackView!
 
     public var drawerView: DrawerView!
+
+    private var lastTableView: UITableView!
 
     @IBAction func jumpToPage(_ sender: UIButton) {
         goToPage(sender.tag)
@@ -45,7 +41,7 @@ class DrawerTabViewController: UIViewController {
         // since the this will change during the drawer interaction.
 
         let stackButtons = stackView.subviews
-            .flatMap { $0 as? UIButton }
+            .compactMap { $0 as? UIButton }
             .sorted { a, b in a.title(for: .normal)! < b.title(for: .normal)! }
 
         // Set up toolbar buttons' targets.
@@ -55,15 +51,23 @@ class DrawerTabViewController: UIViewController {
                 $0.element.addTarget(self, action: #selector(jumpToPage(_:)), for: .touchUpInside)
         }
 
+//        let parentScrollView = UIScrollView()
+//        let childScrollView = UIScrollView()
+//        childScrollView.translatesAutoresizingMaskIntoConstraints = false
+
         let views = stackButtons
-            .map { button -> UIView in
+            .map { button -> UITableView in
                 let view = UITableView()
                 view.delegate = self
                 view.dataSource = self
                 view.backgroundColor = UIColor.clear
                 view.translatesAutoresizingMaskIntoConstraints = false
-            return view
+                return view
         }
+
+        lastTableView = views.last!
+        lastTableView.rowHeight = 80
+        lastTableView.register(CustomCell.self, forCellReuseIdentifier: "Cell2")
 
         contentView.setupAsPager(withViews: views)
     }
@@ -128,13 +132,61 @@ extension DrawerTabViewController: UITableViewDelegate, UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "Cell")
-        cell.textLabel?.text = "Row \(indexPath.row)"
-        cell.backgroundColor = UIColor.clear
-        return cell
+        if tableView === lastTableView {
+            let cell = CustomCell(reuseIdentifier: "Cell2")
+            return cell
+        } else {
+            let cell = UITableViewCell(style: .default, reuseIdentifier: "Cell")
+            cell.textLabel?.text = "Row \(indexPath.row)"
+            cell.backgroundColor = UIColor.clear
+            return cell
+        }
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+}
+
+class CustomCell: UITableViewCell {
+
+    let scroll: UIScrollView
+
+    let label: UILabel
+
+    init(reuseIdentifier: String?) {
+        self.scroll = UIScrollView()
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        scroll.backgroundColor = UIColor.clear
+
+        self.label = UILabel()
+        label.backgroundColor = UIColor.clear
+        label.numberOfLines = 0
+        label.font = UIFont.systemFont(ofSize: 28)
+        label.text = """
+        Please don't do this.
+        Used to verify
+        nested scroll
+        view support.
+        """
+        label.sizeToFit()
+
+        scroll.addSubview(label)
+
+        super.init(style: .default, reuseIdentifier: reuseIdentifier)
+
+        self.addSubview(scroll)
+        self.backgroundColor = UIColor.clear
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        scroll.frame = self.bounds
+        scroll.contentSize = CGSize(
+            width: scroll.bounds.size.width,
+            height: self.label.frame.height)
     }
 }
