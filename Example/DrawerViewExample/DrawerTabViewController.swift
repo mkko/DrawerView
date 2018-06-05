@@ -17,10 +17,11 @@ class DrawerTabViewController: UIViewController {
 
     public var drawerView: DrawerView!
 
-    private var lastTableView: UITableView!
+    private var lastTableView: UITableView?
 
     @IBAction func jumpToPage(_ sender: UIButton) {
         goToPage(sender.tag)
+//        drawerView.enabled = false
     }
 
     func goToPage(_ pageNumber: Int) {
@@ -55,9 +56,10 @@ class DrawerTabViewController: UIViewController {
 //        let childScrollView = UIScrollView()
 //        childScrollView.translatesAutoresizingMaskIntoConstraints = false
 
-        let views = stackButtons
-            .map { button -> UITableView in
+        let views = stackButtons.enumerated()
+            .map { (offset, button) -> UITableView in
                 let view = UITableView()
+                view.tag = offset
                 view.delegate = self
                 view.dataSource = self
                 view.backgroundColor = UIColor.clear
@@ -65,9 +67,9 @@ class DrawerTabViewController: UIViewController {
                 return view
         }
 
-        lastTableView = views.last!
-        lastTableView.rowHeight = 80
-        lastTableView.register(CustomCell.self, forCellReuseIdentifier: "Cell2")
+        lastTableView = views.first { $0.tag == 2 }!
+        lastTableView?.rowHeight = 80
+        lastTableView?.register(CustomCell.self, forCellReuseIdentifier: "Cell2")
 
         contentView.setupAsPager(withViews: views)
     }
@@ -162,11 +164,11 @@ class CustomCell: UITableViewCell {
         self.label = UILabel()
         label.backgroundColor = UIColor.clear
         label.numberOfLines = 0
-        label.font = UIFont.systemFont(ofSize: 28)
+        label.font = UIFont.systemFont(ofSize: 22)
         label.text = """
         Please don't do this.
-        Used to verify
-        nested scroll
+        This is only used to
+        verify nested scroll
         view support.
         """
         label.sizeToFit()

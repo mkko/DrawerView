@@ -127,23 +127,19 @@
                                 <rect key="frame" x="16" y="0.0" width="343" height="44"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ujn-K7-Jf0">
-                                        <rect key="frame" x="0.0" y="0.0" width="86" height="44"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="114.5" height="44"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <state key="normal" title="A"/>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OFK-AU-0a8">
-                                        <rect key="frame" x="94" y="0.0" width="85.5" height="44"/>
+                                        <rect key="frame" x="122.5" y="0.0" width="114" height="44"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <state key="normal" title="B"/>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bLi-Mw-H7o">
-                                        <rect key="frame" x="187.5" y="0.0" width="86" height="44"/>
+                                        <rect key="frame" x="244.5" y="0.0" width="98.5" height="44"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <state key="normal" title="C"/>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rTB-AY-ucF">
-                                        <rect key="frame" x="281.5" y="0.0" width="61.5" height="44"/>
-                                        <state key="normal" title="D"/>
                                     </button>
                                 </subviews>
                                 <constraints>

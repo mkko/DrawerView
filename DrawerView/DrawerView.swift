@@ -90,6 +90,11 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
     @objc optional func drawerWillEndDragging(_ drawerView: DrawerView)
 }
 
+private struct ChildScrollViewInfo {
+    var scrollView: UIScrollView
+    var scrollWasEnabled: Bool
+    var gestureRecognizers: [UIGestureRecognizer] = []
+}
 
 @IBDesignable public class DrawerView: UIView {
 
@@ -113,11 +118,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     private var heightConstraint: NSLayoutConstraint? = nil
 
-    private var childScrollView: UIScrollView? = nil
-
-    private var childScrollWasEnabled: Bool = true
-
-    private var simultaneousGestureRecognizers: [UIGestureRecognizer] = []
+    private var childScrollViews: [ChildScrollViewInfo] = []
 
     private var overlay: Overlay?
 
@@ -428,7 +429,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             return
         }
         let positions = self.enabledPositions
-            .flatMap { self.snapPosition(for: $0, in: superview) }
+            .compactMap { self.snapPosition(for: $0, in: superview) }
             .sorted()
 
         let position: CGFloat
@@ -495,14 +496,17 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             }
 
             // If scrolling upwards a scroll view, ignore the events.
-            if let childScrollView = self.childScrollView {
+            if self.childScrollViews.count > 0 {
 
                 // Detect if directional lock should be respected.
-                let simultaneousPanGestures = simultaneousGestureRecognizers
-                    .flatMap { $0 as? UIPanGestureRecognizer }
-                    .filter {
-                        $0.isEnabled && ($0.state == .changed || $0.state == .began)
+                let panGestures = self.childScrollViews
+                    .filter { $0.scrollWasEnabled }
+                    .flatMap { $0.gestureRecognizers }
+                    .compactMap { g -> UIPanGestureRecognizer? in
+                        g as? UIPanGestureRecognizer
                 }
+
+                let simultaneousPanGestures = panGestures.filter { $0.isActive() }
 
                 let panningHorizontally = simultaneousPanGestures.count > 0
                     && simultaneousPanGestures
@@ -518,15 +522,24 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                     break
                 }
 
+                let activeScrollViews = simultaneousPanGestures
+                    .compactMap { $0.view as? UIScrollView }
+
+                // TODO: TEMP
+                let childScrollView = activeScrollViews.first
+                let childViews = self.childScrollViews.map { $0.scrollView }
+                let childViewsContentOffsets = childViews.map { $0.contentOffset }
+
                 // NB: With negative content offset, we don't ask the delegate as
                 // we need to pan the drawer.
-                let childReachedTheTop = (childScrollView.contentOffset.y <= 0)
+                let childReachedTheTop = (childScrollView?.contentOffset.y ?? 0) <= 0
                 let isFullyOpen = self.enabledPositionsSorted.last == self.position
+                let childScrollEnabled = childScrollView?.isScrollEnabled ?? false
 
                 let scrollingToBottom = velocity.y < 0
 
                 let shouldScrollChildView: Bool
-                if !childScrollView.isScrollEnabled {
+                if !childScrollEnabled {
                     shouldScrollChildView = false
                 } else if !childReachedTheTop && !scrollingToBottom {
                     shouldScrollChildView = true
@@ -539,7 +552,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 }
 
                 // Disable child view scrolling
-                if !shouldScrollChildView && childScrollView.isScrollEnabled {
+                if !shouldScrollChildView && childScrollEnabled {
 
                     startedDragging = true
 
@@ -548,8 +561,10 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                     // Scrolling downwards and content was consumed, so disable
                     // child scrolling and catch up with the offset.
                     let frame = self.layer.presentation()?.frame ?? self.frame
-                    if childScrollView.contentOffset.y < 0 {
-                        self.panOrigin = frame.origin.y - childScrollView.contentOffset.y
+                    let minContentOffset = activeScrollViews.map { $0.contentOffset.y }.min() ?? 0
+
+                    if minContentOffset < 0 {
+                        self.panOrigin = frame.origin.y - minContentOffset
                     } else {
                         self.panOrigin = frame.origin.y
                     }
@@ -566,7 +581,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                             // Disabling the scroll removes negative content offset
                             // in the scroll view, so make it animate here.
                             log("Disabled child scrolling")
-                            childScrollView.isScrollEnabled = false
+                            activeScrollViews.forEach { $0.isScrollEnabled = false }
                             let pos = self.panOrigin
                             self.updateScrollPosition(whileDraggingAtPoint: pos)
                     }, completion: nil)
@@ -589,8 +604,13 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             let velocity = sender.velocity(in: self)
             log("Ending with vertical velocity \(velocity.y)")
 
-            if let childScrollView = self.childScrollView,
-                childScrollView.isScrollEnabled && childScrollView.contentOffset.y > 0 {
+            let activeScrollViews = self.childScrollViews.filter { sv in
+                sv.scrollView.gestureRecognizers?.contains { $0.isActive() } ?? false
+            }
+
+            if activeScrollViews.contains(where: {
+                $0.scrollView.isScrollEnabled && $0.scrollView.contentOffset.y > 0
+            }) {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else if startedDragging {
@@ -616,9 +636,8 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
                 self.setPosition(nextPosition, animated: true)
             }
 
-            self.childScrollView?.isScrollEnabled = childScrollWasEnabled
-            self.childScrollView = nil
-            self.simultaneousGestureRecognizers = []
+            self.childScrollViews.forEach { $0.scrollView.isScrollEnabled = $0.scrollWasEnabled }
+            self.childScrollViews = []
 
             startedDragging = false
 
@@ -698,7 +717,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
             return DrawerPosition.collapsed
         }
         let distances = self.enabledPositions
-            .flatMap { pos in (pos: pos, y: snapPosition(for: pos, in: superview)) }
+            .compactMap { pos in (pos: pos, y: snapPosition(for: pos, in: superview)) }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
         }
@@ -875,16 +894,20 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if let sv = otherGestureRecognizer.view as? UIScrollView {
-            // Safety check: if we haven't resumed the previous child scroll,
-            // do it now. This is bound to happen on the simulator at least, when
-            // the gesture recognizer is interrupted.
-//            if let childScrollView = self.childScrollView {
-//                childScrollView.isScrollEnabled = self.childScrollWasEnabled
-////                self.simultaneousGestureRecognizers = []
-//            }
-            self.simultaneousGestureRecognizers.append(otherGestureRecognizer)
-            self.childScrollView = sv
-            self.childScrollWasEnabled = sv.isScrollEnabled
+
+            let gestureRecognizers: [UIGestureRecognizer]
+            if let index = self.childScrollViews.index(where: { $0.scrollView === sv }) {
+                let scrollInfo = self.childScrollViews[index]
+                self.childScrollViews.remove(at: index)
+                gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
+            } else {
+                gestureRecognizers = []
+            }
+
+            self.childScrollViews.append(ChildScrollViewInfo(
+                scrollView: sv,
+                scrollWasEnabled: sv.isScrollEnabled,
+                gestureRecognizers: gestureRecognizers))
         }
         return true
     }
@@ -918,6 +941,13 @@ fileprivate extension Collection {
 
     func all(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
         return try !self.contains(where: { try !predicate($0) })
+    }
+}
+
+fileprivate extension UIGestureRecognizer {
+
+    func isActive() -> Bool {
+        return self.isEnabled && (self.state == .changed || self.state == .began)
     }
 }
 
