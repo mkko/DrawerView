@@ -525,16 +525,9 @@ private struct ChildScrollViewInfo {
                 let activeScrollViews = simultaneousPanGestures
                     .compactMap { $0.view as? UIScrollView }
 
-                // TODO: TEMP
-                let childScrollView = activeScrollViews.first
-                let childViews = self.childScrollViews.map { $0.scrollView }
-                let childViewsContentOffsets = childViews.map { $0.contentOffset }
-
-                // NB: With negative content offset, we don't ask the delegate as
-                // we need to pan the drawer.
-                let childReachedTheTop = (childScrollView?.contentOffset.y ?? 0) <= 0
+                let childReachedTheTop = activeScrollViews.contains { $0.contentOffset.y <= 0 }
                 let isFullyOpen = self.enabledPositionsSorted.last == self.position
-                let childScrollEnabled = childScrollView?.isScrollEnabled ?? false
+                let childScrollEnabled = activeScrollViews.contains { $0.isScrollEnabled }
 
                 let scrollingToBottom = velocity.y < 0
 
@@ -605,12 +598,11 @@ private struct ChildScrollViewInfo {
             log("Ending with vertical velocity \(velocity.y)")
 
             let activeScrollViews = self.childScrollViews.filter { sv in
-                sv.scrollView.gestureRecognizers?.contains { $0.isActive() } ?? false
+                sv.scrollView.isScrollEnabled &&
+                    sv.scrollView.gestureRecognizers?.contains { $0.isActive() } ?? false
             }
 
-            if activeScrollViews.contains(where: {
-                $0.scrollView.isScrollEnabled && $0.scrollView.contentOffset.y > 0
-            }) {
+            if activeScrollViews.contains(where: { $0.scrollView.contentOffset.y > 0 }) {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else if startedDragging {
