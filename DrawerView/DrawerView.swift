@@ -428,6 +428,7 @@ private struct ChildScrollViewInfo {
             log("ERROR: Cannot set position, no superview defined")
             return
         }
+
         let positions = self.enabledPositions
             .compactMap { self.snapPosition(for: $0, in: superview) }
             .sorted()
@@ -942,6 +943,16 @@ fileprivate extension UIGestureRecognizer {
         return self.isEnabled && (self.state == .changed || self.state == .began)
     }
 }
+
+#if !swift(>=4.2)
+extension Array {
+    // Backwards support for compactMap.
+    public func compactMap<ElementOfResult>(_ transform: (Element) throws -> ElementOfResult?) rethrows -> [ElementOfResult] {
+        return try self.flatMap(transform)
+    }
+}
+#endif
+
 
 func abort(reason: String) -> Never  {
     NSLog("DrawerView: \(reason)")
