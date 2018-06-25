@@ -18,13 +18,13 @@ Well, this is the next thing I'll be working with.
 
 ## Installation
 
-You can install DrawerView with Carthage and CocoaPods. For Carthage add the following into your `Cartfile`:
+You can install DrawerView with Carthage and CocoaPods. With CocoaPods, add the following into your `Podfile`:
 
-```
+```ruby
 pod "DrawerView"
 ```
 
-With CocoaPods, add the following into your `Podfile`:
+For Carthage add the following into your `Cartfile`:
 
 ```
 github "mkko/DrawerView"
@@ -51,7 +51,7 @@ You can add contents of one view controller as a drawer to another view controll
 2. Define a storyboard ID for the drawer view controller (eg. "DrawerViewController")
 3. Make the connection in code:
 
-```
+```swift
 override func viewDidLoad() {
     super.viewDidLoad()
 
@@ -71,14 +71,14 @@ override func viewDidLoad() {
 
 Programmatic setup is pretty much the same as setting up any `UIView`: you create one, set it up with subviews and add it to a view. Here's an example to do it.
 
-```
+```swift
 override func viewDidLoad() {
     super.viewDidLoad()
 
     let drawerView = DrawerView()
     drawerView.attachTo(view: self.view)
 
-	// Set up the drawer here
+    // Set up the drawer here
     drawerView.supportedPositions = [.collapsed, .partiallyOpen]
 }
 ```
