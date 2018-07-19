@@ -79,7 +79,7 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
 @objc public protocol DrawerViewDelegate {
 
-    @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom fromPosition: DrawerPosition, to toPosition: DrawerPosition)
+    @objc optional func drawer(_ drawerView: DrawerView, willTransitionFrom startPosition: DrawerPosition, to targetPosition: DrawerPosition)
 
     @objc optional func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition)
 

@@ -148,9 +148,9 @@ class ViewController: UIViewController {
 
 extension ViewController: DrawerViewDelegate {
 
-    func drawer(_ drawerView: DrawerView, willTransitionFrom fromPosition: DrawerPosition, to toPosition: DrawerPosition) {
-        print("drawer(_:willTransitionFrom: \(fromPosition) to: \(toPosition))")
-        if fromPosition == .open {
+    func drawer(_ drawerView: DrawerView, willTransitionFrom startPosition: DrawerPosition, to targetPosition: DrawerPosition) {
+        print("drawer(_:willTransitionFrom: \(startPosition) to: \(targetPosition))")
+        if startPosition == .open {
             searchBar.resignFirstResponder()
         }
     }
