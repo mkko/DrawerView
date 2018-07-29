@@ -155,6 +155,16 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    override public var isHidden: Bool {
+        get {
+            return super.isHidden
+        }
+        set {
+            super.isHidden = newValue
+            self.overlay?.isHidden = newValue
+        }
+    }
+
     // MARK: - Public properties
 
     @IBOutlet
@@ -797,6 +807,7 @@ private struct ChildScrollViewInfo {
         }
 
         let overlay = Overlay(frame: superview.bounds)
+        overlay.isHidden = self.isHidden
         overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.alpha = 0
         overlayTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))

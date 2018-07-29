@@ -37,7 +37,7 @@ class ViewController: UIViewController {
 
     func showDrawer(drawer: DrawerView?, animated: Bool) {
         for d in drawers {
-            d.drawer?.setPosition(d.drawer != drawer ? .closed : .collapsed, animated: animated)
+            d.drawer?.isHidden = (d.drawer != drawer)
         }
     }
 
