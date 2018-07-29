@@ -40,25 +40,17 @@ extension DrawerPosition: CustomStringConvertible {
 
 fileprivate extension DrawerPosition {
 
-    static let activePositions: [DrawerPosition] = [
-        .open,
-        .partiallyOpen,
-        .collapsed
-    ]
+    static var allPositions: [DrawerPosition] {
+        return [.closed, .collapsed, .partiallyOpen, .open]
+    }
+
+    static let activePositions: [DrawerPosition] = allPositions
+        .filter { $0 != .closed }
 
     static let openPositions: [DrawerPosition] = [
         .open,
         .partiallyOpen
     ]
-
-    var visibleName: String {
-        switch self {
-        case .closed: return "hidden"
-        case .open: return "open"
-        case .partiallyOpen: return "partiallyOpen"
-        case .collapsed: return "collapsed"
-        }
-    }
 }
 
 let kVelocityTreshold: CGFloat = 0
@@ -126,26 +118,33 @@ private struct ChildScrollViewInfo {
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
+    private var willHide = false
+
     // MARK: - Visual properties
 
+    /// The corner radius of the drawer view.
     @IBInspectable public var cornerRadius: CGFloat = kDefaultCornerRadius {
         didSet {
             updateVisuals()
         }
     }
 
+    /// The shadow radius of the drawer view.
     @IBInspectable public var shadowRadius: CGFloat = kDefaultShadowRadius {
         didSet {
             updateVisuals()
         }
     }
 
+    /// The shadow opacity of the drawer view.
     @IBInspectable public var shadowOpacity: Float = kDefaultShadowOpacity {
         didSet {
             updateVisuals()
         }
     }
 
+    /// The used effect for the drawer view background. When set to nil no
+    /// effect is used.
     public var backgroundEffect: UIVisualEffect? = kDefaultBackgroundEffect {
         didSet {
             updateVisuals()
@@ -158,15 +157,96 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    override public var isHidden: Bool {
+        get {
+            return super.isHidden
+        }
+        set(newHiddenValue) {
+
+            if newHiddenValue {
+                self.willHide = true
+            }
+
+            if let superview = superview {
+                // Restore the original position just in case (e.g. was hidden with animation).
+                let snapPosition = self.snapPosition(for: self.position, in: superview)
+                self.scrollToPosition(snapPosition, animated: false)
+            }
+
+            super.isHidden = newHiddenValue
+            self.overlay?.isHidden = newHiddenValue
+            self.willHide = false
+        }
+    }
+
+    public enum VisibilityAnimation {
+        case none
+        case slide
+        //case fadeInOut
+    }
+
+    public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
+        guard self.isHidden != hidden else { return }
+        guard let superview = superview else {
+            self.isHidden = hidden
+            return
+        }
+
+        if hidden {
+            self.willHide = true
+        }
+
+        switch animation {
+        case .none:
+            self.isHidden = hidden
+        case .slide:
+            if hidden {
+                self.willHide = true
+                let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
+                self.scrollToPosition(snapPositionForHidden, animated: true) {
+                    self.isHidden = true
+                    self.willHide = false
+                }
+            } else {
+                self.isHidden = false
+                // Start from the hidden state.
+                let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
+                self.scrollToPosition(snapPositionForHidden, animated: false)
+
+                let snapPosition = self.snapPosition(for: self.position, in: superview)
+                self.scrollToPosition(snapPosition, animated: true)
+            }
+        }
+
+        if !willHide {
+            self.willHide = false
+        }
+    }
+
     // MARK: - Public properties
 
     @IBOutlet
     public var delegate: DrawerViewDelegate?
 
+    /// Boolean indicating whether the drawer is enabled. When disabled, all user
+    /// interaction with the drawer is disabled. However, user interaction with the
+    /// content is still possible.
     public var enabled: Bool = true
 
+    /// The offset position of the drawer. The offset is measured from the bottom,
+    /// zero meaning the top of the drawer is at the bottom of its superview. Hidden
+    /// drawers will have the same offset as closed ones do.
     public var drawerOffset: CGFloat {
-        return convertScrollPositionToOffset(self.topConstraint?.constant ?? 0)
+        guard let superview = superview else {
+            return 0
+        }
+
+        if self.isHidden || self.willHide {
+            let closedSnapPosition = self.snapPosition(for: .closed, in: superview)
+            return convertScrollPositionToOffset(closedSnapPosition)
+        } else {
+            return convertScrollPositionToOffset(self.currentSnapPosition)
+        }
     }
 
     // IB support, not intended to be used otherwise.
@@ -185,6 +265,10 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    /// Attaches the drawer to the given view. The drawer will update its constraints
+    /// to match the bounds of the target view.
+    ///
+    /// - parameter view The view to attach to.
     public func attachTo(view: UIView) {
 
         if self.superview == nil {
@@ -216,24 +300,28 @@ private struct ChildScrollViewInfo {
 
     // TODO: Use size classes with the positions.
 
+    /// The top margin for the drawer when it is at its full height.
     public var topMargin: CGFloat = 68.0 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
     }
 
+    /// The height of the drawer when collapsed.
     public var collapsedHeight: CGFloat = 68.0 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
     }
 
+    /// The height of the drawer when partially open.
     public var partiallyOpenHeight: CGFloat = 264.0 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
     }
 
+    /// The current position of the drawer.
     public var position: DrawerPosition {
         get {
             return currentPosition
@@ -243,9 +331,12 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    public var enabledPositions: [DrawerPosition] = DrawerPosition.activePositions {
+    /// List of user interactive positions for the drawer. Please note that
+    /// programmatically any position is still possible, this list only
+    /// defines the snap positions for the drawer
+    public var snapPositions: [DrawerPosition] = DrawerPosition.activePositions {
         didSet {
-            if !enabledPositions.contains(self.position) {
+            if !snapPositions.contains(self.position) {
                 // Current position is not in the given list, default to the most closed one.
                 self.setInitialPosition()
             }
@@ -269,6 +360,13 @@ private struct ChildScrollViewInfo {
         self.setup()
     }
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    /// Initialize the drawer with contents of the given view. The
+    /// provided view is added as a child view for the drawer and
+    /// constrained with auto layout from all of its sides.
     convenience public init(withView view: UIView) {
         self.init()
 
@@ -288,6 +386,12 @@ private struct ChildScrollViewInfo {
     }
 
     private func setup() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOrientationChange),
+            name: NSNotification.Name.UIDeviceOrientationDidChange,
+            object: nil)
+
         panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         panGesture.maximumNumberOfTouches = 2
         panGesture.minimumNumberOfTouches = 1
@@ -302,7 +406,7 @@ private struct ChildScrollViewInfo {
         updateVisuals()
     }
 
-    func setupBackgroundView() {
+    private func setupBackgroundView() {
         backgroundView.frame = self.bounds
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         backgroundView.clipsToBounds = true
@@ -323,7 +427,7 @@ private struct ChildScrollViewInfo {
         self.backgroundColor = UIColor.clear
     }
 
-    func setupBorderView() {
+    private func setupBorderView() {
         borderView.translatesAutoresizingMaskIntoConstraints = false
         borderView.clipsToBounds = true
         borderView.isUserInteractionEnabled = false
@@ -349,13 +453,6 @@ private struct ChildScrollViewInfo {
     public override func layoutSubviews() {
         super.layoutSubviews()
 
-        // Update snap position, if not dragging.
-        let isAnimating = latestAnimator?.isRunning ?? false
-        if !isAnimating && !startedDragging {
-            // Handle possible layout changes, e.g. rotation.
-            self.updateSnapPosition(animated: false)
-        }
-
         // NB: For some reason the subviews of the blur
         // background don't keep up with sudden change.
         for view in self.backgroundView.subviews {
@@ -363,35 +460,36 @@ private struct ChildScrollViewInfo {
         }
     }
 
+
+    @objc func handleOrientationChange() {
+        self.updateSnapPosition(animated: false)
+    }
+
     // MARK: - Scroll position methods
 
+    /// Set the position of the drawer.
+    ///
+    /// - parameter position The position to be set.
+    /// - parameter animated Wheter the change should be animated or not.
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
         guard let superview = self.superview else {
             log("ERROR: Not contained in a view.")
-            log("ERROR: Could not evaluate snap position for \(position.visibleName)")
+            log("ERROR: Could not evaluate snap position for \(position)")
             return
         }
 
-        updateBackgroundVisuals(self.backgroundView)
+        //updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
-        let nextPosition: DrawerPosition
-        if position != .closed && !self.enabledPositions.contains(position) {
-            nextPosition = position.advance(by: 1, inPositions: self.enabledPositions)
-                ?? position.advance(by: -1, inPositions: self.enabledPositions)
-                ?? position
-        } else {
-            nextPosition = position
-        }
 
         // Notify only if position changed.
-        let notify = (currentPosition != nextPosition)
+        let notify = (currentPosition != position)
         if notify {
-            self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: nextPosition)
+            self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: position)
         }
 
-        self.currentPosition = nextPosition
+        self.currentPosition = position
 
-        let nextSnapPosition = snapPosition(for: nextPosition, in: superview)
+        let nextSnapPosition = snapPosition(for: position, in: superview)
         self.scrollToPosition(nextSnapPosition, animated: animated) {
             if notify {
                 self.delegate?.drawer?(self, didTransitionTo: position)
@@ -399,7 +497,7 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, completion: @escaping () -> Void) {
+    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, completion: (() -> Void)? = nil) {
         if animated {
             // Create the animator.
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
@@ -411,7 +509,7 @@ private struct ChildScrollViewInfo {
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
                 self.setNeedsUpdateConstraints()
-                completion()
+                completion?()
             })
 
             // Add extra height to make sure that bottom doesn't show up.
@@ -441,7 +539,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let positions = self.enabledPositions
+        let positions = self.snapPositions
             .compactMap { self.snapPosition(for: $0, in: superview) }
             .sorted()
 
@@ -480,7 +578,7 @@ private struct ChildScrollViewInfo {
     }
 
     private func setInitialPosition() {
-        self.position = self.enabledPositionsSorted.last ?? .collapsed
+        self.position = self.snapPositionsSorted.last ?? .collapsed
     }
 
     // MARK: - Pan handling
@@ -539,7 +637,7 @@ private struct ChildScrollViewInfo {
                     .compactMap { $0.view as? UIScrollView }
 
                 let childReachedTheTop = activeScrollViews.contains { $0.contentOffset.y <= 0 }
-                let isFullyOpen = self.enabledPositionsSorted.last == self.position
+                let isFullyOpen = self.snapPositionsSorted.last == self.position
                 let childScrollEnabled = activeScrollViews.contains { $0.isScrollEnabled }
 
                 let scrollingToBottom = velocity.y < 0
@@ -633,7 +731,7 @@ private struct ChildScrollViewInfo {
 
                 let nextPosition: DrawerPosition
                 if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
-                    let advanced = targetPosition.advance(by: advancement, inPositions: self.enabledPositionsSorted) {
+                    let advanced = self.snapPositionsSorted.advance(from: targetPosition, offset: advancement) {
                     nextPosition = advanced
                 } else {
                     nextPosition = targetPosition
@@ -654,7 +752,7 @@ private struct ChildScrollViewInfo {
     @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
 
-            if let prevPosition = self.position.advance(by: -1, inPositions: self.enabledPositionsSorted) {
+            if let prevPosition = self.snapPositionsSorted.advance(from: self.position, offset: -1) {
 
                 self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: prevPosition)
 
@@ -721,7 +819,7 @@ private struct ChildScrollViewInfo {
         guard let superview = superview else {
             return DrawerPosition.collapsed
         }
-        let distances = self.enabledPositions
+        let distances = self.snapPositions
             .compactMap { pos in (pos: pos, y: snapPosition(for: pos, in: superview)) }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
@@ -785,6 +883,7 @@ private struct ChildScrollViewInfo {
         }
 
         let overlay = Overlay(frame: superview.bounds)
+        overlay.isHidden = self.isHidden
         overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.alpha = 0
         overlayTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
@@ -814,7 +913,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: enabledPositions + [.closed], in: superview)
+        let values = snapPositions(for: DrawerPosition.allPositions, in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: self.opacityFactor(for: $0.position)
@@ -836,7 +935,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: enabledPositions + [.closed], in: superview)
+        let values = snapPositions(for: DrawerPosition.allPositions, in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: CGFloat(self.shadowOpacityFactor(for: $0.position))
@@ -856,14 +955,14 @@ private struct ChildScrollViewInfo {
         let topPosition = DrawerPosition.openPositions
             .sorted(by: compareSnapPositions)
             .reversed()
-            .first(where: self.enabledPositions.contains)
+            .first(where: self.snapPositions.contains)
             ?? .open
 
         return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
     }
 
-    private var enabledPositionsSorted: [DrawerPosition] {
-        return self.enabledPositions.sorted(by: compareSnapPositions)
+    fileprivate var snapPositionsSorted: [DrawerPosition] {
+        return self.snapPositions.sorted(by: compareSnapPositions)
     }
 
     private func compareSnapPositions(first: DrawerPosition, second: DrawerPosition) -> Bool {
@@ -873,6 +972,10 @@ private struct ChildScrollViewInfo {
             // Fall back to comparison between the enumerations.
             return first.rawValue > second.rawValue
         }
+    }
+
+    private var currentSnapPosition: CGFloat {
+        return self.topConstraint?.constant ?? 0
     }
 
     private func convertScrollPositionToOffset(_ position: CGFloat) -> CGFloat {
@@ -918,6 +1021,13 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 }
 
+public extension DrawerView {
+
+    func getPosition(offsetBy offset: Int) -> DrawerPosition? {
+        return self.snapPositionsSorted.advance(from: self.position, offset: offset)
+    }
+}
+
 fileprivate extension CGRect {
 
     func insetBy(top: CGFloat = 0, bottom: CGFloat = 0, left: CGFloat = 0, right: CGFloat = 0) -> CGRect {
@@ -929,17 +1039,23 @@ fileprivate extension CGRect {
     }
 }
 
-fileprivate extension DrawerPosition {
+public extension BidirectionalCollection where Element == DrawerPosition {
 
-    func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition? {
-        guard !positions.isEmpty else {
+    /// A simple utility function that goes through a collection of `DrawerPosition` items. Note
+    /// that positions are treated in the same order they are provided in the collection.
+    func advance(from position: DrawerPosition, offset: Int) -> DrawerPosition? {
+        guard !self.isEmpty else {
             return nil
         }
 
-        let index = (positions.index(of: self) ?? 0)
-        let nextIndex = index + by
-        return positions.indices.contains(nextIndex) ? positions[nextIndex] : nil
+        if let index = self.index(of: position) {
+            let nextIndex = self.index(index, offsetBy: offset)
+            return self.indices.contains(nextIndex) ? self[nextIndex] : nil
+        } else {
+            return nil
+        }
     }
+
 }
 
 fileprivate extension Collection {
@@ -965,7 +1081,6 @@ extension Array {
 }
 #endif
 
-
 func abort(reason: String) -> Never  {
     NSLog("DrawerView: \(reason)")
     abort()
@@ -976,4 +1091,3 @@ func log(_ message: String) {
         print("\(dateFormatter.string(from: Date())): \(message)")
     }
 }
-

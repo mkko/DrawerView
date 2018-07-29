@@ -36,8 +36,14 @@ class ViewController: UIViewController {
     }
 
     func showDrawer(drawer: DrawerView?, animated: Bool) {
-        for d in drawers {
-            d.drawer?.setPosition(d.drawer != drawer ? .closed : .collapsed, animated: animated)
+        for another in drawers.compactMap({ $0.drawer }) {
+            if another !== drawer {
+                another.setHidden(true, animation: .slide)
+            } else if another.isHidden {
+                another.setHidden(false, animation: .slide)
+            } else if let nextPosition = another.getPosition(offsetBy: 1) ?? another.getPosition(offsetBy: -1) {
+                another.setPosition(nextPosition, animated: true)
+            }
         }
     }
 
@@ -68,7 +74,7 @@ class ViewController: UIViewController {
     }
 
     private func setupDrawer() -> DrawerView {
-        drawerView.enabledPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView.snapPositions = [.collapsed, .partiallyOpen, .open]
         drawerView.delegate = self
         drawerView.position = .collapsed
         return drawerView
@@ -115,7 +121,7 @@ class ViewController: UIViewController {
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
         drawerView.delegate = self
-        drawerView.enabledPositions = [.closed, .open]
+        drawerView.snapPositions = [.closed, .open]
         return drawerView
     }
 
@@ -124,7 +130,7 @@ class ViewController: UIViewController {
         drawerView.attachTo(view: self.view)
         drawerView.delegate = self
 
-        drawerView.enabledPositions = [.collapsed, .partiallyOpen]
+        drawerView.snapPositions = [.collapsed, .partiallyOpen]
         drawerView.backgroundEffect = UIBlurEffect(style: .dark)
         return drawerView
     }
@@ -137,7 +143,7 @@ class ViewController: UIViewController {
 
         drawerView.delegate = self
 
-        drawerView.enabledPositions = [.collapsed, .open]
+        drawerView.snapPositions = [.collapsed, .open]
         drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
         drawerView.cornerRadius = 0
         // Set the height to match the default toolbar.
