@@ -160,8 +160,48 @@ private struct ChildScrollViewInfo {
             return super.isHidden
         }
         set {
+            if let superview = superview {
+                // Restore the original position just in case (e.g. was hidden with animation).
+                let snapPosition = self.snapPosition(for: self.position, in: superview)
+                self.scrollToPosition(snapPosition, animated: false)
+            }
+
             super.isHidden = newValue
             self.overlay?.isHidden = newValue
+        }
+    }
+
+    public enum VisibilityAnimation {
+        case none
+        case slide
+        //case fadeInOut
+    }
+
+    public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
+        guard self.isHidden != hidden else { return }
+        guard let superview = superview else {
+            self.isHidden = hidden
+            return
+        }
+
+        switch animation {
+        case .none:
+            self.isHidden = hidden
+        case .slide:
+            if hidden {
+                let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
+                self.scrollToPosition(snapPositionForHidden, animated: true) {
+                    self.isHidden = true
+                }
+            } else {
+                self.isHidden = false
+                // Start from the hidden state.
+                let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
+                self.scrollToPosition(snapPositionForHidden, animated: false)
+
+                let snapPosition = self.snapPosition(for: self.position, in: superview)
+                self.scrollToPosition(snapPosition, animated: true)
+            }
         }
     }
 
@@ -292,6 +332,10 @@ private struct ChildScrollViewInfo {
         self.setup()
     }
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     /// Initialize the drawer with contents of the given view. The
     /// provided view is added as a child view for the drawer and
     /// constrained with auto layout from all of its sides.
@@ -314,6 +358,12 @@ private struct ChildScrollViewInfo {
     }
 
     private func setup() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOrientationChange),
+            name: NSNotification.Name.UIDeviceOrientationDidChange,
+            object: nil)
+
         panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         panGesture.maximumNumberOfTouches = 2
         panGesture.minimumNumberOfTouches = 1
@@ -375,18 +425,16 @@ private struct ChildScrollViewInfo {
     public override func layoutSubviews() {
         super.layoutSubviews()
 
-        // Update snap position, if not dragging.
-        let isAnimating = latestAnimator?.isRunning ?? false
-        if !isAnimating && !startedDragging {
-            // Handle possible layout changes, e.g. rotation.
-            self.updateSnapPosition(animated: false)
-        }
-
         // NB: For some reason the subviews of the blur
         // background don't keep up with sudden change.
         for view in self.backgroundView.subviews {
             view.frame.origin.y = 0
         }
+    }
+
+
+    @objc func handleOrientationChange() {
+        self.updateSnapPosition(animated: false)
     }
 
     // MARK: - Scroll position methods
@@ -402,7 +450,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        updateBackgroundVisuals(self.backgroundView)
+        //updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
 
         // Notify only if position changed.
@@ -421,7 +469,7 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, completion: @escaping () -> Void) {
+    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, completion: (() -> Void)? = nil) {
         if animated {
             // Create the animator.
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
@@ -433,7 +481,7 @@ private struct ChildScrollViewInfo {
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
                 self.setNeedsUpdateConstraints()
-                completion()
+                completion?()
             })
 
             // Add extra height to make sure that bottom doesn't show up.
