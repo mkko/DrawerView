@@ -502,7 +502,7 @@ private struct ChildScrollViewInfo {
     }
 
     private func setInitialPosition() {
-        self.position = self.enabledPositionsSorted.last ?? .collapsed
+        self.position = self.snapPositionsSorted.last ?? .collapsed
     }
 
     // MARK: - Pan handling
@@ -561,7 +561,7 @@ private struct ChildScrollViewInfo {
                     .compactMap { $0.view as? UIScrollView }
 
                 let childReachedTheTop = activeScrollViews.contains { $0.contentOffset.y <= 0 }
-                let isFullyOpen = self.enabledPositionsSorted.last == self.position
+                let isFullyOpen = self.snapPositionsSorted.last == self.position
                 let childScrollEnabled = activeScrollViews.contains { $0.isScrollEnabled }
 
                 let scrollingToBottom = velocity.y < 0
@@ -655,7 +655,7 @@ private struct ChildScrollViewInfo {
 
                 let nextPosition: DrawerPosition
                 if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
-                    let advanced = targetPosition.advance(by: advancement, inPositions: self.enabledPositionsSorted) {
+                    let advanced = self.snapPositionsSorted.advance(from: targetPosition, offset: advancement) {
                     nextPosition = advanced
                 } else {
                     nextPosition = targetPosition
@@ -676,7 +676,7 @@ private struct ChildScrollViewInfo {
     @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
 
-            if let prevPosition = self.position.advance(by: -1, inPositions: self.enabledPositionsSorted) {
+            if let prevPosition = self.snapPositionsSorted.advance(from: self.position, offset: -1) {
 
                 self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: prevPosition)
 
@@ -885,7 +885,7 @@ private struct ChildScrollViewInfo {
         return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
     }
 
-    private var enabledPositionsSorted: [DrawerPosition] {
+    fileprivate var snapPositionsSorted: [DrawerPosition] {
         return self.snapPositions.sorted(by: compareSnapPositions)
     }
 
@@ -941,6 +941,13 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 }
 
+public extension DrawerView {
+
+    func getPosition(offsetBy offset: Int) -> DrawerPosition? {
+        return self.snapPositionsSorted.advance(from: self.position, offset: offset)
+    }
+}
+
 fileprivate extension CGRect {
 
     func insetBy(top: CGFloat = 0, bottom: CGFloat = 0, left: CGFloat = 0, right: CGFloat = 0) -> CGRect {
@@ -952,17 +959,23 @@ fileprivate extension CGRect {
     }
 }
 
-fileprivate extension DrawerPosition {
+public extension BidirectionalCollection where Element == DrawerPosition {
 
-    func advance(by: Int, inPositions positions: [DrawerPosition]) -> DrawerPosition? {
-        guard !positions.isEmpty else {
+    /// A simple utility function that goes through a collection of `DrawerPosition` items. Note
+    /// that positions are treated in the same order they are provided in the collection.
+    func advance(from position: DrawerPosition, offset: Int) -> DrawerPosition? {
+        guard !self.isEmpty else {
             return nil
         }
 
-        let index = (positions.index(of: self) ?? 0)
-        let nextIndex = index + by
-        return positions.indices.contains(nextIndex) ? positions[nextIndex] : nil
+        if let index = self.index(of: position) {
+            let nextIndex = self.index(index, offsetBy: offset)
+            return self.indices.contains(nextIndex) ? self[nextIndex] : nil
+        } else {
+            return nil
+        }
     }
+
 }
 
 fileprivate extension Collection {

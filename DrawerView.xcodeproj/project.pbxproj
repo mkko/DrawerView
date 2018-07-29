@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2B1D0EFB20179010006BB48C /* CutCornerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1D0EFA2017900C006BB48C /* CutCornerView.swift */; };
 		2B3FD31C2027BA600045C7BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3FD31B2027BA600045C7BF /* Extensions.swift */; };
+		2B9E0DBB210DBF78004ABAC5 /* DrawerPositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9E0DBA210DBF78004ABAC5 /* DrawerPositionTests.swift */; };
 		2BDAD3B120110F6E00AA7FC2 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD3A720110F6E00AA7FC2 /* DrawerView.framework */; };
 		2BDAD3B620110F6E00AA7FC2 /* DrawerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD3B520110F6E00AA7FC2 /* DrawerViewTests.swift */; };
 		2BDAD3B820110F6E00AA7FC2 /* DrawerView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDAD3AA20110F6E00AA7FC2 /* DrawerView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -30,6 +31,7 @@
 /* Begin PBXFileReference section */
 		2B1D0EFA2017900C006BB48C /* CutCornerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutCornerView.swift; sourceTree = "<group>"; };
 		2B3FD31B2027BA600045C7BF /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		2B9E0DBA210DBF78004ABAC5 /* DrawerPositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerPositionTests.swift; sourceTree = "<group>"; };
 		2BDAD3A720110F6E00AA7FC2 /* DrawerView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DrawerView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BDAD3AA20110F6E00AA7FC2 /* DrawerView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DrawerView.h; sourceTree = "<group>"; };
 		2BDAD3AB20110F6E00AA7FC2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				2BDAD3B520110F6E00AA7FC2 /* DrawerViewTests.swift */,
+				2B9E0DBA210DBF78004ABAC5 /* DrawerPositionTests.swift */,
 				2BDAD3B720110F6E00AA7FC2 /* Info.plist */,
 			);
 			path = DrawerViewTests;
@@ -225,6 +228,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BDAD3B620110F6E00AA7FC2 /* DrawerViewTests.swift in Sources */,
+				2B9E0DBB210DBF78004ABAC5 /* DrawerPositionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
