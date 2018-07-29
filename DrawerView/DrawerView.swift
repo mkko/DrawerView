@@ -128,24 +128,29 @@ private struct ChildScrollViewInfo {
 
     // MARK: - Visual properties
 
+    /// The corner radius of the drawer view.
     @IBInspectable public var cornerRadius: CGFloat = kDefaultCornerRadius {
         didSet {
             updateVisuals()
         }
     }
 
+    /// The shadow radius of the drawer view.
     @IBInspectable public var shadowRadius: CGFloat = kDefaultShadowRadius {
         didSet {
             updateVisuals()
         }
     }
 
+    /// The shadow opacity of the drawer view.
     @IBInspectable public var shadowOpacity: Float = kDefaultShadowOpacity {
         didSet {
             updateVisuals()
         }
     }
 
+    /// The used effect for the drawer view background. When set to nil no
+    /// effect is used.
     public var backgroundEffect: UIVisualEffect? = kDefaultBackgroundEffect {
         didSet {
             updateVisuals()
@@ -163,8 +168,13 @@ private struct ChildScrollViewInfo {
     @IBOutlet
     public var delegate: DrawerViewDelegate?
 
+    /// Boolean indicating whether the drawer is enabled. When disabled, all user
+    /// interaction with the drawer is disabled. However, user interaction with the
+    /// content is still possible.
     public var enabled: Bool = true
 
+    /// The offset position of the drawer. The offset is measured from the bottom,
+    /// zero meaning the top of the drawer is at the bottom of its superview.
     public var drawerOffset: CGFloat {
         return convertScrollPositionToOffset(self.topConstraint?.constant ?? 0)
     }
@@ -185,6 +195,10 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    /// Attaches the drawer to the given view. The drawer will update its constraints
+    /// to match the bounds of the target view.
+    ///
+    /// - parameter view The view to attach to.
     public func attachTo(view: UIView) {
 
         if self.superview == nil {
@@ -216,24 +230,28 @@ private struct ChildScrollViewInfo {
 
     // TODO: Use size classes with the positions.
 
+    /// The top margin for the drawer when it is at its full height.
     public var topMargin: CGFloat = 68.0 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
     }
 
+    /// The height of the drawer when collapsed.
     public var collapsedHeight: CGFloat = 68.0 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
     }
 
+    /// The height of the drawer when partially open.
     public var partiallyOpenHeight: CGFloat = 264.0 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
     }
 
+    /// The current position of the drawer.
     public var position: DrawerPosition {
         get {
             return currentPosition
@@ -243,6 +261,9 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    /// List of user interactive positions for the drawer. Please note that
+    /// programmatically any position is still possible, this list only
+    /// defines the snap positions for the drawer
     public var enabledPositions: [DrawerPosition] = DrawerPosition.activePositions {
         didSet {
             if !enabledPositions.contains(self.position) {
@@ -269,6 +290,9 @@ private struct ChildScrollViewInfo {
         self.setup()
     }
 
+    /// Initialize the drawer with contents of the given view. The
+    /// provided view is added as a child view for the drawer and
+    /// constrained with auto layout from all of its sides.
     convenience public init(withView view: UIView) {
         self.init()
 
@@ -302,7 +326,7 @@ private struct ChildScrollViewInfo {
         updateVisuals()
     }
 
-    func setupBackgroundView() {
+    private func setupBackgroundView() {
         backgroundView.frame = self.bounds
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         backgroundView.clipsToBounds = true
@@ -323,7 +347,7 @@ private struct ChildScrollViewInfo {
         self.backgroundColor = UIColor.clear
     }
 
-    func setupBorderView() {
+    private func setupBorderView() {
         borderView.translatesAutoresizingMaskIntoConstraints = false
         borderView.clipsToBounds = true
         borderView.isUserInteractionEnabled = false
@@ -365,6 +389,10 @@ private struct ChildScrollViewInfo {
 
     // MARK: - Scroll position methods
 
+    /// Set the position of the drawer.
+    ///
+    /// - parameter position The position to be set.
+    /// - parameter animated Wheter the change should be animated or not.
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
         guard let superview = self.superview else {
             log("ERROR: Not contained in a view.")
@@ -965,7 +993,6 @@ extension Array {
 }
 #endif
 
-
 func abort(reason: String) -> Never  {
     NSLog("DrawerView: \(reason)")
     abort()
@@ -976,4 +1003,3 @@ func log(_ message: String) {
         print("\(dateFormatter.string(from: Date())): \(message)")
     }
 }
-
