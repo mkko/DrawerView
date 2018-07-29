@@ -40,25 +40,17 @@ extension DrawerPosition: CustomStringConvertible {
 
 fileprivate extension DrawerPosition {
 
-    static let activePositions: [DrawerPosition] = [
-        .open,
-        .partiallyOpen,
-        .collapsed
-    ]
+    static var allPositions: [DrawerPosition] {
+        return [.closed, .collapsed, .partiallyOpen, .open]
+    }
+
+    static let activePositions: [DrawerPosition] = allPositions
+        .filter { $0 != .closed }
 
     static let openPositions: [DrawerPosition] = [
         .open,
         .partiallyOpen
     ]
-
-    var visibleName: String {
-        switch self {
-        case .closed: return "hidden"
-        case .open: return "open"
-        case .partiallyOpen: return "partiallyOpen"
-        case .collapsed: return "collapsed"
-        }
-    }
 }
 
 let kVelocityTreshold: CGFloat = 0
@@ -396,30 +388,22 @@ private struct ChildScrollViewInfo {
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
         guard let superview = self.superview else {
             log("ERROR: Not contained in a view.")
-            log("ERROR: Could not evaluate snap position for \(position.visibleName)")
+            log("ERROR: Could not evaluate snap position for \(position)")
             return
         }
 
         updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
-        let nextPosition: DrawerPosition
-        if position != .closed && !self.snapPositions.contains(position) {
-            nextPosition = position.advance(by: 1, inPositions: self.snapPositions)
-                ?? position.advance(by: -1, inPositions: self.snapPositions)
-                ?? position
-        } else {
-            nextPosition = position
-        }
 
         // Notify only if position changed.
-        let notify = (currentPosition != nextPosition)
+        let notify = (currentPosition != position)
         if notify {
-            self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: nextPosition)
+            self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: position)
         }
 
-        self.currentPosition = nextPosition
+        self.currentPosition = position
 
-        let nextSnapPosition = snapPosition(for: nextPosition, in: superview)
+        let nextSnapPosition = snapPosition(for: position, in: superview)
         self.scrollToPosition(nextSnapPosition, animated: animated) {
             if notify {
                 self.delegate?.drawer?(self, didTransitionTo: position)
@@ -842,7 +826,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: snapPositions + [.closed], in: superview)
+        let values = snapPositions(for: DrawerPosition.allPositions, in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: self.opacityFactor(for: $0.position)
@@ -864,7 +848,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: snapPositions + [.closed], in: superview)
+        let values = snapPositions(for: DrawerPosition.allPositions, in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: CGFloat(self.shadowOpacityFactor(for: $0.position))
