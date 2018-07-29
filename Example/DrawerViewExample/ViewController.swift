@@ -38,10 +38,8 @@ class ViewController: UIViewController {
     func showDrawer(drawer: DrawerView?, animated: Bool) {
         for another in drawers.compactMap({ $0.drawer }) {
             if another !== drawer {
-//                another.isHidden = true
                 another.setHidden(true, animation: .slide)
             } else if another.isHidden {
-//                another.isHidden = false
                 another.setHidden(false, animation: .slide)
             } else if let nextPosition = another.getPosition(offsetBy: 1) ?? another.getPosition(offsetBy: -1) {
                 another.setPosition(nextPosition, animated: true)
