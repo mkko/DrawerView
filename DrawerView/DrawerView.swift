@@ -118,6 +118,8 @@ private struct ChildScrollViewInfo {
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
+    private var willHide = false
+
     // MARK: - Visual properties
 
     /// The corner radius of the drawer view.
@@ -159,15 +161,21 @@ private struct ChildScrollViewInfo {
         get {
             return super.isHidden
         }
-        set {
+        set(newHiddenValue) {
+
+            if newHiddenValue {
+                self.willHide = true
+            }
+
             if let superview = superview {
                 // Restore the original position just in case (e.g. was hidden with animation).
                 let snapPosition = self.snapPosition(for: self.position, in: superview)
                 self.scrollToPosition(snapPosition, animated: false)
             }
 
-            super.isHidden = newValue
-            self.overlay?.isHidden = newValue
+            super.isHidden = newHiddenValue
+            self.overlay?.isHidden = newHiddenValue
+            self.willHide = false
         }
     }
 
@@ -184,14 +192,20 @@ private struct ChildScrollViewInfo {
             return
         }
 
+        if hidden {
+            self.willHide = true
+        }
+
         switch animation {
         case .none:
             self.isHidden = hidden
         case .slide:
             if hidden {
+                self.willHide = true
                 let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
                 self.scrollToPosition(snapPositionForHidden, animated: true) {
                     self.isHidden = true
+                    self.willHide = false
                 }
             } else {
                 self.isHidden = false
@@ -202,6 +216,10 @@ private struct ChildScrollViewInfo {
                 let snapPosition = self.snapPosition(for: self.position, in: superview)
                 self.scrollToPosition(snapPosition, animated: true)
             }
+        }
+
+        if !willHide {
+            self.willHide = false
         }
     }
 
@@ -216,9 +234,19 @@ private struct ChildScrollViewInfo {
     public var enabled: Bool = true
 
     /// The offset position of the drawer. The offset is measured from the bottom,
-    /// zero meaning the top of the drawer is at the bottom of its superview.
+    /// zero meaning the top of the drawer is at the bottom of its superview. Hidden
+    /// drawers will have the same offset as closed ones do.
     public var drawerOffset: CGFloat {
-        return convertScrollPositionToOffset(self.topConstraint?.constant ?? 0)
+        guard let superview = superview else {
+            return 0
+        }
+
+        if self.isHidden || self.willHide {
+            let closedSnapPosition = self.snapPosition(for: .closed, in: superview)
+            return convertScrollPositionToOffset(closedSnapPosition)
+        } else {
+            return convertScrollPositionToOffset(self.currentSnapPosition)
+        }
     }
 
     // IB support, not intended to be used otherwise.
@@ -944,6 +972,10 @@ private struct ChildScrollViewInfo {
             // Fall back to comparison between the enumerations.
             return first.rawValue > second.rawValue
         }
+    }
+
+    private var currentSnapPosition: CGFloat {
+        return self.topConstraint?.constant ?? 0
     }
 
     private func convertScrollPositionToOffset(_ position: CGFloat) -> CGFloat {
