@@ -264,9 +264,9 @@ private struct ChildScrollViewInfo {
     /// List of user interactive positions for the drawer. Please note that
     /// programmatically any position is still possible, this list only
     /// defines the snap positions for the drawer
-    public var enabledPositions: [DrawerPosition] = DrawerPosition.activePositions {
+    public var snapPositions: [DrawerPosition] = DrawerPosition.activePositions {
         didSet {
-            if !enabledPositions.contains(self.position) {
+            if !snapPositions.contains(self.position) {
                 // Current position is not in the given list, default to the most closed one.
                 self.setInitialPosition()
             }
@@ -403,9 +403,9 @@ private struct ChildScrollViewInfo {
         updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
         let nextPosition: DrawerPosition
-        if position != .closed && !self.enabledPositions.contains(position) {
-            nextPosition = position.advance(by: 1, inPositions: self.enabledPositions)
-                ?? position.advance(by: -1, inPositions: self.enabledPositions)
+        if position != .closed && !self.snapPositions.contains(position) {
+            nextPosition = position.advance(by: 1, inPositions: self.snapPositions)
+                ?? position.advance(by: -1, inPositions: self.snapPositions)
                 ?? position
         } else {
             nextPosition = position
@@ -469,7 +469,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let positions = self.enabledPositions
+        let positions = self.snapPositions
             .compactMap { self.snapPosition(for: $0, in: superview) }
             .sorted()
 
@@ -749,7 +749,7 @@ private struct ChildScrollViewInfo {
         guard let superview = superview else {
             return DrawerPosition.collapsed
         }
-        let distances = self.enabledPositions
+        let distances = self.snapPositions
             .compactMap { pos in (pos: pos, y: snapPosition(for: pos, in: superview)) }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
@@ -842,7 +842,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: enabledPositions + [.closed], in: superview)
+        let values = snapPositions(for: snapPositions + [.closed], in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: self.opacityFactor(for: $0.position)
@@ -864,7 +864,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: enabledPositions + [.closed], in: superview)
+        let values = snapPositions(for: snapPositions + [.closed], in: superview)
             .map {(
                 position: $0.snapPosition,
                 value: CGFloat(self.shadowOpacityFactor(for: $0.position))
@@ -884,14 +884,14 @@ private struct ChildScrollViewInfo {
         let topPosition = DrawerPosition.openPositions
             .sorted(by: compareSnapPositions)
             .reversed()
-            .first(where: self.enabledPositions.contains)
+            .first(where: self.snapPositions.contains)
             ?? .open
 
         return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
     }
 
     private var enabledPositionsSorted: [DrawerPosition] {
-        return self.enabledPositions.sorted(by: compareSnapPositions)
+        return self.snapPositions.sorted(by: compareSnapPositions)
     }
 
     private func compareSnapPositions(first: DrawerPosition, second: DrawerPosition) -> Bool {
