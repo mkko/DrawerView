@@ -161,21 +161,9 @@ private struct ChildScrollViewInfo {
         get {
             return super.isHidden
         }
-        set(newHiddenValue) {
-
-            if newHiddenValue {
-                self.willHide = true
-            }
-
-            if let superview = superview {
-                // Restore the original position just in case (e.g. was hidden with animation).
-                let snapPosition = self.snapPosition(for: self.position, in: superview)
-                self.scrollToPosition(snapPosition, animated: false)
-            }
-
-            super.isHidden = newHiddenValue
-            self.overlay?.isHidden = newHiddenValue
-            self.willHide = false
+        set {
+            super.isHidden = newValue
+            self.overlay?.isHidden = newValue
         }
     }
 
@@ -186,26 +174,26 @@ private struct ChildScrollViewInfo {
     }
 
     public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
-        guard self.isHidden != hidden else { return }
+
         guard let superview = superview else {
             self.isHidden = hidden
             return
         }
 
-        if hidden {
-            self.willHide = true
-        }
+        self.willHide = hidden
 
         switch animation {
         case .none:
             self.isHidden = hidden
         case .slide:
             if hidden {
-                self.willHide = true
                 let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
                 self.scrollToPosition(snapPositionForHidden, animated: true) {
-                    self.isHidden = true
-                    self.willHide = false
+                    // TODO: Can't hide this here; calling multiple times is a race condition.
+                    if self.willHide {
+                        self.isHidden = true
+                        self.willHide = false
+                    }
                 }
             } else {
                 self.isHidden = false
