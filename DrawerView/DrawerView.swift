@@ -189,8 +189,9 @@ private struct ChildScrollViewInfo {
             let currentSnapPosition = self.snapPosition(for: self.position, in: superview)
 
             if hidden {
-                self.scrollToPosition(hiddenSnapPosition, animated: true, notifyDelegate: true) {
-                    if self.willHide {
+                self.scrollToPosition(hiddenSnapPosition, animated: true, notifyDelegate: true) { finished in
+                    // If not finished, the scroll animation was superceded by another animation.
+                    if self.willHide && finished {
                         self.isHidden = true
                         self.willHide = false
 
@@ -200,8 +201,8 @@ private struct ChildScrollViewInfo {
                 }
             } else {
                 // Start from the hidden state.
-                self.scrollToPosition(hiddenSnapPosition, animated: false, notifyDelegate: false)
                 self.isHidden = false
+                self.scrollToPosition(hiddenSnapPosition, animated: false, notifyDelegate: false)
                 self.scrollToPosition(currentSnapPosition, animated: true, notifyDelegate: true)
             }
         }
@@ -485,7 +486,7 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: (() -> Void)? = nil) {
+    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
         if animated {
             // Create the animator.
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
@@ -493,11 +494,11 @@ private struct ChildScrollViewInfo {
             animator.addAnimations {
                 self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
             }
-            animator.addCompletion({ _ in
+            animator.addCompletion({ pos in
                 self.superview?.layoutIfNeeded()
                 self.layoutIfNeeded()
                 self.setNeedsUpdateConstraints()
-                completion?()
+                completion?(pos == .end)
             })
 
             // Add extra height to make sure that bottom doesn't show up.
