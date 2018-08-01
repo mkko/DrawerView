@@ -189,7 +189,6 @@ private struct ChildScrollViewInfo {
             if hidden {
                 let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
                 self.scrollToPosition(snapPositionForHidden, animated: true) {
-                    // TODO: Can't hide this here; calling multiple times is a race condition.
                     if self.willHide {
                         self.isHidden = true
                         self.willHide = false
