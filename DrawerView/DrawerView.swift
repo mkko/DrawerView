@@ -174,12 +174,17 @@ private struct ChildScrollViewInfo {
     }
 
     public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
+
         guard let superview = superview else {
             self.isHidden = hidden
             return
         }
 
-        self.willHide = hidden
+        if hidden && (self.willHide || self.isHidden) {
+            return
+        } else if !hidden && !self.isHidden {
+            return
+        }
 
         switch animation {
         case .none:
@@ -189,15 +194,16 @@ private struct ChildScrollViewInfo {
             let currentSnapPosition = self.snapPosition(for: self.position, in: superview)
 
             if hidden {
+                self.willHide = true
                 self.scrollToPosition(hiddenSnapPosition, animated: true, notifyDelegate: true) { finished in
                     // If not finished, the scroll animation was superceded by another animation.
                     if self.willHide && finished {
                         self.isHidden = true
-                        self.willHide = false
 
                         // Finally move back to original position.
                         self.scrollToPosition(currentSnapPosition, animated: false, notifyDelegate: false)
                     }
+                    self.willHide = false
                 }
             } else {
                 // Start from the hidden state.
@@ -479,7 +485,7 @@ private struct ChildScrollViewInfo {
         self.currentPosition = position
 
         let nextSnapPosition = snapPosition(for: position, in: superview)
-        self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) {
+        self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
             if positionChanged {
                 self.delegate?.drawer?(self, didTransitionTo: position)
             }
@@ -495,9 +501,11 @@ private struct ChildScrollViewInfo {
                 self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
             }
             animator.addCompletion({ pos in
-                self.superview?.layoutIfNeeded()
-                self.layoutIfNeeded()
-                self.setNeedsUpdateConstraints()
+                if pos == .end {
+                    self.superview?.layoutIfNeeded()
+                    self.layoutIfNeeded()
+                    self.setNeedsUpdateConstraints()
+                }
                 completion?(pos == .end)
             })
 
