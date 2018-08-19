@@ -180,28 +180,36 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        self.willHide = hidden
+        if hidden && (self.willHide || self.isHidden) {
+            return
+        } else if !hidden && !self.isHidden {
+            return
+        }
 
         switch animation {
         case .none:
             self.isHidden = hidden
         case .slide:
+            let hiddenSnapPosition = self.snapPosition(for: .closed, in: superview)
+            let currentSnapPosition = self.snapPosition(for: self.position, in: superview)
+
             if hidden {
-                let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
-                self.scrollToPosition(snapPositionForHidden, animated: true) {
-                    if self.willHide {
+                self.willHide = true
+                self.scrollToPosition(hiddenSnapPosition, animated: true, notifyDelegate: true) { finished in
+                    // If not finished, the scroll animation was superceded by another animation.
+                    if self.willHide && finished {
                         self.isHidden = true
-                        self.willHide = false
+
+                        // Finally move back to original position.
+                        self.scrollToPosition(currentSnapPosition, animated: false, notifyDelegate: false)
                     }
+                    self.willHide = false
                 }
             } else {
-                self.isHidden = false
                 // Start from the hidden state.
-                let snapPositionForHidden = self.snapPosition(for: .closed, in: superview)
-                self.scrollToPosition(snapPositionForHidden, animated: false)
-
-                let snapPosition = self.snapPosition(for: self.position, in: superview)
-                self.scrollToPosition(snapPosition, animated: true)
+                self.isHidden = false
+                self.scrollToPosition(hiddenSnapPosition, animated: false, notifyDelegate: false)
+                self.scrollToPosition(currentSnapPosition, animated: true, notifyDelegate: true)
             }
         }
 
@@ -469,34 +477,36 @@ private struct ChildScrollViewInfo {
         // Get the next available position. Closed position is always supported.
 
         // Notify only if position changed.
-        let notify = (currentPosition != position)
-        if notify {
+        let positionChanged = (currentPosition != position)
+        if positionChanged {
             self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: position)
         }
 
         self.currentPosition = position
 
         let nextSnapPosition = snapPosition(for: position, in: superview)
-        self.scrollToPosition(nextSnapPosition, animated: animated) {
-            if notify {
+        self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
+            if positionChanged {
                 self.delegate?.drawer?(self, didTransitionTo: position)
             }
         }
     }
 
-    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, completion: (() -> Void)? = nil) {
+    private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
         if animated {
             // Create the animator.
             let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
             let animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
             animator.addAnimations {
-                self.setScrollPosition(scrollPosition)
+                self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
             }
-            animator.addCompletion({ _ in
-                self.superview?.layoutIfNeeded()
-                self.layoutIfNeeded()
-                self.setNeedsUpdateConstraints()
-                completion?()
+            animator.addCompletion({ pos in
+                if pos == .end {
+                    self.superview?.layoutIfNeeded()
+                    self.layoutIfNeeded()
+                    self.setNeedsUpdateConstraints()
+                }
+                completion?(pos == .end)
             })
 
             // Add extra height to make sure that bottom doesn't show up.
@@ -516,11 +526,11 @@ private struct ChildScrollViewInfo {
             }
 
         } else {
-            self.setScrollPosition(scrollPosition)
+            self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
         }
     }
 
-    private func updateScrollPosition(whileDraggingAtPoint dragPoint: CGFloat) {
+    private func updateScrollPosition(whileDraggingAtPoint dragPoint: CGFloat, notifyDelegate: Bool) {
         guard let superview = superview else {
             log("ERROR: Cannot set position, no superview defined")
             return
@@ -539,7 +549,7 @@ private struct ChildScrollViewInfo {
             position = dragPoint
         }
 
-        self.setScrollPosition(position)
+        self.setScrollPosition(position, notifyDelegate: notifyDelegate)
     }
 
     private func updateSnapPosition(animated: Bool) {
@@ -553,13 +563,15 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    private func setScrollPosition(_ scrollPosition: CGFloat) {
+    private func setScrollPosition(_ scrollPosition: CGFloat, notifyDelegate: Bool) {
         self.topConstraint?.constant = scrollPosition
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forScrollPosition: scrollPosition)
 
-        let drawerOffset = convertScrollPositionToOffset(scrollPosition)
-        self.delegate?.drawerDidMove?(self, drawerOffset: drawerOffset)
+        if notifyDelegate {
+            let drawerOffset = convertScrollPositionToOffset(scrollPosition)
+            self.delegate?.drawerDidMove?(self, drawerOffset: drawerOffset)
+        }
 
         self.superview?.layoutIfNeeded()
     }
@@ -582,7 +594,7 @@ private struct ChildScrollViewInfo {
             self.panOrigin = frame.origin.y
             self.horizontalPanOnly = true
 
-            updateScrollPosition(whileDraggingAtPoint: panOrigin)
+            updateScrollPosition(whileDraggingAtPoint: panOrigin, notifyDelegate: true)
 
             break
         case .changed:
@@ -674,18 +686,18 @@ private struct ChildScrollViewInfo {
                             log("Disabled child scrolling")
                             activeScrollViews.forEach { $0.isScrollEnabled = false }
                             let pos = self.panOrigin
-                            self.updateScrollPosition(whileDraggingAtPoint: pos)
+                            self.updateScrollPosition(whileDraggingAtPoint: pos, notifyDelegate: true)
                     }, completion: nil)
                 } else if !shouldScrollChildView {
                     // Scroll only if we're not scrolling the subviews.
                     startedDragging = true
                     let pos = panOrigin + translation.y
-                    updateScrollPosition(whileDraggingAtPoint: pos)
+                    updateScrollPosition(whileDraggingAtPoint: pos, notifyDelegate: true)
                 }
             } else {
                 startedDragging = true
                 let pos = panOrigin + translation.y
-                updateScrollPosition(whileDraggingAtPoint: pos)
+                updateScrollPosition(whileDraggingAtPoint: pos, notifyDelegate: true)
             }
 
         case.failed:
@@ -752,15 +764,16 @@ private struct ChildScrollViewInfo {
 
     // MARK: - Dynamically evaluated properties
 
-    private func snapPositions(for positions: [DrawerPosition], in superview: UIView) -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
-        return positions
-            // Group the info on position together. For the sake of
-            // robustness, hide the ones without snap position.
-            .map { p in (
-                position: p,
-                snapPosition: self.snapPosition(for: p, in: superview)
-                )
-        }
+    private func snapPositions(for positions: [DrawerPosition], in superview: UIView)
+        -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
+            return positions
+                // Group the info on position together. For the sake of
+                // robustness, hide the ones without snap position.
+                .map { p in (
+                    position: p,
+                    snapPosition: self.snapPosition(for: p, in: superview)
+                    )
+            }
     }
 
     private func snapPosition(for position: DrawerPosition, in superview: UIView) -> CGFloat {
