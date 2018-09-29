@@ -1007,18 +1007,21 @@ extension DrawerView: UIGestureRecognizerDelegate {
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if let sv = otherGestureRecognizer.view as? UIScrollView {
 
+            let scrollWasEnabled: Bool
             let gestureRecognizers: [UIGestureRecognizer]
             if let index = self.childScrollViews.index(where: { $0.scrollView === sv }) {
                 let scrollInfo = self.childScrollViews[index]
+                scrollWasEnabled = scrollInfo.scrollWasEnabled
                 self.childScrollViews.remove(at: index)
                 gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
             } else {
+                scrollWasEnabled = sv.isScrollEnabled
                 gestureRecognizers = []
             }
 
             self.childScrollViews.append(ChildScrollViewInfo(
                 scrollView: sv,
-                scrollWasEnabled: sv.isScrollEnabled,
+                scrollWasEnabled: scrollWasEnabled,
                 gestureRecognizers: gestureRecognizers))
             return true
         }
