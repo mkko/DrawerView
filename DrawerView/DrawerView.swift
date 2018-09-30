@@ -124,6 +124,8 @@ private struct ChildScrollViewInfo {
 
     private var willHide = false
 
+    private var lastWarningDate: Date?
+
     // MARK: - Visual properties
 
     /// The corner radius of the drawer view.
@@ -615,19 +617,45 @@ private struct ChildScrollViewInfo {
                 // Detect if directional lock should be respected.
                 let panGestures = self.childScrollViews
                     .filter { $0.scrollWasEnabled }
-                    .flatMap { $0.gestureRecognizers }
-                    .compactMap { g -> UIPanGestureRecognizer? in
-                        g as? UIPanGestureRecognizer
+                    .flatMap { scrollInfo in
+                        scrollInfo.gestureRecognizers.map {
+                            ($0, scrollInfo.scrollView)
+                        }
+                    }
+                    .compactMap { panInfo -> (pan: UIPanGestureRecognizer, scrollView: UIScrollView)? in
+                        if let panRecognizer = panInfo.0 as? UIPanGestureRecognizer {
+                            return (pan: panRecognizer, scrollView: panInfo.1)
+                        } else {
+                            return nil
+                        }
                 }
 
-                let simultaneousPanGestures = panGestures.filter { $0.isActive() }
+                let simultaneousPanGestures = panGestures.filter {
+                    $0.pan.isActive()
+                }
 
-                let panningHorizontally = simultaneousPanGestures.count > 0
+                // TODO: Better support for scroll views that don't have directional scroll lock enabled.
+                let ableToDetermineHorizontalPan = simultaneousPanGestures.count > 0
                     && simultaneousPanGestures
-                        .map { $0.translation(in: self) }
-                        .all { p in p.x != 0 && p.y == 0 }
+                        .map { $0.scrollView }
+                        .all {
+                        let canScrollVertically = $0.contentSize.height > $0.bounds.height
+                        // If vertical scroll is not possible,
+                        return !canScrollVertically || $0.isDirectionalLockEnabled
+                }
 
-                if !panningHorizontally {
+                if !ableToDetermineHorizontalPan && shouldWarn(&lastWarningDate) {
+                    NSLog("WARNING (DrawerView): One subview of DrawerView has not enabled directional lock. Without directional lock it is ambiguous to determine if DrawerView should start panning.")
+                }
+
+                let panningVertically = simultaneousPanGestures.count > 0
+                    && simultaneousPanGestures
+                        .all {
+                            let pan = $0.pan.translation(in: self)
+                            return !(pan.x != 0 && pan.y == 0)
+                        }
+
+                if ableToDetermineHorizontalPan && panningVertically {
                     self.horizontalPanOnly = false
                 }
 
@@ -637,7 +665,7 @@ private struct ChildScrollViewInfo {
                 }
 
                 let activeScrollViews = simultaneousPanGestures
-                    .compactMap { $0.view as? UIScrollView }
+                    .compactMap { $0.pan.view as? UIScrollView }
 
                 let childReachedTheTop = activeScrollViews.contains { $0.contentOffset.y <= 0 }
                 let isFullyOpen = self.snapPositionsSorted.last == self.position
@@ -993,6 +1021,17 @@ private struct ChildScrollViewInfo {
     private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
         return factor * (log10(value + factor/log(10)) - log10(factor/log(10)))
     }
+
+    private func shouldWarn(_ lastWarningDate: inout Date?) -> Bool {
+        let warn: Bool
+        if let date = lastWarningDate {
+            warn = date.timeIntervalSinceNow > 30
+        } else {
+            warn = true
+        }
+        lastWarningDate = Date()
+        return warn
+    }
 }
 
 extension DrawerView: UIGestureRecognizerDelegate {
@@ -1032,6 +1071,8 @@ extension DrawerView: UIGestureRecognizerDelegate {
         // Wait for other gesture recognizers to fail before drawer pan is possible.
         if gestureRecognizer == self.panGestureRecognizer &&
             otherGestureRecognizer.view is UIScrollView {
+            // If the gesture recognizer is from a scroll view, do not fail as
+            // we need to work in parallel
             return false
         }
         return true
