@@ -179,7 +179,7 @@ extension ViewController: DrawerViewDelegate {
             .filter { $0.drawer !== drawers["modal"] }
             .compactMap { $0.drawer?.drawerOffset }
             .max()
-        self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
+        //self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
 
         // Round the corners of the toolbar view when open.
         if drawerView === drawers["toolbar"] {

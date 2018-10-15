@@ -781,14 +781,22 @@ private struct ChildScrollViewInfo {
     }
 
     private func snapPosition(for position: DrawerPosition, in superview: UIView) -> CGFloat {
+        let safeAreaBottom: CGFloat
+        if #available(iOS 11.0, *) {
+            safeAreaBottom = superview.safeAreaInsets.bottom
+        } else {
+            safeAreaBottom = 0
+        }
         switch position {
         case .open:
             return self.topMargin
         case .partiallyOpen:
-            return superview.bounds.height - self.partiallyOpenHeight
+            return superview.bounds.height - safeAreaBottom - self.partiallyOpenHeight
         case .collapsed:
-            return superview.bounds.height - self.collapsedHeight
+            return superview.bounds.height - safeAreaBottom - self.collapsedHeight
         case .closed:
+            // When closed, the safe area is ignored since the
+            // drawer should not be visible.
             return superview.bounds.height
         }
     }
