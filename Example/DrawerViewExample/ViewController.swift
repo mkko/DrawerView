@@ -30,22 +30,7 @@ class ViewController: UIViewController {
 
     let locationManager = CLLocationManager()
 
-    @objc func toggleTapped(sender: UIButton) {
-        let drawer = sender.titleLabel?.text.flatMap { drawers[$0] } ?? nil
-        showDrawer(drawer: drawer, animated: true)
-    }
-
-    func showDrawer(drawer: DrawerView?, animated: Bool) {
-        for another in drawers.compactMap({ $0.drawer }) {
-            if another !== drawer {
-                another.setHidden(true, animation: .slide)
-            } else if another.isHidden {
-                another.setHidden(false, animation: .slide)
-            } else if let nextPosition = another.getPosition(offsetBy: 1) ?? another.getPosition(offsetBy: -1) {
-                another.setPosition(nextPosition, animated: true)
-            }
-        }
-    }
+    // MARK: - View lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,8 +58,33 @@ class ViewController: UIViewController {
         locationManager.startUpdatingLocation()
     }
 
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+
+    // MARK: - Private
+
+    @objc private func toggleTapped(sender: UIButton) {
+        let drawer = sender.titleLabel?.text.flatMap { drawers[$0] } ?? nil
+        showDrawer(drawer: drawer, animated: true)
+    }
+
+    private func showDrawer(drawer: DrawerView?, animated: Bool) {
+        for another in drawers.compactMap({ $0.drawer }) {
+            if another !== drawer {
+                another.setHidden(true, animation: .slide)
+            } else if another.isHidden {
+                another.setHidden(false, animation: .slide)
+            } else if let nextPosition = another.getPosition(offsetBy: 1) ?? another.getPosition(offsetBy: -1) {
+                another.setPosition(nextPosition, animated: true)
+            }
+        }
+    }
+
     private func setupDrawer() -> DrawerView {
         drawerView.snapPositions = [.collapsed, .partiallyOpen, .open]
+        drawerView.insetAdjustmentBehavior = .automatic
         drawerView.delegate = self
         drawerView.position = .collapsed
         return drawerView
@@ -111,17 +121,13 @@ class ViewController: UIViewController {
         self.locateButtonContainer.layer.shadowOpacity = 0.1
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
     func setupProgrammaticDrawerView() -> DrawerView {
         // Create the drawer programmatically.
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
         drawerView.delegate = self
         drawerView.snapPositions = [.closed, .open]
+        drawerView.insetAdjustmentBehavior = .automatic
         return drawerView
     }
 
@@ -131,6 +137,7 @@ class ViewController: UIViewController {
         drawerView.delegate = self
 
         drawerView.snapPositions = [.collapsed, .partiallyOpen]
+        drawerView.insetAdjustmentBehavior = .automatic
         drawerView.backgroundEffect = UIBlurEffect(style: .dark)
         return drawerView
     }
@@ -144,6 +151,7 @@ class ViewController: UIViewController {
         drawerView.delegate = self
 
         drawerView.snapPositions = [.collapsed, .open]
+        drawerView.insetAdjustmentBehavior = .automatic
         drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
         drawerView.cornerRadius = 0
         // Set the height to match the default toolbar.

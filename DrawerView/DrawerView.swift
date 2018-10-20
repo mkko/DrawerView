@@ -94,6 +94,36 @@ private struct ChildScrollViewInfo {
 
 @IBDesignable public class DrawerView: UIView {
 
+    // MARK: - Public types
+
+    public enum VisibilityAnimation {
+        case none
+        case slide
+        //case fadeInOut
+    }
+
+    public enum InsetAdjustmentBehavior: Equatable {
+        /// Evaluate the bottom inset automatically.
+        case automatic
+        /// Evaluate the bottom inset from safe area the superview.
+        case superviewSafeArea
+        /// Use a fixed value for bottom inset.
+        case fixed(CGFloat)
+        /// Don't use bottom inset.
+        case never
+    }
+
+    public enum ContentVisibilityBehavior {
+        /// Hide any content that gets clipped by the bottom inset.
+        case automatic
+        /// Same as automatic, but hide only content that is completely below the bottom inset
+        case allowPartial
+        /// Specify explicit views to hide.
+        case custom([UIView])
+        /// Don't use bottom inset.
+        case never
+    }
+
     // MARK: - Private properties
 
     private var panGestureRecognizer: DrawerViewPanGestureRecognizer!
@@ -163,6 +193,24 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public var insetAdjustmentBehavior: InsetAdjustmentBehavior = .automatic {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+
+    public var contentVisibilityBehavior: ContentVisibilityBehavior = .automatic {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+
+    public var automaticallyAdjustChildContentInset: Bool = true {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+
     override public var isHidden: Bool {
         get {
             return super.isHidden
@@ -171,12 +219,6 @@ private struct ChildScrollViewInfo {
             super.isHidden = newValue
             self.overlay?.isHidden = newValue
         }
-    }
-
-    public enum VisibilityAnimation {
-        case none
-        case slide
-        //case fadeInOut
     }
 
     public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
@@ -196,8 +238,8 @@ private struct ChildScrollViewInfo {
         case .none:
             self.isHidden = hidden
         case .slide:
-            let hiddenSnapPosition = self.snapPosition(for: .closed, in: superview)
-            let currentSnapPosition = self.snapPosition(for: self.position, in: superview)
+            let hiddenSnapPosition = self.snapPosition(for: .closed, inSuperView: superview)
+            let currentSnapPosition = self.snapPosition(for: self.position, inSuperView: superview)
 
             if hidden {
                 self.willHide = true
@@ -243,7 +285,7 @@ private struct ChildScrollViewInfo {
         }
 
         if self.isHidden || self.willHide {
-            let closedSnapPosition = self.snapPosition(for: .closed, in: superview)
+            let closedSnapPosition = self.snapPosition(for: .closed, inSuperView: superview)
             return convertScrollPositionToOffset(closedSnapPosition)
         } else {
             return convertScrollPositionToOffset(self.currentSnapPosition)
@@ -459,8 +501,12 @@ private struct ChildScrollViewInfo {
         for view in self.backgroundView.subviews {
             view.frame.origin.y = 0
         }
-    }
 
+        if automaticallyAdjustChildContentInset {
+            let bottomInset = self.bottomInset
+            self.adjustChildContentInset(self, bottomInset: bottomInset)
+        }
+    }
 
     @objc func handleOrientationChange() {
         self.updateSnapPosition(animated: false)
@@ -490,7 +536,7 @@ private struct ChildScrollViewInfo {
 
         self.currentPosition = position
 
-        let nextSnapPosition = snapPosition(for: position, in: superview)
+        let nextSnapPosition = snapPosition(for: position, inSuperView: superview)
         self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
             if positionChanged {
                 self.delegate?.drawer?(self, didTransitionTo: position)
@@ -543,7 +589,7 @@ private struct ChildScrollViewInfo {
         }
 
         let positions = self.snapPositions
-            .compactMap { self.snapPosition(for: $0, in: superview) }
+            .compactMap { self.snapPosition(for: $0, inSuperView: superview) }
             .sorted()
 
         let position: CGFloat
@@ -563,7 +609,7 @@ private struct ChildScrollViewInfo {
             log("ERROR: Cannot update snap position, no superview defined")
             return
         }
-        let expectedPos = self.snapPosition(for: currentPosition, in: superview)
+        let expectedPos = self.snapPosition(for: currentPosition, inSuperView: superview)
         if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
             self.setPosition(currentPosition, animated: animated)
         }
@@ -573,6 +619,7 @@ private struct ChildScrollViewInfo {
         self.topConstraint?.constant = scrollPosition
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forScrollPosition: scrollPosition)
+        self.setChildrenOpacity(forScrollPosition: scrollPosition)
 
         if notifyDelegate {
             let drawerOffset = convertScrollPositionToOffset(scrollPosition)
@@ -796,27 +843,54 @@ private struct ChildScrollViewInfo {
 
     // MARK: - Dynamically evaluated properties
 
-    private func snapPositions(for positions: [DrawerPosition], in superview: UIView)
+    private func snapPositions(for positions: [DrawerPosition], inSuperView superview: UIView)
         -> [(position: DrawerPosition, snapPosition: CGFloat)]  {
             return positions
                 // Group the info on position together. For the sake of
                 // robustness, hide the ones without snap position.
                 .map { p in (
                     position: p,
-                    snapPosition: self.snapPosition(for: p, in: superview)
+                    snapPosition: self.snapPosition(for: p, inSuperView: superview)
                     )
             }
     }
 
-    private func snapPosition(for position: DrawerPosition, in superview: UIView) -> CGFloat {
+    private var bottomInset: CGFloat {
+        let bottomInset: CGFloat
+        switch insetAdjustmentBehavior {
+        case .automatic:
+            // Evaluate how much of superview is behind the window safe area.
+            if #available(iOS 11.0, *), let window = self.window, let superview = superview {
+                let bounds = superview.convert(superview.bounds, to: window)
+                bottomInset = max(0, window.safeAreaInsets.bottom - (window.bounds.maxY - bounds.maxY))
+            } else {
+                bottomInset = 0
+            }
+        case .superviewSafeArea:
+            if #available(iOS 11.0, *) {
+                bottomInset = superview?.safeAreaInsets.bottom ?? 0
+            } else {
+                bottomInset = 0
+            }
+        case .fixed(let inset):
+            bottomInset = inset
+        case .never:
+            bottomInset = 0
+        }
+        return bottomInset
+    }
+
+    private func snapPosition(for position: DrawerPosition, inSuperView superview: UIView) -> CGFloat {
         switch position {
         case .open:
             return self.topMargin
         case .partiallyOpen:
-            return superview.bounds.height - self.partiallyOpenHeight
+            return superview.bounds.height - bottomInset - self.partiallyOpenHeight
         case .collapsed:
-            return superview.bounds.height - self.collapsedHeight
+            return superview.bounds.height - bottomInset - self.collapsedHeight
         case .closed:
+            // When closed, the safe area is ignored since the
+            // drawer should not be visible.
             return superview.bounds.height
         }
     }
@@ -852,7 +926,7 @@ private struct ChildScrollViewInfo {
             return DrawerPosition.collapsed
         }
         let distances = self.snapPositions
-            .compactMap { pos in (pos: pos, y: snapPosition(for: pos, in: superview)) }
+            .compactMap { pos in (pos: pos, y: snapPosition(for: pos, inSuperView: superview)) }
             .sorted { (p1, p2) -> Bool in
                 return abs(p1.y - offset) < abs(p2.y - offset)
         }
@@ -908,6 +982,18 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    private func adjustChildContentInset(_ view: UIView, bottomInset: CGFloat) {
+        for childView in view.subviews {
+            if let scrollView = childView as? UIScrollView {
+                // Do not recurse into child views if content
+                // inset can be set on superview.
+                scrollView.contentInset.bottom = bottomInset
+            } else {
+                adjustChildContentInset(childView, bottomInset: bottomInset)
+            }
+        }
+    }
+
     private func createOverlay() -> Overlay? {
         guard let superview = self.superview else {
             log("ERROR: Could not create overlay.")
@@ -945,7 +1031,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: DrawerPosition.allPositions, in: superview)
+        let values = snapPositions(for: DrawerPosition.allPositions, inSuperView: superview)
             .map {(
                 position: $0.snapPosition,
                 value: self.opacityFactor(for: $0.position)
@@ -967,7 +1053,7 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let values = snapPositions(for: DrawerPosition.allPositions, in: superview)
+        let values = snapPositions(for: DrawerPosition.allPositions, inSuperView: superview)
             .map {(
                 position: $0.snapPosition,
                 value: CGFloat(self.shadowOpacityFactor(for: $0.position))
@@ -980,7 +1066,53 @@ private struct ChildScrollViewInfo {
         self.layer.shadowOpacity = Float(shadowOpacity)
     }
 
+    private func setChildrenOpacity(forScrollPosition position: CGFloat) {
+        guard let superview = self.superview else {
+            return
+        }
+
+        let viewsToHide = self.childViewsToHide()
+        let bottomInset = self.bottomInset
+
+        if viewsToHide.count > 0 && bottomInset > 0 {
+            // Measure the distance to collapsed position.
+            let snap = self.snapPosition(for: .collapsed, inSuperView: superview)
+            let alpha = min(1, (snap - position) / self.bottomInset)
+            //print("alpha: \(alpha)")
+
+            for childView in viewsToHide {
+                // TODO: respect the original alpha on the child.
+                childView.alpha = alpha
+            }
+        }
+    }
+
     // MARK: - Helpers
+
+    private func childViewsToHide() -> [UIView] {
+        guard let superview = self.superview else {
+            return []
+        }
+
+        var allowPartial = false
+        switch self.contentVisibilityBehavior {
+        case .allowPartial:
+            allowPartial = true
+            fallthrough
+        case .automatic:
+            // Hide all the views that are not completely above the horizon.
+            let snap = self.snapPosition(for: .collapsed, inSuperView: superview)
+            return self.subviews.filter {
+                $0 !== self.backgroundView && $0 !== self.borderView
+                    && (allowPartial ? $0.frame.minY > snap : $0.frame.maxY > snap)
+            }
+        case .custom(let views):
+            return views
+        case .never:
+            return []
+
+        }
+    }
 
     private var topSpace: CGFloat {
         // Use only the open positions for determining the top space.
@@ -990,7 +1122,7 @@ private struct ChildScrollViewInfo {
             .first(where: self.snapPositions.contains)
             ?? .open
 
-        return superview.map { self.snapPosition(for: topPosition, in: $0) } ?? 0
+        return superview.map { self.snapPosition(for: topPosition, inSuperView: $0) } ?? 0
     }
 
     fileprivate var snapPositionsSorted: [DrawerPosition] {
@@ -999,7 +1131,7 @@ private struct ChildScrollViewInfo {
 
     private func compareSnapPositions(first: DrawerPosition, second: DrawerPosition) -> Bool {
         if let superview = superview {
-            return snapPosition(for: first, in: superview) > snapPosition(for: second, in: superview)
+            return snapPosition(for: first, inSuperView: superview) > snapPosition(for: second, inSuperView: superview)
         } else {
             // Fall back to comparison between the enumerations.
             return first.rawValue > second.rawValue
