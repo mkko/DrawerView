@@ -10,13 +10,6 @@ import UIKit
 import MapKit
 import DrawerView
 
-class TestView: UIView {
-
-    override var intrinsicContentSize: CGSize {
-        return CGSize(width: 200, height: 200)
-    }
-}
-
 typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
 
 class ViewController: UIViewController {
