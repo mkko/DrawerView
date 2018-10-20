@@ -94,6 +94,25 @@ private struct ChildScrollViewInfo {
 
 @IBDesignable public class DrawerView: UIView {
 
+    // MARK: - Public types
+
+    public enum VisibilityAnimation {
+        case none
+        case slide
+        //case fadeInOut
+    }
+
+    public enum InsetAdjustmentBehavior: Equatable {
+        /// Evaluate the bottom inset automatically.
+        case automatic
+        /// Evaluate the bottom inset from safe area the superview.
+        case superviewSafeArea
+        /// Use a fixed value for bottom inset.
+        case fixed(CGFloat)
+        /// Don't use bottom inset.
+        case never
+    }
+
     // MARK: - Private properties
 
     private var panGestureRecognizer: DrawerViewPanGestureRecognizer!
@@ -161,6 +180,12 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public var insetAdjustmentBehavior: InsetAdjustmentBehavior = .automatic {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+
     override public var isHidden: Bool {
         get {
             return super.isHidden
@@ -169,12 +194,6 @@ private struct ChildScrollViewInfo {
             super.isHidden = newValue
             self.overlay?.isHidden = newValue
         }
-    }
-
-    public enum VisibilityAnimation {
-        case none
-        case slide
-        //case fadeInOut
     }
 
     public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
@@ -780,20 +799,39 @@ private struct ChildScrollViewInfo {
             }
     }
 
-    private func snapPosition(for position: DrawerPosition, in superview: UIView) -> CGFloat {
-        let safeAreaBottom: CGFloat
-        if #available(iOS 11.0, *) {
-            safeAreaBottom = superview.safeAreaInsets.bottom
-        } else {
-            safeAreaBottom = 0
+    private var bottomInset: CGFloat {
+        let bottomInset: CGFloat
+        switch insetAdjustmentBehavior {
+        case .automatic:
+            // Evaluate how much of superview is behind the window safe area.
+            if #available(iOS 11.0, *), let window = self.window, let superview = superview {
+                let bounds = superview.convert(superview.bounds, to: window)
+                bottomInset = max(0, window.safeAreaInsets.bottom - (window.bounds.maxY - bounds.maxY))
+            } else {
+                bottomInset = 0
+            }
+        case .superviewSafeArea:
+            if #available(iOS 11.0, *) {
+                bottomInset = superview?.safeAreaInsets.bottom ?? 0
+            } else {
+                bottomInset = 0
+            }
+        case .fixed(let inset):
+            bottomInset = inset
+        case .never:
+            bottomInset = 0
         }
+        return bottomInset
+    }
+
+    private func snapPosition(for position: DrawerPosition, in superview: UIView) -> CGFloat {
         switch position {
         case .open:
             return self.topMargin
         case .partiallyOpen:
-            return superview.bounds.height - safeAreaBottom - self.partiallyOpenHeight
+            return superview.bounds.height - bottomInset - self.partiallyOpenHeight
         case .collapsed:
-            return superview.bounds.height - safeAreaBottom - self.collapsedHeight
+            return superview.bounds.height - bottomInset - self.collapsedHeight
         case .closed:
             // When closed, the safe area is ignored since the
             // drawer should not be visible.
