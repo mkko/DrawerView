@@ -186,6 +186,12 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public var automaticallyAdjustChildContentInset: Bool = true {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+
     override public var isHidden: Bool {
         get {
             return super.isHidden
@@ -476,8 +482,12 @@ private struct ChildScrollViewInfo {
         for view in self.backgroundView.subviews {
             view.frame.origin.y = 0
         }
-    }
 
+        if automaticallyAdjustChildContentInset {
+            let bottomInset = self.bottomInset
+            self.adjustChildContentInset(self, bottomInset: bottomInset)
+        }
+    }
 
     @objc func handleOrientationChange() {
         self.updateSnapPosition(animated: false)
@@ -923,6 +933,18 @@ private struct ChildScrollViewInfo {
                 return m
             }()
             backgroundView.layer.mask = mask
+        }
+    }
+
+    private func adjustChildContentInset(_ view: UIView, bottomInset: CGFloat) {
+        for childView in view.subviews {
+            if let scrollView = childView as? UIScrollView {
+                // Do not recurse into child views if content
+                // inset can be set on superview.
+                scrollView.contentInset.bottom = bottomInset
+            } else {
+                adjustChildContentInset(childView, bottomInset: bottomInset)
+            }
         }
     }
 
