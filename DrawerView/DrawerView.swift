@@ -152,7 +152,9 @@ private struct ChildScrollViewInfo {
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
-    private var willHide = false
+    private var willHide: Bool = false
+
+    private var orientationChanged: Bool = false
 
     private var lastWarningDate: Date?
 
@@ -502,6 +504,11 @@ private struct ChildScrollViewInfo {
             view.frame.origin.y = 0
         }
 
+        if self.orientationChanged {
+            self.updateSnapPosition(animated: false)
+            self.orientationChanged = false
+        }
+
         if automaticallyAdjustChildContentInset {
             let bottomInset = self.bottomInset
             self.adjustChildContentInset(self, bottomInset: bottomInset)
@@ -509,7 +516,8 @@ private struct ChildScrollViewInfo {
     }
 
     @objc func handleOrientationChange() {
-        self.updateSnapPosition(animated: false)
+        self.orientationChanged = true
+        self.setNeedsLayout()
     }
 
     // MARK: - Scroll position methods
@@ -610,9 +618,10 @@ private struct ChildScrollViewInfo {
             return
         }
         let expectedPos = self.snapPosition(for: currentPosition, inSuperView: superview)
-        if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
-            self.setPosition(currentPosition, animated: animated)
-        }
+//        if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
+//            self.setPosition(currentPosition, animated: animated)
+//        }
+        self.setPosition(currentPosition, animated: animated)
     }
 
     private func setScrollPosition(_ scrollPosition: CGFloat, notifyDelegate: Bool) {
@@ -876,6 +885,7 @@ private struct ChildScrollViewInfo {
     }
 
     private func snapPosition(for position: DrawerPosition, inSuperView superview: UIView) -> CGFloat {
+        print("superview.bounds: \(superview.bounds)")
         switch position {
         case .open:
             return self.topMargin
