@@ -682,14 +682,9 @@ private struct ChildScrollViewInfo {
                 }
 
                 // TODO: Better support for scroll views that don't have directional scroll lock enabled.
-                let ableToDetermineHorizontalPan = simultaneousPanGestures.count > 0
-                    && simultaneousPanGestures
-                        .map { $0.scrollView }
-                        .all {
-                        let canScrollVertically = $0.contentSize.height > $0.bounds.height
-                        // If vertical scroll is not possible,
-                        return !canScrollVertically || $0.isDirectionalLockEnabled
-                }
+                let ableToDetermineHorizontalPan =
+                    simultaneousPanGestures.count > 0 && simultaneousPanGestures
+                        .all { self.ableToDetermineHorizontalPan($0.scrollView) }
 
                 if !ableToDetermineHorizontalPan && shouldWarn(&lastWarningDate) {
                     NSLog("WARNING (DrawerView): One subview of DrawerView has not enabled directional lock. Without directional lock it is ambiguous to determine if DrawerView should start panning.")
@@ -1152,6 +1147,14 @@ private struct ChildScrollViewInfo {
 
     private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
         return factor * (log10(value + factor/log(10)) - log10(factor/log(10)))
+    }
+
+    func ableToDetermineHorizontalPan(_ scrollView: UIScrollView) -> Bool {
+        let canScrollVertically = scrollView.contentSize.height > scrollView.bounds.height
+        let hasDirectionalLock = (scrollView is UITableView) || scrollView.isDirectionalLockEnabled
+        // If vertical scroll is not possible, or directional lock is
+        // enabled, we are able to detect if view was panned horizontally.
+        return !canScrollVertically || hasDirectionalLock
     }
 
     private func shouldWarn(_ lastWarningDate: inout Date?) -> Bool {
