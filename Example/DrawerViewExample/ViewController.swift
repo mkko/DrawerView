@@ -39,6 +39,8 @@ class ViewController: UIViewController {
         // button, so remove automatic inset adjustment in the table view.
         tableView.contentInsetAdjustmentBehavior = .never
 
+        tableView.keyboardDismissMode = .onDrag
+
         drawers = [
             ("↓", nil),
             ("search", setupDrawer()),
