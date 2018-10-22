@@ -1,12 +1,16 @@
+![Sample](Resources/icon.png)
+
 # DrawerView
 
 DrawerView is a view for iOS that mimics the functionality of the drawer introduced in the Maps (iOS 10 →).
 
-![Sample](Resources/sample.gif)
+![Sample](Resources/search_sample.gif)
+![Sample](Resources/dark_sample.gif)
+![Sample](Resources/toolbar_sample.gif)
 
 #### Ease of use
 
-DrawerView is a simple view that you can add to your app. No need to restructure your views or view controllers to add support for it. This also makes it possible to have multiple drawers and switch between them the same way it is done in the iOS Maps.
+DrawerView is a simple drop-in view that you can add to your app. No need to restructure your views or view controllers to add support for it. This also makes it possible to have multiple drawers hosting different content and switch between them the same way it is done in the iOS Maps.
 
 #### Automatic support for scroll views
 
@@ -14,7 +18,14 @@ DrawerView handles subview interaction so that it adds specialized support for s
 
 #### Customization
 
-Well, this is the next thing I'll be working with.
+**Visuals**: By default DrawerView supports `UIBlurEffect` as a background. However, any `UIColor` is supported too. Just remember to set `backgroundEffect` to nil. Besides background, corner radius, borders and shadow can be customized as well.
+
+**Position**: The drawer has four distinct positions: `closed`, `collapsed`, `partiallyOpen`, `open`. Each of these positions can be customized and you can define the enabled positions.
+
+**Bottom Inset**: To support iOS devices with a notch at the bottom of the screen, you can change `insetAdjustmentBehavior` to automatically determine the correct inset. You can also set it to use the safe area of the superview or set it to a fixed value. Due to the content being overlapping with the notch you can change `contentVisibilityBehavior` to define which views should be hidden when collapsed. By default these two properties are set to automatic.
+
+**Visibility**: You can also set the visibility of the drawer. This is a distinct property from position, but acts the same way as if the drawer was closed. The purpose of this is to help you so that you don't have to remember the previous position if the drawer is made visible again. This in turn makes it convenient to have multiple drawers but only one visible at a time.
+
 
 ## Installation
 
