@@ -885,7 +885,6 @@ private struct ChildScrollViewInfo {
     }
 
     private func snapPosition(for position: DrawerPosition, inSuperView superview: UIView) -> CGFloat {
-        print("superview.bounds: \(superview.bounds)")
         switch position {
         case .open:
             return self.topMargin
