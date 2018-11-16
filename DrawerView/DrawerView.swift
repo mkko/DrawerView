@@ -621,14 +621,6 @@ private struct ChildScrollViewInfo {
     }
 
     private func updateSnapPosition(animated: Bool) {
-        guard let superview = superview else {
-            log("ERROR: Cannot update snap position, no superview defined")
-            return
-        }
-        let expectedPos = self.snapPosition(for: currentPosition, inSuperView: superview)
-//        if let topConstraint = self.topConstraint, expectedPos != topConstraint.constant {
-//            self.setPosition(currentPosition, animated: animated)
-//        }
         self.setPosition(currentPosition, animated: animated)
     }
 
