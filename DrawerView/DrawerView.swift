@@ -126,9 +126,9 @@ private struct ChildScrollViewInfo {
 
     // MARK: - Private properties
 
-    private var panGestureRecognizer: DrawerViewPanGestureRecognizer!
+    fileprivate var panGestureRecognizer: DrawerViewPanGestureRecognizer!
 
-    private var overlayTapRecognizer: UITapGestureRecognizer!
+    fileprivate var overlayTapRecognizer: UITapGestureRecognizer!
 
     private var panOrigin: CGFloat = 0.0
 
@@ -144,7 +144,7 @@ private struct ChildScrollViewInfo {
 
     private var heightConstraint: NSLayoutConstraint? = nil
 
-    private var childScrollViews: [ChildScrollViewInfo] = []
+    fileprivate var childScrollViews: [ChildScrollViewInfo] = []
 
     private var overlay: Overlay?
 
@@ -431,11 +431,19 @@ private struct ChildScrollViewInfo {
     }
 
     private func setup() {
+        #if swift(>=4.2)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOrientationChange),
+            name: UIDevice.orientationDidChangeNotification,
+            object: nil)
+        #else
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleOrientationChange),
             name: NSNotification.Name.UIDeviceOrientationDidChange,
             object: nil)
+        #endif
 
         panGestureRecognizer = DrawerViewPanGestureRecognizer(target: self, action: #selector(handlePan))
         panGestureRecognizer.maximumNumberOfTouches = 2

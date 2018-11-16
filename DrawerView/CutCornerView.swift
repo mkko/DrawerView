@@ -45,7 +45,11 @@ internal class CutCornerView: UIView {
         path.addEllipse(in: clipping)
 
         _mask.path = path
+        #if swift(>=4.2)
+        _mask.fillRule = .evenOdd
+        #else
         _mask.fillRule = kCAFillRuleEvenOdd
+        #endif
 
         self.layer.mask = _mask
     }
