@@ -590,6 +590,9 @@ private struct ChildScrollViewInfo {
                 completion?(pos == .end)
             })
 
+            // Add extra height to make sure that bottom doesn't show up.
+            self.superview?.layoutIfNeeded()
+
             animator.startAnimation()
             previousAnimator = animator
         } else {
