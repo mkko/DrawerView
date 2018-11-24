@@ -1,12 +1,12 @@
-![Sample](Resources/icon.png)
+![Sample](https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/icon.png)
 
 # DrawerView
 
-DrawerView is a view for iOS that mimics the functionality of the drawer introduced in the Maps (iOS 10 →).
+A drop-in view, to be used as a drawer anywhere in your app.
 
-![Sample](Resources/search_sample.gif)
-![Sample](Resources/dark_sample.gif)
-![Sample](Resources/toolbar_sample.gif)
+![Sample](https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/search_sample.gif)
+![Sample](https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/dark_sample.gif)
+![Sample](https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/toolbar_sample.gif)
 
 #### Ease of use
 

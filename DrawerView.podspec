@@ -30,7 +30,7 @@ DrawerView is a view for iOS that mimics the functionality of the drawer introdu
                       DESC
 
   s.homepage     = "https://github.com/mkko/DrawerView"
-  s.screenshots  = "https://github.com/mkko/DrawerView/raw/1.0.2/Resources/sample.gif"
+  s.screenshots  = "https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/search_sample.gif", "https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/dark_sample.gif", "https://raw.githubusercontent.com/mkko/DrawerView/master/Resources/toolbar_sample.gif"
 
 
   # ―――  Spec License  ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
