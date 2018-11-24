@@ -136,7 +136,7 @@ private struct ChildScrollViewInfo {
 
     private var startedDragging: Bool = false
 
-    private var latestAnimator: UIViewPropertyAnimator? = nil
+    private var previousAnimator: UIViewPropertyAnimator? = nil
 
     private var currentPosition: DrawerPosition = .collapsed
 
@@ -561,10 +561,14 @@ private struct ChildScrollViewInfo {
     }
 
     private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
+        previousAnimator?.stopAnimation(false)
+        previousAnimator?.finishAnimation(at: .current)
+
         if animated {
             // Create the animator.
-            let springParameters = UISpringTimingParameters(dampingRatio: 0.8)
-            let animator = UIViewPropertyAnimator(duration: 0.5, timingParameters: springParameters)
+            let animator = UIViewPropertyAnimator(
+                duration: 0.5,
+                timingParameters: UISpringTimingParameters(dampingRatio: 0.8))
             animator.addAnimations {
                 self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
             }
@@ -573,26 +577,21 @@ private struct ChildScrollViewInfo {
                     self.superview?.layoutIfNeeded()
                     self.layoutIfNeeded()
                     self.setNeedsUpdateConstraints()
+                } else if pos == .current {
+                    // Animation was cancelled, update the constraints to match view's frame.
+                    // NOTE: This is a workaround as there seems to be no way of creating
+                    // a spring-based animation with .beginFromCurrentState option. Also it
+                    // seemded that the option didn't work as expected, so we need to do this
+                    // here manually.
+                    if let f = self.layer.presentation()?.frame {
+                        self.setScrollPosition(f.minY, notifyDelegate: notifyDelegate)
+                    }
                 }
                 completion?(pos == .end)
             })
 
-            // Add extra height to make sure that bottom doesn't show up.
-            self.superview?.layoutIfNeeded()
-
-            // Connect the animations so that we'll wait for the previous to finish first.
-            if let latest = latestAnimator, latest.state == .active {
-                self.latestAnimator = animator
-                latest.addCompletion { _ in
-                    animator.startAnimation()
-                }
-                latest.stopAnimation(false)
-                latest.finishAnimation(at: .current)
-            } else {
-                self.latestAnimator = animator
-                animator.startAnimation()
-            }
-
+            animator.startAnimation()
+            previousAnimator = animator
         } else {
             self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
         }
@@ -649,7 +648,7 @@ private struct ChildScrollViewInfo {
         case .began:
             self.delegate?.drawerWillBeginDragging?(self)
 
-            self.latestAnimator?.stopAnimation(true)
+            self.previousAnimator?.stopAnimation(true)
 
             // Get the actual position of the view.
             let frame = self.layer.presentation()?.frame ?? self.frame
@@ -758,8 +757,8 @@ private struct ChildScrollViewInfo {
                     // Also animate to the proper scroll position.
                     log("Animating to target position...")
 
-                    self.latestAnimator?.stopAnimation(true)
-                    self.latestAnimator = UIViewPropertyAnimator.runningPropertyAnimator(
+                    self.previousAnimator?.stopAnimation(true)
+                    self.previousAnimator = UIViewPropertyAnimator.runningPropertyAnimator(
                         withDuration: 0.2,
                         delay: 0.0,
                         options: [.allowUserInteraction, .beginFromCurrentState],
