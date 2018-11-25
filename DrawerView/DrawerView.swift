@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Dispatch
 
 let LOGGING = false
 
@@ -561,8 +562,11 @@ private struct ChildScrollViewInfo {
     }
 
     private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
-        previousAnimator?.stopAnimation(false)
-        previousAnimator?.finishAnimation(at: .current)
+        if previousAnimator?.isRunning == true {
+            previousAnimator?.stopAnimation(false)
+            previousAnimator?.finishAnimation(at: .current)
+            previousAnimator = nil
+        }
 
         if animated {
             // Create the animator.
@@ -584,10 +588,15 @@ private struct ChildScrollViewInfo {
                     // seemded that the option didn't work as expected, so we need to do this
                     // here manually.
                     if let f = self.layer.presentation()?.frame {
-                        self.setScrollPosition(f.minY, notifyDelegate: notifyDelegate)
+                        self.setScrollPosition(f.minY, notifyDelegate: false)
                     }
                 }
-                completion?(pos == .end)
+
+                if let completion = completion {
+                    DispatchQueue.main.async {
+                        completion(pos == .end)
+                    }
+                }
             })
 
             // Add extra height to make sure that bottom doesn't show up.
