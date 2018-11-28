@@ -159,6 +159,8 @@ private struct ChildScrollViewInfo {
 
     private var lastWarningDate: Date?
 
+    private let embeddedView: UIView?
+
     // MARK: - Visual properties
 
     /// The corner radius of the drawer view.
@@ -392,16 +394,25 @@ private struct ChildScrollViewInfo {
     // MARK: - Initialization
 
     init() {
+        self.embeddedView = nil
+        super.init(frame: CGRect())
+        self.setup()
+    }
+
+    private init(embeddedView: UIView?) {
+        self.embeddedView = embeddedView
         super.init(frame: CGRect())
         self.setup()
     }
 
     override init(frame: CGRect) {
+        self.embeddedView = nil
         super.init(frame: frame)
         self.setup()
     }
 
     required public init?(coder aDecoder: NSCoder) {
+        self.embeddedView = nil
         super.init(coder: aDecoder)
         self.setup()
     }
@@ -414,7 +425,7 @@ private struct ChildScrollViewInfo {
     /// provided view is added as a child view for the drawer and
     /// constrained with auto layout from all of its sides.
     convenience public init(withView view: UIView) {
-        self.init()
+        self.init(embeddedView: view)
 
         view.frame = self.bounds
         view.backgroundColor = .clear
@@ -1117,7 +1128,7 @@ private struct ChildScrollViewInfo {
         case .automatic:
             // Hide all the views that are not completely above the horizon.
             let snap = self.snapPosition(for: .collapsed, inSuperView: superview)
-            return self.subviews.filter {
+            return (embeddedView ?? self).subviews.filter {
                 $0 !== self.backgroundView && $0 !== self.borderView
                     && (allowPartial ? $0.frame.minY > snap : $0.frame.maxY > snap)
             }
