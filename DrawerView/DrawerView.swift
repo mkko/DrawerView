@@ -153,7 +153,7 @@ private struct ChildScrollViewInfo {
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
 
-    private var willHide: Bool = false
+    private var willConceal: Bool = false
 
     private var orientationChanged: Bool = false
 
@@ -216,59 +216,25 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    override public var isHidden: Bool {
-        get {
-            return super.isHidden
-        }
-        set {
-            super.isHidden = newValue
-            self.overlay?.isHidden = newValue
+    public override var isHidden: Bool {
+        didSet {
+            self.overlay?.isHidden = isHidden
         }
     }
 
-    public func setHidden(_ hidden: Bool, animation: VisibilityAnimation) {
-
-        guard let superview = superview else {
-            self.isHidden = hidden
-            return
+    private var _isConcealed: Bool = false
+    public var isConcealed: Bool {
+        get {
+            return _isConcealed
         }
-
-        if hidden && (self.willHide || self.isHidden) {
-            return
-        } else if !hidden && !self.isHidden {
-            return
+        set {
+            setConcealed(newValue, animated: false)
         }
+    }
 
-        switch animation {
-        case .none:
-            self.isHidden = hidden
-        case .slide:
-            let hiddenSnapPosition = self.snapPosition(for: .closed, inSuperView: superview)
-            let currentSnapPosition = self.snapPosition(for: self.position, inSuperView: superview)
-
-            if hidden {
-                self.willHide = true
-                self.scrollToPosition(hiddenSnapPosition, animated: true, notifyDelegate: true) { finished in
-                    // If not finished, the scroll animation was superceded by another animation.
-                    if self.willHide && finished {
-                        self.isHidden = true
-
-                        // Finally move back to original position.
-                        self.scrollToPosition(currentSnapPosition, animated: false, notifyDelegate: false)
-                    }
-                    self.willHide = false
-                }
-            } else {
-                // Start from the hidden state.
-                self.isHidden = false
-                self.scrollToPosition(hiddenSnapPosition, animated: false, notifyDelegate: false)
-                self.scrollToPosition(currentSnapPosition, animated: true, notifyDelegate: true)
-            }
-        }
-
-        if !willHide {
-            self.willHide = false
-        }
+    public func setConcealed(_ concealed: Bool, animated: Bool) {
+        _isConcealed = concealed
+        updateSnapPosition(animated: animated)
     }
 
     // MARK: - Public properties
@@ -289,7 +255,7 @@ private struct ChildScrollViewInfo {
             return 0
         }
 
-        if self.isHidden || self.willHide {
+        if self.isConcealed {
             let closedSnapPosition = self.snapPosition(for: .closed, inSuperView: superview)
             return convertScrollPositionToOffset(closedSnapPosition)
         } else {
@@ -557,17 +523,19 @@ private struct ChildScrollViewInfo {
         // Get the next available position. Closed position is always supported.
 
         // Notify only if position changed.
-        let positionChanged = (currentPosition != position)
-        if positionChanged {
+        let visiblePosition: DrawerPosition = (_isConcealed ? .closed : position)
+        // Don't notify about position if concealing the drawer.
+        let notifyPosition = !_isConcealed && (currentPosition != visiblePosition)
+        if notifyPosition {
             self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: position)
         }
 
         self.currentPosition = position
 
-        let nextSnapPosition = snapPosition(for: position, inSuperView: superview)
+        let nextSnapPosition = snapPosition(for: visiblePosition, inSuperView: superview)
         self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
-            if positionChanged {
-                self.delegate?.drawer?(self, didTransitionTo: position)
+            if notifyPosition {
+                self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
             }
         }
     }
