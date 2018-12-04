@@ -575,7 +575,9 @@ private struct ChildScrollViewInfo {
     private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
         if previousAnimator?.isRunning == true {
             previousAnimator?.stopAnimation(false)
-            previousAnimator?.finishAnimation(at: .current)
+            if let s = previousAnimator?.state, s == .stopped {
+                previousAnimator?.finishAnimation(at: .current)
+            }
             previousAnimator = nil
         }
 
