@@ -662,25 +662,16 @@ private struct ChildScrollViewInfo {
             // If scrolling upwards a scroll view, ignore the events.
             if self.childScrollViews.count > 0 {
 
-                // Detect if directional lock should be respected.
-                let panGestures = self.childScrollViews
+                // Collect the active pan gestures with their respective scroll views.
+                let simultaneousPanGestures = self.childScrollViews
                     .filter { $0.scrollWasEnabled }
-                    .flatMap { scrollInfo in
-                        scrollInfo.gestureRecognizers.map {
-                            ($0, scrollInfo.scrollView)
+                    .flatMap { scrollInfo -> [(pan: UIPanGestureRecognizer, scrollView: UIScrollView)] in
+                        // Filter out non-pan gestures
+                        scrollInfo.gestureRecognizers.compactMap { recognizer in
+                            (recognizer as? UIPanGestureRecognizer).map { ($0, scrollInfo.scrollView) }
                         }
                     }
-                    .compactMap { panInfo -> (pan: UIPanGestureRecognizer, scrollView: UIScrollView)? in
-                        if let panRecognizer = panInfo.0 as? UIPanGestureRecognizer {
-                            return (pan: panRecognizer, scrollView: panInfo.1)
-                        } else {
-                            return nil
-                        }
-                }
-
-                let simultaneousPanGestures = panGestures.filter {
-                    $0.pan.isActive()
-                }
+                    .filter { $0.pan.isActive() }
 
                 // TODO: Better support for scroll views that don't have directional scroll lock enabled.
                 let ableToDetermineHorizontalPan =
@@ -696,13 +687,14 @@ private struct ChildScrollViewInfo {
                         .all {
                             let pan = $0.pan.translation(in: self)
                             return !(pan.x != 0 && pan.y == 0)
-                        }
+
+                }
 
                 if ableToDetermineHorizontalPan && panningVertically {
                     self.horizontalPanOnly = false
                 }
 
-                if self.horizontalPanOnly {
+                if ableToDetermineHorizontalPan && self.horizontalPanOnly {
                     log("Vertical pan cancelled due to direction lock")
                     break
                 }
@@ -1151,11 +1143,10 @@ private struct ChildScrollViewInfo {
     }
 
     func ableToDetermineHorizontalPan(_ scrollView: UIScrollView) -> Bool {
-        let canScrollVertically = scrollView.contentSize.height > scrollView.bounds.height
         let hasDirectionalLock = (scrollView is UITableView) || scrollView.isDirectionalLockEnabled
         // If vertical scroll is not possible, or directional lock is
         // enabled, we are able to detect if view was panned horizontally.
-        return !canScrollVertically || hasDirectionalLock
+        return !scrollView.canScrollVertically || hasDirectionalLock
     }
 
     private func shouldWarn(_ lastWarningDate: inout Date?) -> Bool {
@@ -1182,22 +1173,17 @@ extension DrawerView: UIGestureRecognizerDelegate {
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if let sv = otherGestureRecognizer.view as? UIScrollView {
 
-            let scrollWasEnabled: Bool
-            let gestureRecognizers: [UIGestureRecognizer]
             if let index = self.childScrollViews.index(where: { $0.scrollView === sv }) {
+                // Existing scroll view, update it.
                 let scrollInfo = self.childScrollViews[index]
-                scrollWasEnabled = scrollInfo.scrollWasEnabled
-                self.childScrollViews.remove(at: index)
-                gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
+                self.childScrollViews[index].gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
             } else {
-                scrollWasEnabled = sv.isScrollEnabled
-                gestureRecognizers = []
+                // New entry.
+                self.childScrollViews.append(ChildScrollViewInfo(
+                    scrollView: sv,
+                    scrollWasEnabled: sv.isScrollEnabled,
+                    gestureRecognizers: []))
             }
-
-            self.childScrollViews.append(ChildScrollViewInfo(
-                scrollView: sv,
-                scrollWasEnabled: scrollWasEnabled,
-                gestureRecognizers: gestureRecognizers))
             return true
         }
         return false
@@ -1267,6 +1253,11 @@ fileprivate extension UIGestureRecognizer {
     }
 }
 
+fileprivate extension UIScrollView {
+    var canScrollVertically: Bool {
+        return self.contentSize.height > self.bounds.height
+    }
+}
 #if !swift(>=4.2)
 extension Array {
     // Backwards support for compactMap.
