@@ -678,26 +678,28 @@ private struct ChildScrollViewInfo {
                     simultaneousPanGestures.count > 0 && simultaneousPanGestures
                         .all { self.ableToDetermineHorizontalPan($0.scrollView) }
 
-                if !ableToDetermineHorizontalPan && shouldWarn(&lastWarningDate) {
+                if simultaneousPanGestures.count > 0 && !ableToDetermineHorizontalPan && shouldWarn(&lastWarningDate) {
                     NSLog("WARNING (DrawerView): One subview of DrawerView has not enabled directional lock. Without directional lock it is ambiguous to determine if DrawerView should start panning.")
                 }
 
-                let panningVertically = simultaneousPanGestures.count > 0
-                    && simultaneousPanGestures
-                        .all {
-                            let pan = $0.pan.translation(in: self)
-                            return !(pan.x != 0 && pan.y == 0)
+                if ableToDetermineHorizontalPan {
+                    let panningVertically = simultaneousPanGestures.count > 0
+                        && simultaneousPanGestures
+                            .all {
+                                let pan = $0.pan.translation(in: self)
+                                return !(pan.x != 0 && pan.y == 0)
+                    }
 
+                    if panningVertically {
+                        self.horizontalPanOnly = false
+                    }
+
+                    if self.horizontalPanOnly {
+                        log("Vertical pan cancelled due to direction lock")
+                        break
+                    }
                 }
 
-                if ableToDetermineHorizontalPan && panningVertically {
-                    self.horizontalPanOnly = false
-                }
-
-                if ableToDetermineHorizontalPan && self.horizontalPanOnly {
-                    log("Vertical pan cancelled due to direction lock")
-                    break
-                }
 
                 let activeScrollViews = simultaneousPanGestures
                     .compactMap { $0.pan.view as? UIScrollView }
