@@ -637,6 +637,9 @@ private struct ChildScrollViewInfo {
     // MARK: - Pan handling
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
+
+        let isFullyExpanded = self.snapPositionsSorted.last == self.position
+
         switch sender.state {
         case .began:
             self.delegate?.drawerWillBeginDragging?(self)
@@ -649,6 +652,12 @@ private struct ChildScrollViewInfo {
             self.horizontalPanOnly = true
 
             updateScrollPosition(whileDraggingAtPoint: panOrigin, notifyDelegate: true)
+
+            // Disable child scroll if not in an expanded position
+            if !isFullyExpanded {
+                log("Disabled child scrolling")
+                self.childScrollViews.forEach { $0.scrollView.isScrollEnabled = false }
+            }
 
             break
         case .changed:
@@ -705,7 +714,6 @@ private struct ChildScrollViewInfo {
                     .compactMap { $0.pan.view as? UIScrollView }
 
                 let childReachedTheTop = activeScrollViews.contains { $0.contentOffset.y <= 0 }
-                let isFullyOpen = self.snapPositionsSorted.last == self.position
                 let childScrollEnabled = activeScrollViews.contains { $0.isScrollEnabled }
 
                 let scrollingToBottom = velocity.y < 0
@@ -717,7 +725,7 @@ private struct ChildScrollViewInfo {
                     shouldScrollChildView = true
                 } else if childReachedTheTop && !scrollingToBottom {
                     shouldScrollChildView = false
-                } else if !isFullyOpen {
+                } else if !isFullyExpanded {
                     shouldScrollChildView = false
                 } else {
                     shouldScrollChildView = true
