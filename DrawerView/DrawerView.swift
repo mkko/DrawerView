@@ -1181,32 +1181,44 @@ extension DrawerView: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        if let sv = otherGestureRecognizer.view as? UIScrollView {
 
-            if let index = self.childScrollViews.index(where: { $0.scrollView === sv }) {
-                // Existing scroll view, update it.
-                let scrollInfo = self.childScrollViews[index]
-                self.childScrollViews[index].gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
-            } else {
-                // New entry.
-                self.childScrollViews.append(ChildScrollViewInfo(
-                    scrollView: sv,
-                    scrollWasEnabled: sv.isScrollEnabled,
-                    gestureRecognizers: []))
+        if gestureRecognizer === self.panGestureRecognizer {
+            if let scrollView = otherGestureRecognizer.view as? UIScrollView {
+
+                if let index = self.childScrollViews.index(where: { $0.scrollView === scrollView }) {
+                    // Existing scroll view, update it.
+                    let scrollInfo = self.childScrollViews[index]
+                    self.childScrollViews[index].gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
+                } else {
+                    // New entry.
+                    self.childScrollViews.append(ChildScrollViewInfo(
+                        scrollView: scrollView,
+                        scrollWasEnabled: scrollView.isScrollEnabled,
+                        gestureRecognizers: []))
+                }
+                return true
+            } else if otherGestureRecognizer.view is UITextField {
+                return true
             }
-            return true
         }
+
         return false
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        // Wait for other gesture recognizers to fail before drawer pan is possible.
-        if gestureRecognizer == self.panGestureRecognizer &&
-            otherGestureRecognizer.view is UIScrollView {
-            // If the gesture recognizer is from a scroll view, do not fail as
-            // we need to work in parallel
-            return false
+
+        if gestureRecognizer === self.panGestureRecognizer {
+            if otherGestureRecognizer.view is UIScrollView {
+                // If the gesture recognizer is from a scroll view, do not fail as
+                // we need to work in parallel
+                return false
+            }
+
+            if otherGestureRecognizer.view is UITextField {
+                return false
+            }
         }
+
         return true
     }
 
