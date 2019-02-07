@@ -237,6 +237,16 @@ private struct ChildScrollViewInfo {
         updateSnapPosition(animated: animated)
     }
 
+    public func removeFromSuperview(animated: Bool) {
+        guard let superview = superview else { return }
+
+        let pos = snapPosition(for: .closed, inSuperView: superview)
+        self.scrollToPosition(pos, animated: animated, notifyDelegate: false) { _ in
+            self.removeFromSuperview()
+            self.overlay?.removeFromSuperview()
+        }
+    }
+
     // MARK: - Public properties
 
     @IBOutlet
