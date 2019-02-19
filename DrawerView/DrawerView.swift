@@ -241,7 +241,7 @@ private struct ChildScrollViewInfo {
         guard let superview = superview else { return }
 
         let pos = snapPosition(for: .closed, inSuperView: superview)
-        self.scrollToPosition(pos, animated: animated, notifyDelegate: false) { _ in
+        self.scrollToPosition(pos, animated: animated, notifyDelegate: true) { _ in
             self.removeFromSuperview()
             self.overlay?.removeFromSuperview()
         }
