@@ -250,7 +250,7 @@ private struct ChildScrollViewInfo {
     // MARK: - Public properties
 
     @IBOutlet
-    public var delegate: DrawerViewDelegate?
+    public weak var delegate: DrawerViewDelegate?
 
     /// Boolean indicating whether the drawer is enabled. When disabled, all user
     /// interaction with the drawer is disabled. However, user interaction with the
