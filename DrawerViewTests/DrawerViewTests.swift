@@ -2,7 +2,7 @@
 //  DrawerViewTests.swift
 //  DrawerViewTests
 //
-//  Created by Mikko Välimäki on 18/01/2018.
+//  Created by Mikko Välimäki on 2018-01-18.
 //  Copyright © 2018 Mikko Välimäki. All rights reserved.
 //
 

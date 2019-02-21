@@ -2,7 +2,7 @@
 //  Extensions.swift
 //  DrawerView
 //
-//  Created by Mikko Välimäki on 04/02/2018.
+//  Created by Mikko Välimäki on 2018-02-04.
 //  Copyright © 2018 Mikko Välimäki. All rights reserved.
 //
 

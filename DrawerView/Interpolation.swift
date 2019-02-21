@@ -2,7 +2,7 @@
 //  Interpolation.swift
 //  DrawerView
 //
-//  Created by Mikko Välimäki on 10/03/2018.
+//  Created by Mikko Välimäki on 2018-03-10.
 //  Copyright © 2018 Mikko Välimäki. All rights reserved.
 //
 

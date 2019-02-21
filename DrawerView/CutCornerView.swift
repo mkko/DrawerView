@@ -2,7 +2,7 @@
 //  CutCornerView.swift
 //  DrawerView
 //
-//  Created by Mikko Välimäki on 23/01/2018.
+//  Created by Mikko Välimäki on 2018-01-23.
 //  Copyright © 2018 Mikko Välimäki. All rights reserved.
 //
 

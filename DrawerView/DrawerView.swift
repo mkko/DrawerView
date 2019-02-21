@@ -2,7 +2,7 @@
 //  DrawerView.swift
 //  DrawerView
 //
-//  Created by Mikko Välimäki on 28/10/2017.
+//  Created by Mikko Välimäki on 2017-10-28.
 //  Copyright © 2017 Mikko Välimäki. All rights reserved.
 //
 

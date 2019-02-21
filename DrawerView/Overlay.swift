@@ -2,7 +2,7 @@
 //  Overlay.swift
 //  DrawerView
 //
-//  Created by Mikko Välimäki on 04/01/2018.
+//  Created by Mikko Välimäki on 2018-01-04.
 //  Copyright © 2018 Mikko Välimäki. All rights reserved.
 //
 
