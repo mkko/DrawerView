@@ -212,7 +212,7 @@ private struct ChildScrollViewInfo {
 
     public var automaticallyAdjustChildContentInset: Bool = true {
         didSet {
-            setNeedsLayout()
+            safeAreaInsetsDidChange()
         }
     }
 
@@ -503,11 +503,6 @@ private struct ChildScrollViewInfo {
         if self.orientationChanged {
             self.updateSnapPosition(animated: false)
             self.orientationChanged = false
-        }
-
-        if automaticallyAdjustChildContentInset {
-            let bottomInset = self.bottomInset
-            self.adjustChildContentInset(self, bottomInset: bottomInset)
         }
     }
 
@@ -990,12 +985,21 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public override func safeAreaInsetsDidChange() {
+        if automaticallyAdjustChildContentInset {
+            let bottomInset = self.bottomInset
+            self.adjustChildContentInset(self, bottomInset: bottomInset)
+        }
+    }
+
     private func adjustChildContentInset(_ view: UIView, bottomInset: CGFloat) {
         for childView in view.subviews {
             if let scrollView = childView as? UIScrollView {
                 // Do not recurse into child views if content
-                // inset can be set on superview.
-                scrollView.contentInset.bottom = bottomInset
+                // inset can be set on the superview.
+                let convertedBounds = scrollView.convert(scrollView.bounds, to: self)
+                let distanceFromBottom = self.bounds.height - convertedBounds.maxY
+                scrollView.contentInset.bottom = max(bottomInset - distanceFromBottom, 0)
             } else {
                 adjustChildContentInset(childView, bottomInset: bottomInset)
             }
