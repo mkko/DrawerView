@@ -367,6 +367,10 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    /// An opacity (0 to 1) used for automatically hiding child views. This is made public so that
+    /// you can match the opacity with your custom views.
+    public private(set) var currentChildOpacity: CGFloat = 1.0
+
     // MARK: - Initialization
 
     init() {
@@ -1086,16 +1090,17 @@ private struct ChildScrollViewInfo {
         let viewsToHide = self.childViewsToHide()
         let bottomInset = self.bottomInset
 
-        if viewsToHide.count > 0 && bottomInset > 0 {
+        if bottomInset > 0 {
             // Measure the distance to collapsed position.
             let snap = self.snapPosition(for: .collapsed, inSuperView: superview)
             let alpha = min(1, (snap - position) / self.bottomInset)
-            //print("alpha: \(alpha)")
 
             for childView in viewsToHide {
                 // TODO: respect the original alpha on the child.
                 childView.alpha = alpha
             }
+
+            currentChildOpacity = alpha
         }
     }
 
