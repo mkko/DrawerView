@@ -82,9 +82,11 @@ let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
     @objc optional func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat)
 
-    @objc optional func drawerWillBeginDragging(_ drawerView: DrawerView)
-
-    @objc optional func drawerWillEndDragging(_ drawerView: DrawerView)
+    @objc optional func drawerWillBeginDragging(_ drawerView: DrawerView, with recognizer: UIPanGestureRecognizer)
+    
+    @objc optional func drawerIsDragging(_ drawerView: DrawerView, with recognizer: UIPanGestureRecognizer)
+    
+    @objc optional func drawerWillEndDragging(_ drawerView: DrawerView, with recognizer: UIPanGestureRecognizer)
 }
 
 private struct ChildScrollViewInfo {
@@ -651,7 +653,7 @@ private struct ChildScrollViewInfo {
 
         switch sender.state {
         case .began:
-            self.delegate?.drawerWillBeginDragging?(self)
+            self.delegate?.drawerWillBeginDragging?(self, with: sender)
 
             self.previousAnimator?.stopAnimation(true)
 
@@ -676,7 +678,9 @@ private struct ChildScrollViewInfo {
             if velocity.y == 0 {
                 break
             }
-
+            
+            self.delegate?.drawerIsDragging?(self, with: sender)
+            
             // If scrolling upwards a scroll view, ignore the events.
             if self.childScrollViews.count > 0 {
 
@@ -802,7 +806,7 @@ private struct ChildScrollViewInfo {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else if startedDragging {
-                self.delegate?.drawerWillEndDragging?(self)
+                self.delegate?.drawerWillEndDragging?(self, with: sender)
 
                 // Check velocity and snap position separately:
                 // 1) A treshold for velocity that makes drawer slide to the next state
