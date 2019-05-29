@@ -1059,8 +1059,13 @@ private struct ChildScrollViewInfo {
 
         let maxOpacity: CGFloat = 0.5
 
-        self.overlay = self.overlay ?? createOverlay()
-        self.overlay?.alpha = opacityFactor * maxOpacity
+        if opacityFactor > 0 {
+            self.overlay = self.overlay ?? createOverlay()
+            self.overlay?.alpha = opacityFactor * maxOpacity
+        } else {
+            self.overlay?.removeFromSuperview()
+            self.overlay = nil
+        }
     }
 
     private func setShadowOpacity(forScrollPosition position: CGFloat) {
