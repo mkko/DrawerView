@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "DrawerView"
-  s.version      = "1.1.1"
+  s.version      = "1.1.2"
   s.summary      = "An iOS 10 Maps.app style drawer to be used anywhere in your app"
 
 
