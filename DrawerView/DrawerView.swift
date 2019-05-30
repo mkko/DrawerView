@@ -93,6 +93,7 @@ private struct ChildScrollViewInfo {
     var gestureRecognizers: [UIGestureRecognizer] = []
 }
 
+
 @IBDesignable public class DrawerView: UIView {
 
     // MARK: - Public types
@@ -664,13 +665,6 @@ private struct ChildScrollViewInfo {
 
             updateScrollPosition(whileDraggingAtPoint: panOrigin, notifyDelegate: true)
 
-            // Disable child scroll if not in an expanded position
-            if !isFullyExpanded {
-                log("Disabled child scrolling")
-                self.childScrollViews.forEach { $0.scrollView.isScrollEnabled = false }
-            }
-
-            break
         case .changed:
 
             let translation = sender.translation(in: self)
