@@ -120,7 +120,7 @@ private struct ChildScrollViewInfo {
         /// Same as automatic, but hide only content that is completely below the bottom inset
         case allowPartial
         /// Specify explicit views to hide.
-        case custom([UIView])
+        case custom(() -> [UIView])
         /// Don't use bottom inset.
         case never
     }
@@ -160,6 +160,8 @@ private struct ChildScrollViewInfo {
     private var lastWarningDate: Date?
 
     private let embeddedView: UIView?
+
+    private var hiddenChildViews: [(view: UIView, originalAlpha: CGFloat)]?
 
     // MARK: - Visual properties
 
@@ -1092,17 +1094,31 @@ private struct ChildScrollViewInfo {
             return
         }
 
-        let viewsToHide = self.childViewsToHide()
-        let bottomInset = self.bottomInset
+        // TODO: This method doesn't take into account if a child view opacity was changed while it is hidden.
 
-        if bottomInset > 0 {
+        if self.bottomInset > 0 {
+
             // Measure the distance to collapsed position.
             let snap = self.snapPosition(for: .collapsed, inSuperView: superview)
             let alpha = min(1, (snap - position) / self.bottomInset)
 
-            for childView in viewsToHide {
-                // TODO: respect the original alpha on the child.
-                childView.alpha = alpha
+            if alpha < 1 {
+                // Ask only once when beginning to hide child views.
+                let viewsToHide = self.hiddenChildViews ??
+                    self.childViewsToHide().map { ($0, $0.alpha) }
+                self.hiddenChildViews = viewsToHide
+
+                viewsToHide.forEach { e in
+                    e.view.alpha = e.originalAlpha * alpha
+                }
+
+            } else {
+                if let hiddenViews = self.hiddenChildViews {
+                    hiddenViews.forEach { e in
+                        e.view.alpha = e.originalAlpha
+                    }
+                }
+                self.hiddenChildViews = nil
             }
 
             currentChildOpacity = alpha
@@ -1128,8 +1144,8 @@ private struct ChildScrollViewInfo {
                 $0 !== self.backgroundView && $0 !== self.borderView
                     && (allowPartial ? $0.frame.minY > snap : $0.frame.maxY > snap)
             }
-        case .custom(let views):
-            return views
+        case .custom(let handler):
+            return handler()
         case .never:
             return []
 
