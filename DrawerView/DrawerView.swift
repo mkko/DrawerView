@@ -162,7 +162,7 @@ private struct ChildScrollViewInfo {
 
     private let embeddedView: UIView?
 
-    private var hiddenChildViews: [(view: UIView, originalAlpha: CGFloat)]?
+    private var hiddenChildViews: [UIView]?
 
     // MARK: - Visual properties
 
@@ -1098,18 +1098,17 @@ private struct ChildScrollViewInfo {
 
             if alpha < 1 {
                 // Ask only once when beginning to hide child views.
-                let viewsToHide = self.hiddenChildViews ??
-                    self.childViewsToHide().map { ($0, $0.alpha) }
+                let viewsToHide = self.hiddenChildViews ?? self.childViewsToHide()
                 self.hiddenChildViews = viewsToHide
 
-                viewsToHide.forEach { e in
-                    e.view.alpha = e.originalAlpha * alpha
+                viewsToHide.forEach { view in
+                    view.alpha = 0
                 }
 
             } else {
                 if let hiddenViews = self.hiddenChildViews {
-                    hiddenViews.forEach { e in
-                        e.view.alpha = e.originalAlpha
+                    hiddenViews.forEach { view in
+                        view.alpha = 1
                     }
                 }
                 self.hiddenChildViews = nil
