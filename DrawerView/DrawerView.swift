@@ -1102,7 +1102,7 @@ private struct ChildScrollViewInfo {
                 self.hiddenChildViews = viewsToHide
 
                 viewsToHide.forEach { view in
-                    view.alpha = 0
+                    view.alpha = alpha
                 }
 
             } else {
