@@ -237,7 +237,7 @@ private struct ChildScrollViewInfo {
 
     public func setConcealed(_ concealed: Bool, animated: Bool) {
         _isConcealed = concealed
-        updateSnapPosition(animated: animated)
+        setPosition(currentPosition, animated: animated)
     }
 
     public func removeFromSuperview(animated: Bool) {
@@ -625,7 +625,9 @@ private struct ChildScrollViewInfo {
     }
 
     private func updateSnapPosition(animated: Bool) {
-        self.setPosition(currentPosition, animated: animated)
+        if panGestureRecognizer.state.isTracking == false {
+            self.setPosition(currentPosition, animated: animated)
+        }
     }
 
     private func setScrollPosition(_ scrollPosition: CGFloat, notifyDelegate: Bool) {
@@ -1330,5 +1332,12 @@ func abort(reason: String) -> Never  {
 func log(_ message: String) {
     if LOGGING {
         print("\(dateFormatter.string(from: Date())): \(message)")
+    }
+}
+
+extension UIGestureRecognizer.State {
+
+    var isTracking: Bool {
+        return self == .began || self == .changed
     }
 }
