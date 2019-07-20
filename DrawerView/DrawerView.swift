@@ -156,6 +156,8 @@ private struct ChildScrollViewInfo {
 
     private var willConceal: Bool = false
 
+    private var _isConcealed: Bool = false
+
     private var orientationChanged: Bool = false
 
     private var lastWarningDate: Date?
@@ -225,7 +227,6 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    private var _isConcealed: Bool = false
     public var isConcealed: Bool {
         get {
             return _isConcealed
@@ -701,7 +702,7 @@ private struct ChildScrollViewInfo {
                 if ableToDetermineHorizontalPan {
                     let panningVertically = simultaneousPanGestures.count > 0
                         && simultaneousPanGestures
-                            .all {
+                            .allSatisfy {
                                 let pan = $0.pan.translation(in: self)
                                 return !(pan.x != 0 && pan.y == 0)
                     }
@@ -1167,11 +1168,7 @@ private struct ChildScrollViewInfo {
         return superview.bounds.height - position
     }
 
-    private func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
-        return factor * (log10(value + factor/log(10)) - log10(factor/log(10)))
-    }
-
-    func ableToDetermineHorizontalPan(_ scrollView: UIScrollView) -> Bool {
+    private func ableToDetermineHorizontalPan(_ scrollView: UIScrollView) -> Bool {
         let hasDirectionalLock = (scrollView is UITableView) || scrollView.isDirectionalLockEnabled
         // If vertical scroll is not possible, or directional lock is
         // enabled, we are able to detect if view was panned horizontally.
@@ -1189,6 +1186,8 @@ private struct ChildScrollViewInfo {
         return warn
     }
 }
+
+// MARK: - Extensions
 
 extension DrawerView: UIGestureRecognizerDelegate {
 
@@ -1243,7 +1242,9 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
 }
 
-public extension DrawerView {
+// MARK: - Private Extensions
+
+fileprivate extension DrawerView {
 
     var snapPositionsDescending: [DrawerPosition] {
         return self.snapPositions
@@ -1255,6 +1256,7 @@ public extension DrawerView {
         return snapPositionsDescending.advance(from: self.position, offset: offset)
     }
 }
+
 
 fileprivate extension CGRect {
 
@@ -1286,10 +1288,20 @@ public extension BidirectionalCollection where Element == DrawerPosition {
 
 }
 
-fileprivate extension Collection {
+fileprivate extension Collection where Element == DrawerPosition {
 
-    func all(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
-        return try !self.contains(where: { try !predicate($0) })
+    func sortedBySnap(in drawerView: DrawerView, ascending: Bool) -> [(position: DrawerPosition, snap: CGFloat)] {
+        guard let superview = drawerView.superview else {
+            return []
+        }
+
+        return self
+            .map { ($0, drawerView.snapPosition(for: $0, inSuperView: superview))}
+            .sorted(by: {
+                ascending
+                    ? $0.snap < $1.snap
+                    : $0.snap > $1.snap
+            })
     }
 }
 
@@ -1301,12 +1313,22 @@ fileprivate extension UIGestureRecognizer {
 }
 
 fileprivate extension UIScrollView {
+
     var canScrollVertically: Bool {
         return self.contentSize.height > self.bounds.height
     }
 }
+
+fileprivate extension UIGestureRecognizer.State {
+
+    var isTracking: Bool {
+        return self == .began || self == .changed
+    }
+}
+
 #if !swift(>=4.2)
-extension Array {
+fileprivate extension Array {
+
     // Backwards support for compactMap.
     public func compactMap<ElementOfResult>(_ transform: (Element) throws -> ElementOfResult?) rethrows -> [ElementOfResult] {
         return try self.flatMap(transform)
@@ -1314,20 +1336,20 @@ extension Array {
 }
 #endif
 
-func abort(reason: String) -> Never  {
+// MARK: - Private functions
+
+fileprivate func damp(value: CGFloat, factor: CGFloat) -> CGFloat {
+    return factor * (log10(value + factor/log(10)) - log10(factor/log(10)))
+}
+
+fileprivate func abort(reason: String) -> Never  {
     NSLog("DrawerView: \(reason)")
     abort()
 }
 
-func log(_ message: String) {
+fileprivate func log(_ message: String) {
     if LOGGING {
         print("\(dateFormatter.string(from: Date())): \(message)")
     }
 }
 
-extension UIGestureRecognizer.State {
-
-    var isTracking: Bool {
-        return self == .began || self == .changed
-    }
-}
