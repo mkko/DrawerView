@@ -615,9 +615,9 @@ private struct ChildScrollViewInfo {
 
         let position: CGFloat
         if let lowerBound = positions.first, dragPoint < lowerBound {
-            position = lowerBound - damp(value: lowerBound - dragPoint, factor: 50)
+            position = lowerBound - damp(value: lowerBound - dragPoint, factor: 20)
         } else if let upperBound = positions.last, dragPoint > upperBound {
-            position = upperBound + damp(value: dragPoint - upperBound, factor: 50)
+            position = upperBound + damp(value: dragPoint - upperBound, factor: 20)
         } else {
             position = dragPoint
         }
@@ -693,7 +693,7 @@ private struct ChildScrollViewInfo {
                 // TODO: Better support for scroll views that don't have directional scroll lock enabled.
                 let ableToDetermineHorizontalPan =
                     simultaneousPanGestures.count > 0 && simultaneousPanGestures
-                        .all { self.ableToDetermineHorizontalPan($0.scrollView) }
+                        .allSatisfy { self.ableToDetermineHorizontalPan($0.scrollView) }
 
                 if simultaneousPanGestures.count > 0 && !ableToDetermineHorizontalPan && shouldWarn(&lastWarningDate) {
                     NSLog("WARNING (DrawerView): One subview of DrawerView has not enabled directional lock. Without directional lock it is ambiguous to determine if DrawerView should start panning.")
