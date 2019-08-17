@@ -277,6 +277,15 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public func visibleHeight(forPosition position: DrawerPosition) -> CGFloat {
+        guard let superview = superview else {
+            return 0
+        }
+
+        let snapPosition = self.snapPosition(for: position, inSuperView: superview)
+        return convertScrollPositionToOffset(snapPosition)
+    }
+
     // IB support, not intended to be used otherwise.
     @IBOutlet
     public var containerView: UIView? {
