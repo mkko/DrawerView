@@ -26,6 +26,8 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var locateButtonContainer: UIView!
 
+    private var items: [Int] = Array(0...15)
+
     var drawers: [DrawerMapEntry] = []
 
     let locationManager = CLLocationManager()
@@ -78,7 +80,7 @@ class ViewController: UIViewController {
                 another.setConcealed(true, animated: animated)
             } else if another.isConcealed {
                 another.setConcealed(false, animated: animated)
-            }  else if let nextPosition = another.getPosition(offsetBy: 1) ?? another.getPosition(offsetBy: -1) {
+            }  else if let nextPosition = another.getNextPosition(offsetBy: 1) ?? another.getNextPosition(offsetBy: -1) {
                 another.setPosition(nextPosition, animated: animated)
             }
         }
@@ -206,12 +208,12 @@ extension ViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 25
+        return items.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") ?? UITableViewCell(style: .default, reuseIdentifier: "Cell")
-        cell.textLabel?.text = "Cell \(indexPath.row)"
+        cell.textLabel?.text = "Cell \(items[indexPath.row])"
         cell.backgroundColor = UIColor.clear
         return cell
     }
@@ -223,6 +225,13 @@ extension ViewController: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         drawerView?.setPosition(.collapsed, animated: true)
         //drawers[3].drawer?.setPosition(.partiallyOpen, animated: true)
+    }
+
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            items.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        }
     }
 }
 

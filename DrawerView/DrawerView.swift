@@ -1253,7 +1253,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
 // MARK: - Private Extensions
 
-fileprivate extension DrawerView {
+public extension DrawerView {
 
     var snapPositionsDescending: [DrawerPosition] {
         return self.snapPositions
@@ -1261,7 +1261,7 @@ fileprivate extension DrawerView {
             .map { $0.position }
     }
 
-    func getPosition(offsetBy offset: Int) -> DrawerPosition? {
+    func getNextPosition(offsetBy offset: Int) -> DrawerPosition? {
         return snapPositionsDescending.advance(from: self.position, offset: offset)
     }
 }
