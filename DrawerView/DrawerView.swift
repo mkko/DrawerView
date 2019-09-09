@@ -1212,7 +1212,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
         if gestureRecognizer === self.panGestureRecognizer {
             if let scrollView = otherGestureRecognizer.view as? UIScrollView {
 
-                if let index = self.childScrollViews.index(where: { $0.scrollView === scrollView }) {
+                if let index = self.childScrollViews.firstIndex(where: { $0.scrollView === scrollView }) {
                     // Existing scroll view, update it.
                     let scrollInfo = self.childScrollViews[index]
                     self.childScrollViews[index].gestureRecognizers = scrollInfo.gestureRecognizers + [otherGestureRecognizer]
@@ -1287,7 +1287,7 @@ public extension BidirectionalCollection where Element == DrawerPosition {
             return nil
         }
 
-        if let index = self.index(of: position) {
+        if let index = self.firstIndex(of: position) {
             let nextIndex = self.index(index, offsetBy: offset)
             return self.indices.contains(nextIndex) ? self[nextIndex] : nil
         } else {
