@@ -97,7 +97,7 @@ class ViewController: UIViewController {
     private func setupDrawers() {
         let toggles = drawers
             .map { (key, value) -> UIButton in
-                let button = UIButton(type: UIButtonType.system)
+                let button = UIButton(type: UIButton.ButtonType.system)
                 button.addTarget(self, action: #selector(toggleTapped(sender:)), for: .touchUpInside)
                 button.setTitle("\(key)", for: .normal)
                 button.setTitleColor(UIColor(red: 0, green: 0.5, blue: 0.8, alpha: 0.7), for: .normal)
