@@ -227,7 +227,7 @@ extension ViewController: UITableViewDelegate {
         //drawers[3].drawer?.setPosition(.partiallyOpen, animated: true)
     }
 
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             items.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
