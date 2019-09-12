@@ -1231,24 +1231,6 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
         return false
     }
-
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-
-        if gestureRecognizer === self.panGestureRecognizer {
-            if otherGestureRecognizer.view is UIScrollView {
-                // If the gesture recognizer is from a scroll view, do not fail as
-                // we need to work in parallel
-                return false
-            }
-
-            if otherGestureRecognizer.view is UITextField {
-                return false
-            }
-        }
-
-        return true
-    }
-
 }
 
 // MARK: - Private Extensions
