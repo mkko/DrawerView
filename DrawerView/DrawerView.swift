@@ -54,10 +54,6 @@ fileprivate extension DrawerPosition {
     ]
 }
 
-public class DrawerViewPanGestureRecognizer: UIPanGestureRecognizer {
-
-}
-
 let kVelocityTreshold: CGFloat = 0
 
 // Vertical leeway is used to cover the bottom with springy animations.
@@ -127,8 +123,6 @@ private struct ChildScrollViewInfo {
     }
 
     // MARK: - Private properties
-
-    fileprivate var panGestureRecognizer: DrawerViewPanGestureRecognizer!
 
     fileprivate var overlayTapRecognizer: UITapGestureRecognizer!
 
@@ -255,6 +249,14 @@ private struct ChildScrollViewInfo {
 
     @IBOutlet
     public weak var delegate: DrawerViewDelegate?
+
+    /// The gesture recognizer that will be handling the drawer pan.
+    public lazy var panGestureRecognizer: UIPanGestureRecognizer = {
+        var panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        panGestureRecognizer.maximumNumberOfTouches = 2
+        panGestureRecognizer.minimumNumberOfTouches = 1
+        return panGestureRecognizer
+    }()
 
     /// Boolean indicating whether the drawer is enabled. When disabled, all user
     /// interaction with the drawer is disabled. However, user interaction with the
@@ -450,9 +452,6 @@ private struct ChildScrollViewInfo {
             object: nil)
         #endif
 
-        panGestureRecognizer = DrawerViewPanGestureRecognizer(target: self, action: #selector(handlePan))
-        panGestureRecognizer.maximumNumberOfTouches = 2
-        panGestureRecognizer.minimumNumberOfTouches = 1
         panGestureRecognizer.delegate = self
         self.addGestureRecognizer(panGestureRecognizer)
 
@@ -661,7 +660,6 @@ private struct ChildScrollViewInfo {
     // MARK: - Pan handling
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
-
         let isFullyExpanded = self.snapPositionsDescending.last == self.position
 
         switch sender.state {
@@ -1231,6 +1229,24 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
         return false
     }
+
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+
+        if gestureRecognizer === self.panGestureRecognizer {
+            if otherGestureRecognizer.view is UIScrollView {
+                // If the gesture recognizer is from a scroll view, do not fail as
+                // we need to work in parallel
+                return false
+            }
+
+            if otherGestureRecognizer.view is UITextField {
+                return false
+            }
+        }
+
+        return false
+    }
+
 }
 
 // MARK: - Private Extensions
