@@ -999,6 +999,7 @@ private struct ChildScrollViewInfo {
         if automaticallyAdjustChildContentInset {
             let bottomInset = self.bottomInset
             self.adjustChildContentInset(self, bottomInset: bottomInset)
+            self.updateSnapPosition(animated: true)
         }
     }
 
