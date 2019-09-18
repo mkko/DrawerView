@@ -17,6 +17,7 @@
 		2BF05931205DD1F100D336DE /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BF05930205DD1F100D336DE /* DrawerView.framework */; };
 		2BF05932205DD1F100D336DE /* DrawerView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2BF05930205DD1F100D336DE /* DrawerView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2BF05937205DD6AB00D336DE /* DrawerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF05936205DD6AB00D336DE /* DrawerViewController.swift */; };
+		C03B980D2332B8FE002A27D3 /* UIView+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C03B980C2332B8FE002A27D3 /* UIView+Layout.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,6 +46,7 @@
 		2BF0592A205DD19C00D336DE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2BF05930205DD1F100D336DE /* DrawerView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DrawerView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BF05936205DD6AB00D336DE /* DrawerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawerViewController.swift; sourceTree = "<group>"; };
+		C03B980C2332B8FE002A27D3 /* UIView+Layout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+Layout.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +95,7 @@
 				2BF05920205DD19C00D336DE /* ViewController.swift */,
 				2BF05936205DD6AB00D336DE /* DrawerViewController.swift */,
 				2B39FC7120AAB1F50099D712 /* DrawerTabViewController.swift */,
+				C03B980C2332B8FE002A27D3 /* UIView+Layout.swift */,
 				2BF05922205DD19C00D336DE /* Main.storyboard */,
 				2BF05925205DD19C00D336DE /* Assets.xcassets */,
 				2BF05927205DD19C00D336DE /* LaunchScreen.storyboard */,
@@ -184,6 +187,7 @@
 				2BF0591F205DD19C00D336DE /* AppDelegate.swift in Sources */,
 				2BF05937205DD6AB00D336DE /* DrawerViewController.swift in Sources */,
 				2B39FC7220AAB1F50099D712 /* DrawerTabViewController.swift in Sources */,
+				C03B980D2332B8FE002A27D3 /* UIView+Layout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,6 +9,7 @@
 import UIKit
 import MapKit
 import DrawerView
+import WebKit
 
 typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
 
@@ -91,6 +92,7 @@ class ViewController: UIViewController {
         drawerView.insetAdjustmentBehavior = .automatic
         drawerView.delegate = self
         drawerView.position = .collapsed
+
         return drawerView
     }
 
@@ -132,6 +134,17 @@ class ViewController: UIViewController {
         drawerView.delegate = self
         drawerView.snapPositions = [.closed, .open]
         drawerView.insetAdjustmentBehavior = .automatic
+
+        let wwdc = "https://developer.apple.com/videos/play/wwdc2019/239/"
+        let request = URLRequest(url: URL(string: wwdc)!)
+
+        let webview = WKWebView()
+        webview.load(request)
+        webview.frame = drawerView.bounds
+        webview.translatesAutoresizingMaskIntoConstraints = false
+        drawerView.addSubview(webview)
+        webview.autoPinEdgesToSuperview()
+
         return drawerView
     }
 
