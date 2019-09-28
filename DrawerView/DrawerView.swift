@@ -69,6 +69,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
+let kOverlayOpacity: CGFloat = 0.5
+
 
 @objc public protocol DrawerViewDelegate {
 
@@ -94,12 +96,8 @@ private struct ChildScrollViewInfo {
 
     // MARK: - Public types
 
-    public enum VisibilityAnimation {
-        case none
-        case slide
-        //case fadeInOut
-    }
-
+    /// InsetAdjustmentBehavior describes the behavior for inset adjustment. Generally this is used to
+    /// account the safe area of the device.
     public enum InsetAdjustmentBehavior: Equatable {
         /// Evaluate the bottom inset automatically.
         case automatic
@@ -107,7 +105,7 @@ private struct ChildScrollViewInfo {
         case superviewSafeArea
         /// Use a fixed value for bottom inset.
         case fixed(CGFloat)
-        /// Don't use bottom inset.
+        /// No automatic inset adjustment.
         case never
     }
 
@@ -122,43 +120,14 @@ private struct ChildScrollViewInfo {
         case never
     }
 
-    // MARK: - Private properties
-
-    fileprivate var overlayTapRecognizer: UITapGestureRecognizer!
-
-    private var panOrigin: CGFloat = 0.0
-
-    private var horizontalPanOnly: Bool = true
-
-    private var startedDragging: Bool = false
-
-    private var previousAnimator: UIViewPropertyAnimator? = nil
-
-    private var currentPosition: DrawerPosition = .collapsed
-
-    private var topConstraint: NSLayoutConstraint? = nil
-
-    private var heightConstraint: NSLayoutConstraint? = nil
-
-    fileprivate var childScrollViews: [ChildScrollViewInfo] = []
-
-    private var overlay: Overlay?
-
-    private let borderView = UIView()
-
-    private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
-
-    private var willConceal: Bool = false
-
-    private var _isConcealed: Bool = false
-
-    private var orientationChanged: Bool = false
-
-    private var lastWarningDate: Date?
-
-    private let embeddedView: UIView?
-
-    private var hiddenChildViews: [UIView]?
+    public enum OverlayVisibilityBehavior {
+        /// Show the overlay only when at the topmost position.
+        case topmostPosition
+        /// Show the overlay when open, either fully or partially.
+        case whenOpen
+        /// Don't show overlay
+        case disabled
+    }
 
     // MARK: - Visual properties
 
@@ -206,6 +175,12 @@ private struct ChildScrollViewInfo {
     public var contentVisibilityBehavior: ContentVisibilityBehavior = .automatic {
         didSet {
             setNeedsLayout()
+        }
+    }
+
+    public var overlayVisibilityBehavior: OverlayVisibilityBehavior = .topmostPosition {
+        didSet {
+            updateVisuals()
         }
     }
 
@@ -385,6 +360,44 @@ private struct ChildScrollViewInfo {
     /// An opacity (0 to 1) used for automatically hiding child views. This is made public so that
     /// you can match the opacity with your custom views.
     public private(set) var currentChildOpacity: CGFloat = 1.0
+
+    // MARK: - Private properties
+
+    fileprivate var overlayTapRecognizer: UITapGestureRecognizer!
+
+    private var panOrigin: CGFloat = 0.0
+
+    private var horizontalPanOnly: Bool = true
+
+    private var startedDragging: Bool = false
+
+    private var previousAnimator: UIViewPropertyAnimator? = nil
+
+    private var currentPosition: DrawerPosition = .collapsed
+
+    private var topConstraint: NSLayoutConstraint? = nil
+
+    private var heightConstraint: NSLayoutConstraint? = nil
+
+    fileprivate var childScrollViews: [ChildScrollViewInfo] = []
+
+    private var overlay: Overlay?
+
+    private let borderView = UIView()
+
+    private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
+
+    private var willConceal: Bool = false
+
+    private var _isConcealed: Bool = false
+
+    private var orientationChanged: Bool = false
+
+    private var lastWarningDate: Date?
+
+    private let embeddedView: UIView?
+
+    private var hiddenChildViews: [UIView]?
 
     // MARK: - Initialization
 
@@ -908,17 +921,27 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    private func opacityFactor(for position: DrawerPosition) -> CGFloat {
-        switch position {
-        case .open:
+    private func opacityFactor(for position: DrawerPosition) -> CGFloat? {
+        let topmost = (self.topmostPosition ?? .closed).rawValue
+
+        switch (position, overlayVisibilityBehavior) {
+        case (_, .disabled):
+            return nil
+        case (_, .topmostPosition):
+            return (position.rawValue >= topmost) ? 1 : 0
+        case (.open, .whenOpen):
+            fallthrough
+        case (.partiallyOpen, .whenOpen):
             return 1
-        case .partiallyOpen:
+        case (.collapsed, _):
             return 0
-        case .collapsed:
-            return 0
-        case .closed:
+        case (.closed, _):
             return 0
         }
+    }
+
+    private var topmostPosition: DrawerPosition? {
+        return self.snapPositionsDescending.last
     }
 
     private func shadowOpacityFactor(for position: DrawerPosition) -> Float {
@@ -1054,25 +1077,43 @@ private struct ChildScrollViewInfo {
             return
         }
 
+        switch (self.overlayVisibilityBehavior) {
+        case .disabled:
+            return
+        case .topmostPosition:
+            break
+        case .whenOpen:
+            break
+        }
+
         let values = snapPositions(for: DrawerPosition.allPositions, inSuperView: superview)
-            .map {(
-                position: $0.snapPosition,
-                value: self.opacityFactor(for: $0.position)
-                )}
+          .compactMap { pos -> (position: CGFloat, value: CGFloat)? in
+            guard let opacityFactor = self.opacityFactor(for: pos.position) else {
+                return nil
+            }
+            return (
+                position: pos.snapPosition,
+                value: opacityFactor
+            )
+        }
 
-        let opacityFactor = interpolate(
-            values: values,
-            position: position)
-
-        let maxOpacity: CGFloat = 0.5
+        let opacityFactor: CGFloat
+        if values.count > 0 {
+            opacityFactor = interpolate(
+                values: values,
+                position: position)
+        } else {
+            opacityFactor = 0
+        }
 
         if opacityFactor > 0 {
             self.overlay = self.overlay ?? createOverlay()
-            self.overlay?.alpha = opacityFactor * maxOpacity
+            self.overlay?.alpha = opacityFactor * kOverlayOpacity
         } else {
             self.overlay?.removeFromSuperview()
             self.overlay = nil
         }
+
     }
 
     private func setShadowOpacity(forScrollPosition position: CGFloat) {
