@@ -357,6 +357,7 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public var drawerAnimationDuration: Double = 0.5
     /// An opacity (0 to 1) used for automatically hiding child views. This is made public so that
     /// you can match the opacity with your custom views.
     public private(set) var currentChildOpacity: CGFloat = 1.0
@@ -586,7 +587,7 @@ private struct ChildScrollViewInfo {
         if animated {
             // Create the animator.
             let animator = UIViewPropertyAnimator(
-                duration: 0.5,
+                duration: drawerAnimationDuration,
                 timingParameters: UISpringTimingParameters(dampingRatio: 0.8))
             animator.addAnimations {
                 self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
