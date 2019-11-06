@@ -129,3 +129,5 @@ playground.xcworkspace
 /*.gcno
 
 # End of https://www.gitignore.io/api/xcode,swift,objective-c,carthage,cocoapods
+.DS_Store
+/.swiftpm
