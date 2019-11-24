@@ -548,18 +548,9 @@ private struct ChildScrollViewInfo {
     /// - parameter position The position to be set.
     /// - parameter animated Wheter the change should be animated or not.
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        guard let superview = self.superview else {
-            log("ERROR: Not contained in a view.")
-            log("ERROR: Could not evaluate snap position for \(position)")
-            return
-        }
-
-        //updateBackgroundVisuals(self.backgroundView)
         // Get the next available position. Closed position is always supported.
-
-        // Notify only if position changed.
         let visiblePosition: DrawerPosition = (_isConcealed ? .closed : position)
-        // Don't notify about position if concealing the drawer.
+        // Don't notify about position if concealing the drawer. Notify only if position changed.
         let notifyPosition = !_isConcealed && (currentPosition != visiblePosition)
         if notifyPosition {
             self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: position)
@@ -567,8 +558,17 @@ private struct ChildScrollViewInfo {
 
         self.currentPosition = position
 
-        let nextSnapPosition = snapPosition(for: visiblePosition, inSuperView: superview)
-        self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
+        let nextSnapPosition: CGFloat
+
+        if let superview = self.superview {
+            nextSnapPosition = snapPosition(for: visiblePosition, inSuperView: superview)
+            self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
+                if notifyPosition {
+                    self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
+                }
+            }
+        } else {
+            // No superview, so only notify.
             if notifyPosition {
                 self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
             }
