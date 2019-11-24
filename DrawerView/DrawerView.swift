@@ -520,6 +520,12 @@ private struct ChildScrollViewInfo {
     }
 
     // MARK: - View methods
+    private func setNeedsRespositioning() {
+        _needsRespositioning = true
+        self.setNeedsLayout()
+    }
+
+    private var _needsRespositioning = false
 
     public override func layoutSubviews() {
         super.layoutSubviews()
@@ -530,9 +536,10 @@ private struct ChildScrollViewInfo {
             view.frame.origin.y = 0
         }
 
-        if self.orientationChanged {
+        if self.orientationChanged || _needsRespositioning {
             self.updateSnapPosition(animated: false)
             self.orientationChanged = false
+            _needsRespositioning = false
         }
     }
 
@@ -548,11 +555,19 @@ private struct ChildScrollViewInfo {
     /// - parameter position The position to be set.
     /// - parameter animated Wheter the change should be animated or not.
     public func setPosition(_ position: DrawerPosition, animated: Bool) {
-        // Get the next available position. Closed position is always supported.
-        let visiblePosition: DrawerPosition = (_isConcealed ? .closed : position)
+
         // Don't notify about position if concealing the drawer. Notify only if position changed.
-        let notifyPosition = !_isConcealed && (currentPosition != visiblePosition)
-        if notifyPosition {
+        let visiblePosition = (_isConcealed ? .closed : position)
+        let notifyDelegate = !_isConcealed && (currentPosition != visiblePosition)
+        self.setPosition(position, animated: animated, notifyDelegate: notifyDelegate)
+
+    }
+
+    private func setPosition(_ position: DrawerPosition, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
+        // Get the next available position. Closed position is always supported.
+        let visiblePosition = (_isConcealed ? .closed : position)
+
+        if notifyDelegate {
             self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: position)
         }
 
@@ -563,13 +578,13 @@ private struct ChildScrollViewInfo {
         if let superview = self.superview {
             nextSnapPosition = snapPosition(for: visiblePosition, inSuperView: superview)
             self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
-                if notifyPosition {
+                if notifyDelegate {
                     self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
                 }
             }
         } else {
             // No superview, so only notify.
-            if notifyPosition {
+            if notifyDelegate {
                 self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
             }
         }
@@ -859,11 +874,12 @@ private struct ChildScrollViewInfo {
 
             if let prevPosition = self.snapPositionsDescending.advance(from: self.position, offset: -1) {
 
-                self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: prevPosition)
+                //self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: prevPosition)
 
-                self.setPosition(prevPosition, animated: true)
+                self.setPosition(prevPosition, animated: true, notifyDelegate: true)
+                //self.setPosition(<#T##position: DrawerPosition##DrawerPosition#>, animated: <#T##Bool#>)
 
-                self.delegate?.drawer?(self, didTransitionTo: prevPosition)
+                //self.delegate?.drawer?(self, didTransitionTo: prevPosition)
             }
         }
     }
@@ -1020,11 +1036,13 @@ private struct ChildScrollViewInfo {
     }
 
     public override func safeAreaInsetsDidChange() {
+        print("### safeAreaInsetsDidChange")
         if automaticallyAdjustChildContentInset {
             let bottomInset = self.bottomInset
             self.adjustChildContentInset(self, bottomInset: bottomInset)
-            self.updateSnapPosition(animated: true)
-        }
+            self.setNeedsRespositioning()
+            self.setNeedsLayout()
+       }
     }
 
     private func adjustChildContentInset(_ view: UIView, bottomInset: CGFloat) {

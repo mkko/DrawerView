@@ -14,7 +14,7 @@ import WebKit
 enum DrawerPresentationType {
     case none
     case drawer(DrawerView)
-
+    case presentation
 }
 
 struct DrawerMapEntry {
@@ -25,8 +25,12 @@ struct DrawerMapEntry {
 extension DrawerMapEntry {
     var drawer: DrawerView? {
         switch presentation {
-        case .none: return nil
-        case .drawer(let drawer): return drawer
+        case .none:
+            return nil
+        case .drawer(let drawer):
+            return drawer
+        case .presentation:
+            return nil
         }
     }
 }
@@ -63,17 +67,18 @@ class ViewController: UIViewController {
         tableView.keyboardDismissMode = .onDrag
 
         drawers = [
-            ("↓", DrawerPresentationType.none),
-            ("search", setupDrawer()),
-            ("modal", setupProgrammaticDrawerView()),
-            ("dark", setupDarkThemedDrawerView()),
-            ("toolbar", setupTabDrawerView())
+//            ("↓", DrawerPresentationType.none),
+//            ("search", setupDrawer()),
+//            ("modal", setupProgrammaticDrawerView()),
+//            ("dark", setupDarkThemedDrawerView()),
+//            ("toolbar", setupTabDrawerView()),
+            ("⇡", DrawerPresentationType.presentation)
         ].map(DrawerMapEntry.init(key:presentation:))
 
         self.setupDrawers()
         self.setupLocateButton()
 
-        showDrawer(drawer: drawerView, animated: false)
+        //showDrawer(drawer: drawerView, animated: false)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -97,8 +102,20 @@ class ViewController: UIViewController {
         case .drawer(let drawer):
             showDrawer(drawer: drawer, animated: true)
         case .none:
+            showDrawer(drawer: nil, animated: true)
+        case .presentation:
+            showDrawer(drawer: nil, animated: true)
+            presentDrawer()
             break
         }
+    }
+
+    private func presentDrawer() {
+        let drawerPresentation = DrawerPresentationManager()
+        let viewController = self.storyboard!.instantiateViewController(withIdentifier: "ModalPresentationViewController") as! ModalPresentationViewController
+        viewController.transitioningDelegate = drawerPresentation
+        viewController.modalPresentationStyle = .custom
+        self.present(viewController, animated: true, completion: nil)
     }
 
     private func showDrawer(drawer: DrawerView?, animated: Bool) {
