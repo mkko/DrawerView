@@ -110,8 +110,9 @@ class ViewController: UIViewController {
         }
     }
 
+    let drawerPresentation = DrawerPresentationManager()
+
     private func presentDrawer() {
-        let drawerPresentation = DrawerPresentationManager()
         let viewController = self.storyboard!.instantiateViewController(withIdentifier: "ModalPresentationViewController") as! ModalPresentationViewController
         viewController.transitioningDelegate = drawerPresentation
         viewController.modalPresentationStyle = .custom

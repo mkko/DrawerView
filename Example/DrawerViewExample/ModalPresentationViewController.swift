@@ -11,9 +11,7 @@ import UIKit
 class ModalPresentationViewController: UIViewController {
 
     @IBAction func close(_ sender: Any) {
-        self.dismiss(animated: true) {
-            print("### DONE!")
-        }
+        self.dismiss(animated: true)
     }
 
     override func viewDidLoad() {

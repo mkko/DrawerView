@@ -16,6 +16,7 @@
 		2BDAD3C2201110B600AA7FC2 /* DrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD3C1201110B600AA7FC2 /* DrawerView.swift */; };
 		2BDAD3CC2011116000AA7FC2 /* Overlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDAD3CA2011116000AA7FC2 /* Overlay.swift */; };
 		2BF512172054844800154B99 /* Interpolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF512162054844800154B99 /* Interpolation.swift */; };
+		C002D093239029B300BD8880 /* DrawerPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C002D092239029B300BD8880 /* DrawerPresentation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +42,7 @@
 		2BDAD3C1201110B600AA7FC2 /* DrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerView.swift; sourceTree = "<group>"; };
 		2BDAD3CA2011116000AA7FC2 /* Overlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Overlay.swift; sourceTree = "<group>"; };
 		2BF512162054844800154B99 /* Interpolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolation.swift; sourceTree = "<group>"; };
+		C002D092239029B300BD8880 /* DrawerPresentation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawerPresentation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +90,7 @@
 				2BDAD3C1201110B600AA7FC2 /* DrawerView.swift */,
 				2BDAD3CA2011116000AA7FC2 /* Overlay.swift */,
 				2B1D0EFA2017900C006BB48C /* CutCornerView.swift */,
+				C002D092239029B300BD8880 /* DrawerPresentation.swift */,
 				2B3FD31B2027BA600045C7BF /* Extensions.swift */,
 				2BF512162054844800154B99 /* Interpolation.swift */,
 			);
@@ -220,6 +223,7 @@
 				2BDAD3CC2011116000AA7FC2 /* Overlay.swift in Sources */,
 				2B1D0EFB20179010006BB48C /* CutCornerView.swift in Sources */,
 				2BDAD3C2201110B600AA7FC2 /* DrawerView.swift in Sources */,
+				C002D093239029B300BD8880 /* DrawerPresentation.swift in Sources */,
 				2B3FD31C2027BA600045C7BF /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

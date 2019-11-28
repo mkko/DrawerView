@@ -554,13 +554,12 @@ private struct ChildScrollViewInfo {
     ///
     /// - parameter position The position to be set.
     /// - parameter animated Wheter the change should be animated or not.
-    public func setPosition(_ position: DrawerPosition, animated: Bool) {
+    public func setPosition(_ position: DrawerPosition, animated: Bool, completion: ((Bool) -> Void)? = nil) {
 
         // Don't notify about position if concealing the drawer. Notify only if position changed.
         let visiblePosition = (_isConcealed ? .closed : position)
         let notifyDelegate = !_isConcealed && (currentPosition != visiblePosition)
-        self.setPosition(position, animated: animated, notifyDelegate: notifyDelegate)
-
+        self.setPosition(position, animated: animated, notifyDelegate: notifyDelegate, completion: completion)
     }
 
     private func setPosition(_ position: DrawerPosition, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
@@ -577,16 +576,18 @@ private struct ChildScrollViewInfo {
 
         if let superview = self.superview {
             nextSnapPosition = snapPosition(for: visiblePosition, inSuperView: superview)
-            self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { _ in
+            self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { finished in
                 if notifyDelegate {
                     self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
                 }
+                completion?(finished)
             }
         } else {
             // No superview, so only notify.
             if notifyDelegate {
                 self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
             }
+            completion?(false)
         }
     }
 
@@ -1036,7 +1037,6 @@ private struct ChildScrollViewInfo {
     }
 
     public override func safeAreaInsetsDidChange() {
-        print("### safeAreaInsetsDidChange")
         if automaticallyAdjustChildContentInset {
             let bottomInset = self.bottomInset
             self.adjustChildContentInset(self, bottomInset: bottomInset)
