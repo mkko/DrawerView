@@ -67,18 +67,18 @@ class ViewController: UIViewController {
         tableView.keyboardDismissMode = .onDrag
 
         drawers = [
-//            ("↓", DrawerPresentationType.none),
-//            ("search", setupDrawer()),
-//            ("modal", setupProgrammaticDrawerView()),
-//            ("dark", setupDarkThemedDrawerView()),
-//            ("toolbar", setupTabDrawerView()),
+            ("↓", DrawerPresentationType.none),
+            ("search", setupDrawer()),
+            ("modal", setupProgrammaticDrawerView()),
+            ("dark", setupDarkThemedDrawerView()),
+            ("toolbar", setupTabDrawerView()),
             ("⇡", DrawerPresentationType.presentation)
         ].map(DrawerMapEntry.init(key:presentation:))
 
         self.setupDrawers()
         self.setupLocateButton()
 
-        //showDrawer(drawer: drawerView, animated: false)
+        showDrawer(drawer: drawerView, animated: false)
     }
 
     override func viewDidAppear(_ animated: Bool) {

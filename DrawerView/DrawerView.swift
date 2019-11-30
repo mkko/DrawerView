@@ -890,15 +890,8 @@ private struct ChildScrollViewInfo {
 
     @objc private func onTapOverlay(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
-
             if let prevPosition = self.snapPositionsDescending.advance(from: self.position, offset: -1) {
-
-                //self.delegate?.drawer?(self, willTransitionFrom: currentPosition, to: prevPosition)
-
                 self.setPosition(prevPosition, animated: true, notifyDelegate: true)
-                //self.setPosition(<#T##position: DrawerPosition##DrawerPosition#>, animated: <#T##Bool#>)
-
-                //self.delegate?.drawer?(self, didTransitionTo: prevPosition)
             }
         }
     }
@@ -1441,4 +1434,3 @@ fileprivate func log(_ message: String) {
         print("\(dateFormatter.string(from: Date())): \(message)")
     }
 }
-
