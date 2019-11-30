@@ -210,13 +210,14 @@ private struct ChildScrollViewInfo {
         setPosition(currentPosition, animated: animated)
     }
 
-    public func removeFromSuperview(animated: Bool) {
+    public func removeFromSuperview(animated: Bool, completion: ((Bool) -> Void)? = nil) {
         guard let superview = superview else { return }
 
         let pos = snapPosition(for: .closed, inSuperView: superview)
         self.scrollToPosition(pos, animated: animated, notifyDelegate: true) { _ in
             self.removeFromSuperview()
             self.overlay?.removeFromSuperview()
+            completion?(true)
         }
     }
 
@@ -384,6 +385,9 @@ private struct ChildScrollViewInfo {
 
     private var overlay: Overlay?
 
+    /// Lazily remove the overlay. Needed to lazily remove overlay after animation.
+    private var shouldRemoveOverlay: Bool = false
+
     private let borderView = UIView()
 
     private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
@@ -399,6 +403,8 @@ private struct ChildScrollViewInfo {
     private let embeddedView: UIView?
 
     private var hiddenChildViews: [UIView]?
+
+    private var needsRespositioning = false
 
     // MARK: - Initialization
 
@@ -521,11 +527,17 @@ private struct ChildScrollViewInfo {
 
     // MARK: - View methods
     private func setNeedsRespositioning() {
-        _needsRespositioning = true
+        needsRespositioning = true
         self.setNeedsLayout()
     }
 
-    private var _needsRespositioning = false
+    private func removeOverlayIfNeeded() {
+        if self.shouldRemoveOverlay, let overlay = self.overlay {
+            overlay.removeFromSuperview()
+            self.overlay = nil
+            self.shouldRemoveOverlay = false
+        }
+    }
 
     public override func layoutSubviews() {
         super.layoutSubviews()
@@ -536,10 +548,12 @@ private struct ChildScrollViewInfo {
             view.frame.origin.y = 0
         }
 
-        if self.orientationChanged || _needsRespositioning {
+        removeOverlayIfNeeded()
+
+        if self.orientationChanged || needsRespositioning {
             self.updateSnapPosition(animated: false)
             self.orientationChanged = false
-            _needsRespositioning = false
+            needsRespositioning = false
         }
     }
 
@@ -623,6 +637,8 @@ private struct ChildScrollViewInfo {
                         self.setScrollPosition(f.minY, notifyDelegate: false)
                     }
                 }
+
+                self.removeOverlayIfNeeded()
 
                 if let completion = completion {
                     DispatchQueue.main.async {
@@ -1068,7 +1084,7 @@ private struct ChildScrollViewInfo {
         let overlay = Overlay(frame: superview.bounds)
         overlay.isHidden = self.isHidden
         overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.alpha = 0
+        overlay.alpha = 0.0
         overlayTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(onTapOverlay))
         overlay.addGestureRecognizer(overlayTapRecognizer)
 
@@ -1128,11 +1144,11 @@ private struct ChildScrollViewInfo {
         if opacityFactor > 0 {
             self.overlay = self.overlay ?? createOverlay()
             self.overlay?.alpha = opacityFactor * kOverlayOpacity
+            self.shouldRemoveOverlay = false
         } else {
-            self.overlay?.removeFromSuperview()
-            self.overlay = nil
+            self.overlay?.alpha = 0
+            self.shouldRemoveOverlay = true
         }
-
     }
 
     private func setShadowOpacity(forScrollPosition position: CGFloat) {
