@@ -406,6 +406,8 @@ private struct ChildScrollViewInfo {
 
     private var needsRespositioning = false
 
+    private var overlayBottomConstraint: NSLayoutConstraint?
+
     // MARK: - Initialization
 
     init() {
@@ -1012,6 +1014,7 @@ private struct ChildScrollViewInfo {
         updateOverlayVisuals(self.overlay)
         updateBackgroundVisuals(self.backgroundView)
         heightConstraint?.constant = -self.topSpace
+        overlayBottomConstraint?.constant = self.cornerRadius
 
         self.setNeedsDisplay()
     }
@@ -1030,7 +1033,7 @@ private struct ChildScrollViewInfo {
 
     private func updateOverlayVisuals(_ overlay: Overlay?) {
         overlay?.backgroundColor = UIColor.black
-        overlay?.cutCornerSize = self.cornerRadius
+        overlay?.cornerRadius = self.cornerRadius
     }
 
     private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
@@ -1090,16 +1093,18 @@ private struct ChildScrollViewInfo {
 
         superview.insertSubview(overlay, belowSubview: self)
 
-        let constraints = [
+        let overlayBottomConstraint = overlay.bottomAnchor.constraint(
+            equalTo: self.topAnchor,
+            constant: self.cornerRadius)
+
+        NSLayoutConstraint.activate([
             overlay.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
             overlay.trailingAnchor.constraint(equalTo: superview.trailingAnchor),
             overlay.heightAnchor.constraint(equalTo: superview.heightAnchor),
-            overlay.bottomAnchor.constraint(equalTo: self.topAnchor)
-        ]
+            overlayBottomConstraint,
+        ])
 
-        for constraint in constraints {
-            constraint.isActive = true
-        }
+        self.overlayBottomConstraint = overlayBottomConstraint
 
         updateOverlayVisuals(overlay)
 

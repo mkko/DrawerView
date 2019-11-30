@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2B1D0EFB20179010006BB48C /* CutCornerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1D0EFA2017900C006BB48C /* CutCornerView.swift */; };
 		2B3FD31C2027BA600045C7BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3FD31B2027BA600045C7BF /* Extensions.swift */; };
 		2B9E0DBB210DBF78004ABAC5 /* DrawerPositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9E0DBA210DBF78004ABAC5 /* DrawerPositionTests.swift */; };
 		2BDAD3B120110F6E00AA7FC2 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BDAD3A720110F6E00AA7FC2 /* DrawerView.framework */; };
@@ -30,7 +29,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2B1D0EFA2017900C006BB48C /* CutCornerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutCornerView.swift; sourceTree = "<group>"; };
 		2B3FD31B2027BA600045C7BF /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		2B9E0DBA210DBF78004ABAC5 /* DrawerPositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerPositionTests.swift; sourceTree = "<group>"; };
 		2BDAD3A720110F6E00AA7FC2 /* DrawerView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DrawerView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,7 +87,6 @@
 				2BDAD3AB20110F6E00AA7FC2 /* Info.plist */,
 				2BDAD3C1201110B600AA7FC2 /* DrawerView.swift */,
 				2BDAD3CA2011116000AA7FC2 /* Overlay.swift */,
-				2B1D0EFA2017900C006BB48C /* CutCornerView.swift */,
 				C002D092239029B300BD8880 /* DrawerPresentation.swift */,
 				2B3FD31B2027BA600045C7BF /* Extensions.swift */,
 				2BF512162054844800154B99 /* Interpolation.swift */,
@@ -221,7 +218,6 @@
 			files = (
 				2BF512172054844800154B99 /* Interpolation.swift in Sources */,
 				2BDAD3CC2011116000AA7FC2 /* Overlay.swift in Sources */,
-				2B1D0EFB20179010006BB48C /* CutCornerView.swift in Sources */,
 				2BDAD3C2201110B600AA7FC2 /* DrawerView.swift in Sources */,
 				C002D093239029B300BD8880 /* DrawerPresentation.swift in Sources */,
 				2B3FD31C2027BA600045C7BF /* Extensions.swift in Sources */,
