@@ -72,7 +72,7 @@ class ViewController: UIViewController {
             ("modal", setupProgrammaticDrawerView()),
             ("dark", setupDarkThemedDrawerView()),
             ("toolbar", setupTabDrawerView()),
-            ("⇡", DrawerPresentationType.presentation)
+            ("❏", DrawerPresentationType.presentation)
         ].map(DrawerMapEntry.init(key:presentation:))
 
         self.setupDrawers()

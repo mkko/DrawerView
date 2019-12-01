@@ -938,7 +938,11 @@ private struct ChildScrollViewInfo {
     fileprivate func snapPosition(for position: DrawerPosition, inSuperView superview: UIView) -> CGFloat {
         switch position {
         case .open:
-            return self.topMargin
+            if let height = self.openHeight {
+                return max(self.topMargin, superview.bounds.height - bottomInset - height)
+            } else {
+                return self.topMargin
+            }
         case .partiallyOpen:
             return superview.bounds.height - bottomInset - self.partiallyOpenHeight
         case .collapsed:
@@ -1236,6 +1240,17 @@ private struct ChildScrollViewInfo {
             .first?.snap
 
         return topPosition ?? 0
+    }
+
+    private var openHeight: CGFloat? {
+        guard let superview = self.superview else {
+            return nil
+        }
+        let fittingSize = self.systemLayoutSizeFitting(
+            superview.bounds.size,
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .defaultLow)
+        return fittingSize.height
     }
 
     private var currentSnapPosition: CGFloat {
