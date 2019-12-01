@@ -129,6 +129,15 @@ private struct ChildScrollViewInfo {
         case disabled
     }
 
+    public enum OpenHeightBehavior {
+        /// The default, fully expand the drawer when open.
+        case none
+        /// Use `systemLayoutSizeFitting` to determine the height of the drawer.
+        case fitting
+        /// Use fixed height.
+        case fixed(height: CGFloat)
+    }
+
     // MARK: - Visual properties
 
     /// The corner radius of the drawer view.
@@ -181,6 +190,12 @@ private struct ChildScrollViewInfo {
     public var overlayVisibilityBehavior: OverlayVisibilityBehavior = .topmostPosition {
         didSet {
             updateVisuals()
+        }
+    }
+
+    public var openHeightBehavior: OpenHeightBehavior = .none {
+        didSet {
+            setNeedsRespositioning()
         }
     }
 
@@ -283,7 +298,7 @@ private struct ChildScrollViewInfo {
     /// Attaches the drawer to the given view. The drawer will update its constraints
     /// to match the bounds of the target view.
     ///
-    /// - parameter view The view to attach to.
+    /// - parameter view The view to contain the drawer in.
     public func attachTo(view: UIView) {
 
         if self.superview == nil {
@@ -457,6 +472,19 @@ private struct ChildScrollViewInfo {
         ] {
             c.isActive = true
         }
+    }
+
+    func embed(view: UIView) {
+        view.backgroundColor = .clear
+        view.frame = self.bounds
+        view.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(view)
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            view.heightAnchor.constraint(equalTo: self.heightAnchor),
+            view.topAnchor.constraint(equalTo: self.topAnchor)
+        ])
     }
 
     private func setup() {
@@ -1246,11 +1274,18 @@ private struct ChildScrollViewInfo {
         guard let superview = self.superview else {
             return nil
         }
-        let fittingSize = self.systemLayoutSizeFitting(
-            superview.bounds.size,
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .defaultLow)
-        return fittingSize.height
+        switch self.openHeightBehavior {
+        case .none:
+            return nil
+        case .fitting:
+            let fittingSize = self.systemLayoutSizeFitting(
+                CGSize(width: superview.bounds.size.width, height: 0),
+                withHorizontalFittingPriority: .required,
+                verticalFittingPriority: .defaultLow)
+            return fittingSize.height
+        case .fixed(let height):
+            return height
+        }
     }
 
     private var currentSnapPosition: CGFloat {

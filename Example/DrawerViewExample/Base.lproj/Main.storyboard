@@ -196,7 +196,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="1000" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uQc-Da-g9m">
-                                <rect key="frame" x="16" y="80" width="343" height="304"/>
+                                <rect key="frame" x="16" y="80" width="343" height="284.5"/>
                                 <mutableString key="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc convallis et erat sed ornare. Vivamus eget nibh vestibulum, efficitur mi quis, viverra erat. Maecenas at est viverra, posuere risus ac, blandit mauris. Proin maximus semper feugiat. Phasellus placerat sodales ante vel luctus. Cras commodo congue nulla a cursus. Aenean accumsan ante erat, sit amet dignissim mi posuere scelerisque. Nulla facilisi. In consequat mi nec tempus auctor. Donec quis consequat enim, facilisis volutpat nibh. Aliquam vel ultrices ex, tincidunt vulputate erat.</mutableString>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
@@ -207,7 +207,7 @@
                         <constraints>
                             <constraint firstItem="com-Ya-LsP" firstAttribute="leading" secondItem="Wev-iY-Wa9" secondAttribute="trailing" id="Bpi-YI-hOy"/>
                             <constraint firstItem="Wev-iY-Wa9" firstAttribute="leading" secondItem="A0d-xS-Dle" secondAttribute="leading" constant="16" id="DhB-Dh-92X"/>
-                            <constraint firstItem="A0d-xS-Dle" firstAttribute="bottom" secondItem="uQc-Da-g9m" secondAttribute="bottom" constant="16" id="FjC-tY-5Yb"/>
+                            <constraint firstItem="A0d-xS-Dle" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="uQc-Da-g9m" secondAttribute="bottom" constant="16" id="FjC-tY-5Yb"/>
                             <constraint firstItem="com-Ya-LsP" firstAttribute="top" secondItem="A0d-xS-Dle" secondAttribute="top" constant="20" id="HEa-Dd-Y22"/>
                             <constraint firstAttribute="trailing" secondItem="com-Ya-LsP" secondAttribute="trailing" constant="20" id="HMD-C4-HQX"/>
                             <constraint firstAttribute="trailing" secondItem="uQc-Da-g9m" secondAttribute="trailing" constant="16" id="I5o-QI-hRy"/>

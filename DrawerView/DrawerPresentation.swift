@@ -9,10 +9,12 @@ import Foundation
 
 class DrawerPresentationController: UIPresentationController {
 
-    private var drawerView: DrawerView? = nil
+    private let drawerView: DrawerView
 
-    override init(presentedViewController: UIViewController,
-                  presenting presentingViewController: UIViewController?) {
+    init(presentedViewController: UIViewController,
+                  presenting presentingViewController: UIViewController?,
+                  drawerView: DrawerView) {
+        self.drawerView = drawerView
         super.init(presentedViewController: presentedViewController, presenting: presentingViewController)
     }
 
@@ -31,14 +33,14 @@ class DrawerPresentationController: UIPresentationController {
         }
 
         presentedViewController.view.removeFromSuperview()
-        let drawer = DrawerView(withView: presentedViewController.view)
-        drawer.position = .closed
-        drawer.snapPositions = [.open, .closed]
-        drawer.delegate = self
+        drawerView.embed(view: presentedViewController.view)
 
-        drawer.attachTo(view: containerView)
-        self.drawerView = drawer
-        drawer.layoutSubviews()
+        drawerView.position = .closed
+        drawerView.snapPositions = [.open, .closed]
+        drawerView.delegate = self
+
+        drawerView.attachTo(view: containerView)
+        drawerView.layoutSubviews()
     }
 
     override var shouldRemovePresentersView: Bool {
@@ -60,6 +62,7 @@ extension DrawerPresentationController: DrawerViewDelegate {
 }
 
 public class DrawerPresentationManager: NSObject {
+    public let drawer = DrawerView()
 }
 
 extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
@@ -71,7 +74,8 @@ extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
     ) -> UIPresentationController? {
         let presentationController = DrawerPresentationController(
             presentedViewController: presented,
-            presenting: presenting
+            presenting: presenting,
+            drawerView: self.drawer
         )
         presentationController.delegate = self
         return presentationController
