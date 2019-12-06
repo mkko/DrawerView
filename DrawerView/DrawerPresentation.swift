@@ -7,7 +7,7 @@
 
 import Foundation
 
-class DrawerPresentationController: UIPresentationController {
+public class DrawerPresentationController: UIPresentationController {
 
     private let drawerView: DrawerView
 
@@ -18,15 +18,15 @@ class DrawerPresentationController: UIPresentationController {
         super.init(presentedViewController: presentedViewController, presenting: presentingViewController)
     }
 
-    override var presentedView: UIView? {
+    override public var presentedView: UIView? {
         return drawerView
     }
 
-    override var presentationStyle: UIModalPresentationStyle {
+    override public var presentationStyle: UIModalPresentationStyle {
         return .currentContext
     }
 
-    override func presentationTransitionWillBegin() {
+    override public func presentationTransitionWillBegin() {
         super.presentationTransitionWillBegin()
         guard let containerView = self.containerView else {
             return
@@ -43,18 +43,18 @@ class DrawerPresentationController: UIPresentationController {
         drawerView.layoutSubviews()
     }
 
-    override var shouldRemovePresentersView: Bool {
+    override public var shouldRemovePresentersView: Bool {
         return false
     }
 
-    override func containerViewWillLayoutSubviews() {
+    override public func containerViewWillLayoutSubviews() {
         super.containerViewWillLayoutSubviews()
     }
 }
 
 extension DrawerPresentationController: DrawerViewDelegate {
 
-    func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition) {
+    public func drawer(_ drawerView: DrawerView, didTransitionTo position: DrawerPosition) {
         if position == .closed {
             presentedViewController.dismiss(animated: false)
         }
@@ -82,18 +82,18 @@ extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
     }
 
     public func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return SlideInPresentationAnimator(presentation: .present)
+        return DrawerPresentationAnimator(presentation: .present)
     }
 
     public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return SlideInPresentationAnimator(presentation: .dismiss)
+        return DrawerPresentationAnimator(presentation: .dismiss)
     }
 }
 
 extension DrawerPresentationManager: UIAdaptivePresentationControllerDelegate {
 }
 
-final class SlideInPresentationAnimator: NSObject {
+public final class DrawerPresentationAnimator: NSObject {
 
     let presentation: PresentationType
 
@@ -108,14 +108,14 @@ final class SlideInPresentationAnimator: NSObject {
     }
 }
 
-extension SlideInPresentationAnimator: UIViewControllerAnimatedTransitioning {
-    func transitionDuration(
+extension DrawerPresentationAnimator: UIViewControllerAnimatedTransitioning {
+    public func transitionDuration(
         using transitionContext: UIViewControllerContextTransitioning?
     ) -> TimeInterval {
         return 0.0
     }
 
-    func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+    public func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
 
         switch presentation {
         case .present:
