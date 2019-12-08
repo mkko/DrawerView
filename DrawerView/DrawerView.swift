@@ -324,6 +324,7 @@ private struct ChildScrollViewInfo {
             constraint?.isActive = true
         }
 
+        setNeedsRespositioning()
         updateVisuals()
     }
 
