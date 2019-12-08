@@ -7,14 +7,29 @@
 
 import Foundation
 
+public protocol DrawerPresenter {
+    func presentDrawerModal(_ presentedViewController: UIViewController, openHeightBehavior: DrawerView.OpenHeightBehavior)
+}
+
+extension UIViewController: DrawerPresenter {
+    public func presentDrawerModal(_ presentedViewController: UIViewController, openHeightBehavior: DrawerView.OpenHeightBehavior) {
+
+    }
+}
+
 public class DrawerPresentationController: UIPresentationController {
 
     private let drawerView: DrawerView
 
+    private var presentationDelegate: DrawerPresentationDelegate?
+
     init(presentedViewController: UIViewController,
                   presenting presentingViewController: UIViewController?,
-                  drawerView: DrawerView) {
+                  drawerView: DrawerView,
+                  presentationDelegate: DrawerPresentationDelegate?
+    ) {
         self.drawerView = drawerView
+        self.presentationDelegate = presentationDelegate
         super.init(presentedViewController: presentedViewController, presenting: presentingViewController)
     }
 
@@ -40,7 +55,30 @@ public class DrawerPresentationController: UIPresentationController {
         drawerView.delegate = self
 
         drawerView.attachTo(view: containerView)
-        drawerView.layoutSubviews()
+        drawerView.layoutIfNeeded()
+
+        presentationDelegate?.drawerPresentationWillBegin?()
+    }
+
+    public override func presentationTransitionDidEnd(_ completed: Bool) {
+        super.presentationTransitionDidEnd(completed)
+        presentationDelegate?.drawerPresentationnDidEnd?(completed)
+    }
+
+    public override func dismissalTransitionWillBegin() {
+        super.dismissalTransitionWillBegin()
+        presentationDelegate?.drawerDismissalWillBegin?()
+    }
+
+    public override func dismissalTransitionDidEnd(_ completed: Bool) {
+        super.dismissalTransitionDidEnd(completed)
+
+        // Clean up the drawer for reuse.
+        presentedViewController.view.removeFromSuperview()
+
+        drawerView.removeFromSuperview()
+
+        presentationDelegate?.drawerDismissalDidEnd?(completed)
     }
 
     override public var shouldRemovePresentersView: Bool {
@@ -50,6 +88,14 @@ public class DrawerPresentationController: UIPresentationController {
     override public func containerViewWillLayoutSubviews() {
         super.containerViewWillLayoutSubviews()
     }
+}
+
+@objc public protocol DrawerPresentationDelegate {
+
+    @objc optional func drawerPresentationWillBegin()
+    @objc optional func drawerPresentationnDidEnd(_ completed: Bool)
+    @objc optional func drawerDismissalWillBegin()
+    @objc optional func drawerDismissalDidEnd(_ completed: Bool)
 }
 
 extension DrawerPresentationController: DrawerViewDelegate {
@@ -62,7 +108,9 @@ extension DrawerPresentationController: DrawerViewDelegate {
 }
 
 public class DrawerPresentationManager: NSObject {
-    public let drawer = DrawerView()
+    public var drawer = DrawerView()
+
+    public var presentationDelegate: DrawerPresentationDelegate?
 }
 
 extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
@@ -75,9 +123,9 @@ extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
         let presentationController = DrawerPresentationController(
             presentedViewController: presented,
             presenting: presenting,
-            drawerView: self.drawer
+            drawerView: self.drawer,
+            presentationDelegate: self.presentationDelegate
         )
-        presentationController.delegate = self
         return presentationController
     }
 
@@ -88,9 +136,6 @@ extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
     public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return DrawerPresentationAnimator(presentation: .dismiss)
     }
-}
-
-extension DrawerPresentationManager: UIAdaptivePresentationControllerDelegate {
 }
 
 public final class DrawerPresentationAnimator: NSObject {
@@ -131,7 +176,6 @@ extension DrawerPresentationAnimator: UIViewControllerAnimatedTransitioning {
                 return
             }
             drawerView.setPosition(.closed, animated: true) { finished in
-                drawerView.removeFromSuperview()
                 transitionContext.completeTransition(finished)
             }
         }
