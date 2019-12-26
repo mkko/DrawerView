@@ -220,9 +220,9 @@ private struct ChildScrollViewInfo {
         }
     }
 
-    public func setConcealed(_ concealed: Bool, animated: Bool) {
+    public func setConcealed(_ concealed: Bool, animated: Bool, completion: ((Bool) -> Void)? = nil) {
         _isConcealed = concealed
-        setPosition(currentPosition, animated: animated)
+        setPosition(currentPosition, animated: animated, completion: completion)
     }
 
     public func removeFromSuperview(animated: Bool, completion: ((Bool) -> Void)? = nil) {
