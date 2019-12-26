@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14868" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14824"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -23,7 +21,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                             </mapView>
                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="zca-w4-fsL">
-                                <rect key="frame" x="24" y="20" width="327" height="56"/>
+                                <rect key="frame" x="24" y="0.0" width="327" height="56"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="56" id="meS-bE-fcS"/>
                                 </constraints>
@@ -175,6 +173,58 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Wcm-NP-ax5" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1029.5999999999999" y="133.5832083958021"/>
+        </scene>
+        <!--Modal Presentation View Controller-->
+        <scene sceneID="tvz-e7-lgz">
+            <objects>
+                <viewController storyboardIdentifier="ModalPresentationViewController" id="8Kg-Jo-N5k" customClass="ModalPresentationViewController" customModule="DrawerViewExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="QP1-4T-vBO">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="400"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="com-Ya-LsP">
+                                <rect key="frame" x="316" y="20" width="39" height="30"/>
+                                <state key="normal" title="Close"/>
+                                <connections>
+                                    <action selector="close:" destination="8Kg-Jo-N5k" eventType="touchUpInside" id="CHt-Vi-xco"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This is a modal presentation" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Wev-iY-Wa9">
+                                <rect key="frame" x="16" y="23" width="300" height="24"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="1000" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uQc-Da-g9m">
+                                <rect key="frame" x="16" y="80" width="343" height="284.5"/>
+                                <mutableString key="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc convallis et erat sed ornare. Vivamus eget nibh vestibulum, efficitur mi quis, viverra erat. Maecenas at est viverra, posuere risus ac, blandit mauris. Proin maximus semper feugiat. Phasellus placerat sodales ante vel luctus. Cras commodo congue nulla a cursus. Aenean accumsan ante erat, sit amet dignissim mi posuere scelerisque. Nulla facilisi. In consequat mi nec tempus auctor. Donec quis consequat enim, facilisis volutpat nibh. Aliquam vel ultrices ex, tincidunt vulputate erat.</mutableString>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="com-Ya-LsP" firstAttribute="leading" secondItem="Wev-iY-Wa9" secondAttribute="trailing" id="Bpi-YI-hOy"/>
+                            <constraint firstItem="Wev-iY-Wa9" firstAttribute="leading" secondItem="A0d-xS-Dle" secondAttribute="leading" constant="16" id="DhB-Dh-92X"/>
+                            <constraint firstItem="A0d-xS-Dle" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="uQc-Da-g9m" secondAttribute="bottom" constant="16" id="FjC-tY-5Yb"/>
+                            <constraint firstItem="com-Ya-LsP" firstAttribute="top" secondItem="A0d-xS-Dle" secondAttribute="top" constant="20" id="HEa-Dd-Y22"/>
+                            <constraint firstAttribute="trailing" secondItem="com-Ya-LsP" secondAttribute="trailing" constant="20" id="HMD-C4-HQX"/>
+                            <constraint firstAttribute="trailing" secondItem="uQc-Da-g9m" secondAttribute="trailing" constant="16" id="I5o-QI-hRy"/>
+                            <constraint firstItem="uQc-Da-g9m" firstAttribute="leading" secondItem="A0d-xS-Dle" secondAttribute="leading" constant="16" id="f3F-Xr-zYx"/>
+                            <constraint firstItem="uQc-Da-g9m" firstAttribute="top" secondItem="QP1-4T-vBO" secondAttribute="topMargin" constant="80" id="ncf-2F-Vyz"/>
+                            <constraint firstItem="com-Ya-LsP" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="A0d-xS-Dle" secondAttribute="leading" constant="20" id="vwH-J4-76C"/>
+                            <constraint firstItem="Wev-iY-Wa9" firstAttribute="centerY" secondItem="com-Ya-LsP" secondAttribute="centerY" id="wQs-EA-Fhw"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="A0d-xS-Dle"/>
+                    </view>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <nil key="simulatedBottomBarMetrics"/>
+                    <size key="freeformSize" width="375" height="400"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="AU3-g5-75i" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1976.8" y="133.5832083958021"/>
         </scene>
     </scenes>
 </document>

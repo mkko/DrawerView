@@ -20,7 +20,7 @@ DrawerView handles subview interaction so that it adds specialized support for s
 
 **Visuals**: By default DrawerView supports `UIBlurEffect` as a background. However, any `UIColor` is supported too. Just remember to set `backgroundEffect` to nil. Besides background, corner radius, borders and shadow can be customized as well.
 
-**Position**: The drawer has four distinct positions: `closed`, `collapsed`, `partiallyOpen`, `open`. Each of these positions can be customized and you can define the enabled positions.
+**Position**: The drawer has four distinct positions: `closed`, `collapsed`, `partiallyOpen`, `open`. Each of these positions can be customized and you can define the enabled positions. Open position is evaluated using `systemLayoutSizeFitting` and constrained by the given `topMargin`. 
 
 **Bottom Inset**: To support iOS devices with a notch at the bottom of the screen, you can change `insetAdjustmentBehavior` to automatically determine the correct inset. You can also set it to use the safe area of the superview or set it to a fixed value. Due to the content being overlapping with the notch you can change `contentVisibilityBehavior` to define which views should be hidden when collapsed. By default these two properties are set to automatic.
 

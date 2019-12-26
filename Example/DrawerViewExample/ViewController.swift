@@ -11,7 +11,29 @@ import MapKit
 import DrawerView
 import WebKit
 
-typealias DrawerMapEntry = (key: String, drawer: DrawerView?)
+enum DrawerPresentationType {
+    case none
+    case drawer(DrawerView)
+    case presentation
+}
+
+struct DrawerMapEntry {
+    let key: String
+    let presentation: DrawerPresentationType
+}
+
+extension DrawerMapEntry {
+    var drawer: DrawerView? {
+        switch presentation {
+        case .none:
+            return nil
+        case .drawer(let drawer):
+            return drawer
+        case .presentation:
+            return nil
+        }
+    }
+}
 
 class ViewController: UIViewController {
 
@@ -45,12 +67,13 @@ class ViewController: UIViewController {
         tableView.keyboardDismissMode = .onDrag
 
         drawers = [
-            ("↓", nil),
+            ("↓", DrawerPresentationType.none),
             ("search", setupDrawer()),
             ("modal", setupProgrammaticDrawerView()),
             ("dark", setupDarkThemedDrawerView()),
-            ("toolbar", setupTabDrawerView())
-        ]
+            ("toolbar", setupTabDrawerView()),
+            ("❏", DrawerPresentationType.presentation)
+        ].map(DrawerMapEntry.init(key:presentation:))
 
         self.setupDrawers()
         self.setupLocateButton()
@@ -71,8 +94,30 @@ class ViewController: UIViewController {
     // MARK: - Private
 
     @objc private func toggleTapped(sender: UIButton) {
-        let drawer = sender.titleLabel?.text.flatMap { drawers[$0] } ?? nil
-        showDrawer(drawer: drawer, animated: true)
+        guard let entry = sender.titleLabel?.text.flatMap({drawers[$0]}) else {
+            return
+        }
+
+        switch entry.presentation {
+        case .drawer(let drawer):
+            showDrawer(drawer: drawer, animated: true)
+        case .none:
+            showDrawer(drawer: nil, animated: true)
+        case .presentation:
+            showDrawer(drawer: nil, animated: true)
+            presentDrawer()
+            break
+        }
+    }
+
+    let drawerPresentation = DrawerPresentationManager()
+
+    private func presentDrawer() {
+        let viewController = self.storyboard!.instantiateViewController(withIdentifier: "ModalPresentationViewController") as! ModalPresentationViewController
+        drawerPresentation.drawer.openHeightBehavior = .fitting
+        viewController.transitioningDelegate = drawerPresentation
+        viewController.modalPresentationStyle = .custom
+        self.present(viewController, animated: true, completion: nil)
     }
 
     private func showDrawer(drawer: DrawerView?, animated: Bool) {
@@ -87,21 +132,21 @@ class ViewController: UIViewController {
         }
     }
 
-    private func setupDrawer() -> DrawerView {
+    private func setupDrawer() -> DrawerPresentationType {
         drawerView.snapPositions = [.collapsed, .partiallyOpen, .open]
         drawerView.insetAdjustmentBehavior = .automatic
         drawerView.delegate = self
         drawerView.position = .collapsed
 
-        return drawerView
+        return .drawer(drawerView)
     }
 
     private func setupDrawers() {
         let toggles = drawers
-            .map { (key, value) -> UIButton in
+            .map { e -> UIButton in
                 let button = UIButton(type: UIButton.ButtonType.system)
                 button.addTarget(self, action: #selector(toggleTapped(sender:)), for: .touchUpInside)
-                button.setTitle("\(key)", for: .normal)
+                button.setTitle("\(e.key)", for: .normal)
                 button.setTitleColor(UIColor(red: 0, green: 0.5, blue: 0.8, alpha: 0.7), for: .normal)
                 button.titleLabel?.font = UIFont(name: "HelveticaNeue-Bold", size: 18)!
                 return button
@@ -127,7 +172,7 @@ class ViewController: UIViewController {
         self.locateButtonContainer.layer.shadowOpacity = 0.1
     }
 
-    func setupProgrammaticDrawerView() -> DrawerView {
+    func setupProgrammaticDrawerView() -> DrawerPresentationType {
         // Create the drawer programmatically.
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
@@ -145,10 +190,10 @@ class ViewController: UIViewController {
         drawerView.addSubview(webview)
         webview.autoPinEdgesToSuperview()
 
-        return drawerView
+        return .drawer(drawerView)
     }
 
-    func setupDarkThemedDrawerView() -> DrawerView {
+    func setupDarkThemedDrawerView() -> DrawerPresentationType {
         let drawerView = DrawerView()
         drawerView.attachTo(view: self.view)
         drawerView.delegate = self
@@ -156,10 +201,10 @@ class ViewController: UIViewController {
         drawerView.snapPositions = [.collapsed, .partiallyOpen]
         drawerView.insetAdjustmentBehavior = .automatic
         drawerView.backgroundEffect = UIBlurEffect(style: .dark)
-        return drawerView
+        return .drawer(drawerView)
     }
 
-    func setupTabDrawerView() -> DrawerView {
+    func setupTabDrawerView() -> DrawerPresentationType {
         // Attach the drawer with contents of a view controller.
         let vc = self.storyboard!.instantiateViewController(withIdentifier: "TabDrawerViewController") as! DrawerTabViewController
         let drawerView = self.addDrawerView(withViewController: vc)
@@ -173,7 +218,7 @@ class ViewController: UIViewController {
         drawerView.cornerRadius = 0
         // Set the height to match the default toolbar.
         drawerView.collapsedHeight = 44
-        return drawerView
+        return .drawer(drawerView)
     }
 }
 
@@ -201,13 +246,13 @@ extension ViewController: DrawerViewDelegate {
     func drawerDidMove(_ drawerView: DrawerView, drawerOffset: CGFloat) {
         let maxOffset = drawers
             // Ignore modal for safe area insets.
-            .filter { $0.drawer !== drawers["modal"] }
+            .filter { $0.drawer !== drawers["modal"]?.drawer }
             .compactMap { $0.drawer?.drawerOffset }
             .max()
         self.additionalSafeAreaInsets.bottom = min(maxOffset ?? 0, drawerView.partiallyOpenHeight)
 
         // Round the corners of the toolbar view when open.
-        if drawerView === drawers["toolbar"] {
+        if drawerView === drawers["toolbar"]?.drawer {
             let offset = drawerView.drawerOffset - drawerView.collapsedHeight
             drawerView.cornerRadius = min(offset / 5, 9)
         }
@@ -257,7 +302,7 @@ extension ViewController: UISearchBarDelegate {
 
 extension Sequence where Element == DrawerMapEntry {
 
-    subscript(key: String) -> DrawerView? {
-        return self.first { $0.key == key }?.drawer
+    subscript(key: String) -> DrawerMapEntry? {
+        return self.first { $0.key == key }
     }
 }
