@@ -387,7 +387,7 @@ private struct ChildScrollViewInfo {
 
     private var horizontalPanOnly: Bool = true
 
-    private var startedDragging: Bool = false
+    private var drawerPanStarted: Bool = false
 
     private var previousAnimator: UIViewPropertyAnimator? = nil
 
@@ -637,9 +637,10 @@ private struct ChildScrollViewInfo {
     }
 
     private func scrollToPosition(_ scrollPosition: CGFloat, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
+
         if previousAnimator?.isRunning == true {
             previousAnimator?.stopAnimation(false)
-            if let s = previousAnimator?.state, s == .stopped {
+            if let state = previousAnimator?.state, state == .stopped {
                 previousAnimator?.finishAnimation(at: .current)
             }
             previousAnimator = nil
@@ -749,6 +750,7 @@ private struct ChildScrollViewInfo {
             let frame = self.layer.presentation()?.frame ?? self.frame
             self.panOrigin = frame.origin.y
             self.horizontalPanOnly = true
+            self.drawerPanStarted = false
 
             updateScrollPosition(whileDraggingAtPoint: panOrigin, notifyDelegate: true)
 
@@ -796,7 +798,7 @@ private struct ChildScrollViewInfo {
                     }
 
                     if self.horizontalPanOnly {
-                        log("Vertical pan cancelled due to direction lock")
+                        log("Vertical pan cancelled due to directional lock")
                         break
                     }
                 }
@@ -826,8 +828,7 @@ private struct ChildScrollViewInfo {
                 // Disable child view scrolling
                 if !shouldScrollChildView && childScrollEnabled {
 
-                    startedDragging = true
-
+                    drawerPanStarted = true
                     sender.setTranslation(CGPoint.zero, in: self)
 
                     // Scrolling downwards and content was consumed, so disable
@@ -857,14 +858,14 @@ private struct ChildScrollViewInfo {
                             let pos = self.panOrigin
                             self.updateScrollPosition(whileDraggingAtPoint: pos, notifyDelegate: true)
                     }, completion: nil)
-                } else if !shouldScrollChildView {
+                } else if !shouldScrollChildView && abs(translation.y) > 0 {
                     // Scroll only if we're not scrolling the subviews.
-                    startedDragging = true
+                    drawerPanStarted = true
                     let pos = panOrigin + translation.y
                     updateScrollPosition(whileDraggingAtPoint: pos, notifyDelegate: true)
                 }
-            } else {
-                startedDragging = true
+            } else if abs(translation.y) > 0 {
+                drawerPanStarted = true
                 let pos = panOrigin + translation.y
                 updateScrollPosition(whileDraggingAtPoint: pos, notifyDelegate: true)
             }
@@ -884,7 +885,7 @@ private struct ChildScrollViewInfo {
             if activeScrollViews.contains(where: { $0.scrollView.contentOffset.y > 0 }) {
                 // Let it scroll.
                 log("Let child view scroll.")
-            } else if startedDragging {
+            } else if drawerPanStarted {
                 self.delegate?.drawerWillEndDragging?(self)
 
                 // Check velocity and snap position separately:
@@ -910,7 +911,7 @@ private struct ChildScrollViewInfo {
             self.childScrollViews.forEach { $0.scrollView.isScrollEnabled = $0.scrollWasEnabled }
             self.childScrollViews = []
 
-            startedDragging = false
+            drawerPanStarted = false
 
         default:
             break
