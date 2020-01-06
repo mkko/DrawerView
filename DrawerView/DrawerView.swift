@@ -940,7 +940,7 @@ private struct ChildScrollViewInfo {
             }
     }
 
-    private var bottomInset: CGFloat {
+    public var bottomInset: CGFloat {
         let bottomInset: CGFloat
         switch insetAdjustmentBehavior {
         case .automatic:
