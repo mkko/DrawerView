@@ -508,10 +508,24 @@ private struct ChildScrollViewInfo {
 
         self.translatesAutoresizingMaskIntoConstraints = false
 
+        setupVisuals()
         setupBackgroundView()
         setupBorderView()
 
         updateVisuals()
+    }
+
+    private func setupVisuals() {
+        if #available(iOS 12.0, *) {
+            switch self.traitCollection.userInterfaceStyle {
+            case .dark:
+                self.backgroundEffect = UIBlurEffect(style: .dark)
+            case .light: fallthrough
+            case .unspecified: fallthrough
+            @unknown default:
+                break
+            }
+        }
     }
 
     private func setupBackgroundView() {
