@@ -201,6 +201,12 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    public var overlayOpacity: CGFloat = kOverlayOpacity {
+        didSet {
+            setPosition(currentPosition, animated: false, notifyDelegate: false)
+        }
+    }
+
     public var openHeightBehavior: OpenHeightBehavior = .none {
         didSet {
             setNeedsRespositioning()
@@ -1197,7 +1203,7 @@ private struct ChildScrollViewInfo {
 
         if opacityFactor > 0 {
             self.overlay = self.overlay ?? createOverlay()
-            self.overlay?.alpha = opacityFactor * kOverlayOpacity
+            self.overlay?.alpha = opacityFactor * overlayOpacity
             self.shouldRemoveOverlay = false
         } else {
             self.overlay?.alpha = 0
