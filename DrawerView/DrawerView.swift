@@ -69,6 +69,8 @@ let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
 
 let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
+let kDefaultOverlayBackgroundColor = UIColor.black
+
 let kOverlayOpacity: CGFloat = 0.5
 
 
@@ -190,6 +192,18 @@ private struct ChildScrollViewInfo {
     public var overlayVisibilityBehavior: OverlayVisibilityBehavior = .topmostPosition {
         didSet {
             updateVisuals()
+        }
+    }
+
+    public var overlayBackgroundColor: UIColor = kDefaultOverlayBackgroundColor {
+        didSet {
+            updateVisuals()
+        }
+    }
+
+    public var overlayOpacity: CGFloat = kOverlayOpacity {
+        didSet {
+            setPosition(currentPosition, animated: false, notifyDelegate: false)
         }
     }
 
@@ -1073,7 +1087,7 @@ private struct ChildScrollViewInfo {
     }
 
     private func updateOverlayVisuals(_ overlay: Overlay?) {
-        overlay?.backgroundColor = UIColor.black
+        overlay?.backgroundColor = self.overlayBackgroundColor
         overlay?.cornerRadius = self.cornerRadius
     }
 
@@ -1189,7 +1203,7 @@ private struct ChildScrollViewInfo {
 
         if opacityFactor > 0 {
             self.overlay = self.overlay ?? createOverlay()
-            self.overlay?.alpha = opacityFactor * kOverlayOpacity
+            self.overlay?.alpha = opacityFactor * overlayOpacity
             self.shouldRemoveOverlay = false
         } else {
             self.overlay?.alpha = 0
