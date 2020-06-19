@@ -262,6 +262,9 @@ private struct ChildScrollViewInfo {
         panGestureRecognizer.minimumNumberOfTouches = 1
         return panGestureRecognizer
     }()
+    
+    /// Damping ratio of the spring animation when opening or closing the drawer 
+    public var animationSpringDampingRatio: CGFloat = 0.8
 
     /// Boolean indicating whether the drawer is enabled. When disabled, all user
     /// interaction with the drawer is disabled. However, user interaction with the
@@ -678,7 +681,7 @@ private struct ChildScrollViewInfo {
             // Create the animator.
             let animator = UIViewPropertyAnimator(
                 duration: drawerAnimationDuration,
-                timingParameters: UISpringTimingParameters(dampingRatio: 0.8))
+                timingParameters: UISpringTimingParameters(dampingRatio: animationSpringDampingRatio))
             animator.addAnimations {
                 self.setScrollPosition(scrollPosition, notifyDelegate: notifyDelegate)
             }
