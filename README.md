@@ -91,6 +91,6 @@ override func viewDidLoad() {
     drawerView.attachTo(view: self.view)
 
     // Set up the drawer here
-    drawerView.supportedPositions = [.collapsed, .partiallyOpen]
+    drawerView.snapPositions = [.collapsed, .partiallyOpen]
 }
 ```
