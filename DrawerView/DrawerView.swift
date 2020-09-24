@@ -1076,8 +1076,12 @@ private struct ChildScrollViewInfo {
 
     private func updateLayerVisuals(_ layer: CALayer) {
         layer.shadowRadius = shadowRadius
-        layer.shadowOpacity = shadowOpacity
-        layer.cornerRadius = self.cornerRadius
+        layer.shadowOpacity = shadowOpacity        
+        
+        let path = UIBezierPath(roundedRect: bounds, byRoundingCorners: [.topLeft, .topRight], cornerRadii: CGSize(width: self.cornerRadius, height: self.cornerRadius))
+        let mask = CAShapeLayer()
+        mask.path = path.cgPath
+        layer.mask = mask
     }
 
     private func updateBorderVisuals(_ borderView: UIView) {
