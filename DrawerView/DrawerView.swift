@@ -266,6 +266,10 @@ private struct ChildScrollViewInfo {
     /// Damping ratio of the spring animation when opening or closing the drawer 
     public var animationSpringDampingRatio: CGFloat = 0.8
 
+    /// Boolean indicating if the activity drawer should dismiss when you scroll down
+    /// on an internal scrollView after scroll reached top of that view.
+    public var childScrollViewsPanningCanDismissDrawer = true
+
     /// Boolean indicating whether the drawer is enabled. When disabled, all user
     /// interaction with the drawer is disabled. However, user interaction with the
     /// content is still possible.
@@ -849,7 +853,7 @@ private struct ChildScrollViewInfo {
                 } else if !childReachedTheTop && !scrollingToBottom {
                     shouldScrollChildView = true
                 } else if childReachedTheTop && !scrollingToBottom {
-                    shouldScrollChildView = false
+                    shouldScrollChildView = !childScrollViewsPanningCanDismissDrawer
                 } else if !isFullyExpanded {
                     shouldScrollChildView = false
                 } else {
