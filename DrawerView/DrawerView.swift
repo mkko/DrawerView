@@ -1460,7 +1460,7 @@ fileprivate extension UIGestureRecognizer.State {
     }
 }
 
-#if !swift(>=4.2)
+#if !swift(>=4.1)
 fileprivate extension Array {
 
     // Backwards support for compactMap.
