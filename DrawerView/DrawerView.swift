@@ -65,8 +65,6 @@ let kDefaultShadowRadius: CGFloat = 1.0
 
 let kDefaultShadowOpacity: Float = 0.05
 
-let kDefaultBackgroundEffect = UIBlurEffect(style: .extraLight)
-
 let kDefaultBorderColor = UIColor(white: 0.2, alpha: 0.2)
 
 let kDefaultOverlayBackgroundColor = UIColor.black
@@ -140,6 +138,12 @@ private struct ChildScrollViewInfo {
         case fixed(height: CGFloat)
     }
 
+    public enum BackgroundEffectStyle {
+        case none
+        case visualEffect(UIVisualEffect)
+        case systemDefault
+    }
+
     // MARK: - Visual properties
 
     /// The corner radius of the drawer view.
@@ -165,7 +169,7 @@ private struct ChildScrollViewInfo {
 
     /// The used effect for the drawer view background. When set to nil no
     /// effect is used.
-    public var backgroundEffect: UIVisualEffect? = kDefaultBackgroundEffect {
+    public var backgroundEffect: BackgroundEffectStyle = .systemDefault {
         didSet {
             updateVisuals()
         }
@@ -427,7 +431,7 @@ private struct ChildScrollViewInfo {
 
     private let borderView = UIView()
 
-    private let backgroundView = UIVisualEffectView(effect: kDefaultBackgroundEffect)
+    private let backgroundView = UIVisualEffectView(effect: nil)
 
     private var willConceal: Bool = false
 
@@ -529,24 +533,10 @@ private struct ChildScrollViewInfo {
 
         self.translatesAutoresizingMaskIntoConstraints = false
 
-        setupVisuals()
         setupBackgroundView()
         setupBorderView()
 
         updateVisuals()
-    }
-
-    private func setupVisuals() {
-        if #available(iOS 12.0, *) {
-            switch self.traitCollection.userInterfaceStyle {
-            case .dark:
-                self.backgroundEffect = UIBlurEffect(style: .dark)
-            case .light: fallthrough
-            case .unspecified: fallthrough
-            @unknown default:
-                break
-            }
-        }
     }
 
     private func setupBackgroundView() {
@@ -1081,6 +1071,14 @@ private struct ChildScrollViewInfo {
         self.setNeedsDisplay()
     }
 
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        if #available(iOS 13.0, *) {
+            if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+                updateVisuals()
+            }
+        }
+    }
+
     private func updateLayerVisuals(_ layer: CALayer) {
         layer.shadowRadius = shadowRadius
         layer.shadowOpacity = shadowOpacity
@@ -1099,8 +1097,8 @@ private struct ChildScrollViewInfo {
     }
 
     private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
-
         backgroundView.effect = self.backgroundEffect
+            .effect(inTraitCollection: self.traitCollection)
         if #available(iOS 11.0, *) {
             backgroundView.layer.cornerRadius = self.cornerRadius
             backgroundView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
@@ -1411,7 +1409,7 @@ extension DrawerView: UIGestureRecognizerDelegate {
 
 }
 
-// MARK: - Private Extensions
+// MARK: - Public Extensions
 
 public extension DrawerView {
 
@@ -1426,6 +1424,28 @@ public extension DrawerView {
     }
 }
 
+
+// MARK: - Private Extensions
+
+extension DrawerView.BackgroundEffectStyle {
+
+    func effect(inTraitCollection traitCollection: UITraitCollection) -> UIVisualEffect? {
+        switch self {
+        case .none: return nil
+        case let .visualEffect(effect): return effect
+        case .systemDefault:
+            let darkMode: Bool
+            if #available(iOS 12.0, *) {
+                darkMode = (traitCollection.userInterfaceStyle == .dark)
+            } else {
+                darkMode = false
+            }
+            return darkMode
+                ? UIBlurEffect(style: .dark)
+                : UIBlurEffect(style: .light)
+        }
+    }
+}
 
 fileprivate extension CGRect {
 

@@ -200,7 +200,7 @@ class ViewController: UIViewController {
 
         drawerView.snapPositions = [.collapsed, .partiallyOpen]
         drawerView.insetAdjustmentBehavior = .automatic
-        drawerView.backgroundEffect = UIBlurEffect(style: .dark)
+        drawerView.backgroundEffect = .visualEffect(UIBlurEffect(style: .dark))
         return .drawer(drawerView)
     }
 
@@ -214,7 +214,7 @@ class ViewController: UIViewController {
 
         drawerView.snapPositions = [.collapsed, .open]
         drawerView.insetAdjustmentBehavior = .automatic
-        drawerView.backgroundEffect = UIBlurEffect(style: .extraLight)
+        drawerView.backgroundEffect = .visualEffect(UIBlurEffect(style: .extraLight))
         drawerView.cornerRadius = 0
         // Set the height to match the default toolbar.
         drawerView.collapsedHeight = 44
