@@ -1079,10 +1079,21 @@ private struct ChildScrollViewInfo {
         }
     }
 
+    private func roundTopRightLeftCorners(_ layer: CALayer) {
+        if #available(iOS 11.0, *) {
+            layer.maskedCorners = [
+                .layerMaxXMinYCorner, // top right
+                .layerMinXMinYCorner  // top left
+            ]
+            layer.masksToBounds = true
+        }
+        layer.cornerRadius = self.cornerRadius
+    }
+
     private func updateLayerVisuals(_ layer: CALayer) {
         layer.shadowRadius = shadowRadius
         layer.shadowOpacity = shadowOpacity
-        layer.cornerRadius = self.cornerRadius
+        roundTopRightLeftCorners(layer)
     }
 
     private func updateBorderVisuals(_ borderView: UIView) {
