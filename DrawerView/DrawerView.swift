@@ -92,7 +92,7 @@ private struct ChildScrollViewInfo {
 }
 
 
-@IBDesignable public class DrawerView: UIView {
+@IBDesignable open class DrawerView: UIView {
 
     // MARK: - Public types
 
