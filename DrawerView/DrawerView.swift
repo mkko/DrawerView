@@ -1082,8 +1082,8 @@ private struct ChildScrollViewInfo {
                 .layerMaxXMinYCorner, // top right
                 .layerMinXMinYCorner  // top left
             ]
-            layer.masksToBounds = true
         }
+        layer.masksToBounds = false
         layer.cornerRadius = self.cornerRadius
     }
 
