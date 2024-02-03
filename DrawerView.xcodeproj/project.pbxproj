@@ -41,6 +41,7 @@
 		2BDAD3CA2011116000AA7FC2 /* Overlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Overlay.swift; sourceTree = "<group>"; };
 		2BF512162054844800154B99 /* Interpolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpolation.swift; sourceTree = "<group>"; };
 		C002D092239029B300BD8880 /* DrawerPresentation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawerPresentation.swift; sourceTree = "<group>"; };
+		C0F4840E2B6E2F6800134E04 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +91,7 @@
 				C002D092239029B300BD8880 /* DrawerPresentation.swift */,
 				2B3FD31B2027BA600045C7BF /* Extensions.swift */,
 				2BF512162054844800154B99 /* Interpolation.swift */,
+				C0F4840E2B6E2F6800134E04 /* PrivacyInfo.xcprivacy */,
 			);
 			path = DrawerView;
 			sourceTree = "<group>";
