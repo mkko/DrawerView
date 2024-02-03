@@ -64,7 +64,7 @@ DrawerView is a view for iOS that mimics the functionality of the drawer introdu
   #  the deployment target. You can optionally include the target after the platform.
   #
 
-  s.platform     = :ios, "10.0"
+  s.platform     = :ios, "12.0"
 
 
   # ――― Source Location ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
