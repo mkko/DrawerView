@@ -74,7 +74,7 @@ public class DrawerPresentationController: UIPresentationController {
 
         // Clean up the drawer for reuse.
         presentedViewController.view.removeFromSuperview()
-        presentedViewController.removeFromParentViewController()
+        presentedViewController.removeFromParent()
         drawerView.removeFromSuperview()
 
         presentationDelegate?.drawerDismissalDidEnd?(completed)
