@@ -1185,33 +1185,29 @@ private struct ChildScrollViewInfo {
             return
         }
 
+        let opacityFactor: CGFloat
         switch (self.overlayVisibilityBehavior) {
         case .disabled:
-            return
-        case .topmostPosition:
-            break
-        case .whenOpen:
-            break
-        }
-
-        let values = snapPositions(for: DrawerPosition.allPositions, inSuperView: superview)
-          .compactMap { pos -> (position: CGFloat, value: CGFloat)? in
-            guard let opacityFactor = self.opacityFactor(for: pos.position) else {
-                return nil
-            }
-            return (
-                position: pos.snapPosition,
-                value: opacityFactor
-            )
-        }
-
-        let opacityFactor: CGFloat
-        if values.count > 0 {
-            opacityFactor = interpolate(
-                values: values,
-                position: position)
-        } else {
             opacityFactor = 0
+        case .topmostPosition, .whenOpen:
+            let values = snapPositions(for: DrawerPosition.allPositions, inSuperView: superview)
+              .compactMap { pos -> (position: CGFloat, value: CGFloat)? in
+                guard let opacityFactor = self.opacityFactor(for: pos.position) else {
+                    return nil
+                }
+                return (
+                    position: pos.snapPosition,
+                    value: opacityFactor
+                )
+            }
+
+            if values.count > 0 {
+                opacityFactor = interpolate(
+                    values: values,
+                    position: position)
+            } else {
+                opacityFactor = 0
+            }
         }
 
         if opacityFactor > 0 {
