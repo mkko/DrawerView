@@ -78,6 +78,8 @@ class ViewController: UIViewController {
         self.setupDrawers()
         self.setupLocateButton()
 
+        drawerView.delegate = self
+
         showDrawer(drawer: drawerView, animated: false)
     }
 
