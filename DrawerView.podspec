@@ -86,4 +86,15 @@ DrawerView is a view for iOS that mimics the functionality of the drawer introdu
 
   spec.source_files  = "DrawerView", "DrawerView/**/*.{h,m}"
 
+
+  # ――― Resource bundles ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
+  #
+  #  This attribute allows to define the name and the file of the resource bundles 
+  #  which should be built for the Pod. 
+  #  They are specified as a hash where the keys represent the name of the bundles 
+  #  and the values the file patterns that they should include
+  #
+
+  spec.resource_bundles = { 'DrawerView' => ['DrawerView/PrivacyInfo.xcprivacy'] }
+
 end
