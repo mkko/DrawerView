@@ -743,7 +743,7 @@ private struct ChildScrollViewInfo {
         self.topConstraint?.constant = scrollPosition
         self.setOverlayOpacity(forScrollPosition: scrollPosition)
         self.setShadowOpacity(forScrollPosition: scrollPosition)
-        self.setChildrenOpacity(forScrollPosition: scrollPosition)
+        self.setChildOpacity(forScrollPosition: scrollPosition)
 
         if notifyDelegate {
             let drawerOffset = convertScrollPositionToOffset(scrollPosition)
@@ -1239,7 +1239,7 @@ private struct ChildScrollViewInfo {
         self.layer.shadowOpacity = Float(shadowOpacity)
     }
 
-    private func setChildrenOpacity(forScrollPosition position: CGFloat) {
+    private func setChildOpacity(forScrollPosition position: CGFloat) {
         guard let superview = self.superview else {
             return
         }
@@ -1257,14 +1257,19 @@ private struct ChildScrollViewInfo {
                 let viewsToHide = self.hiddenChildViews ?? self.childViewsToHide()
                 self.hiddenChildViews = viewsToHide
 
-                viewsToHide.forEach { view in
-                    view.alpha = alpha
+                // Update the alpha async to avoid any glitches.
+                DispatchQueue.main.async {
+                    viewsToHide.forEach { view in
+                        view.alpha = max(alpha, 0)
+                    }
                 }
 
             } else {
                 if let hiddenViews = self.hiddenChildViews {
-                    hiddenViews.forEach { view in
-                        view.alpha = 1
+                    DispatchQueue.main.async {
+                        hiddenViews.forEach { view in
+                            view.alpha = 1
+                        }
                     }
                 }
                 self.hiddenChildViews = nil
