@@ -23,9 +23,9 @@ public class DrawerPresentationController: UIPresentationController {
     private var presentationDelegate: DrawerPresentationDelegate?
 
     init(presentedViewController: UIViewController,
-                  presenting presentingViewController: UIViewController?,
-                  drawerView: DrawerView,
-                  presentationDelegate: DrawerPresentationDelegate?
+         presenting presentingViewController: UIViewController?,
+         drawerView: DrawerView,
+         presentationDelegate: DrawerPresentationDelegate?
     ) {
         self.drawerView = drawerView
         self.presentationDelegate = presentationDelegate
@@ -56,17 +56,32 @@ public class DrawerPresentationController: UIPresentationController {
         drawerView.attachTo(view: containerView)
         drawerView.layoutIfNeeded()
 
-        presentationDelegate?.drawerPresentationWillBegin?()
+        // Make callbacks backwards compatible
+        if let callback = presentationDelegate?.drawerPresentationWillBegin(for:in:) {
+            callback(presentedViewController, drawerView)
+        } else {
+            presentationDelegate?.drawerPresentationWillBegin?()
+        }
     }
 
     public override func presentationTransitionDidEnd(_ completed: Bool) {
         super.presentationTransitionDidEnd(completed)
-        presentationDelegate?.drawerPresentationDidEnd?(completed)
+        // Make callbacks backwards compatible
+        if let callback = presentationDelegate?.drawerPresentationDidEnd(for:in:completed:) {
+            callback(presentedViewController, drawerView, completed)
+        } else {
+            presentationDelegate?.drawerPresentationDidEnd?(completed)
+        }
     }
 
     public override func dismissalTransitionWillBegin() {
         super.dismissalTransitionWillBegin()
-        presentationDelegate?.drawerDismissalWillBegin?()
+        // Make callbacks backwards compatible
+        if let callback = presentationDelegate?.drawerDismissalWillBegin(for:in:) {
+            callback(presentedViewController, drawerView)
+        } else {
+            presentationDelegate?.drawerDismissalWillBegin?()
+        }
     }
 
     public override func dismissalTransitionDidEnd(_ completed: Bool) {
@@ -77,7 +92,12 @@ public class DrawerPresentationController: UIPresentationController {
         presentedViewController.removeFromParent()
         drawerView.removeFromSuperview()
 
-        presentationDelegate?.drawerDismissalDidEnd?(completed)
+        // Make callbacks backwards compatible
+        if let callback = presentationDelegate?.drawerDismissalDidEnd(for:in:completed:) {
+            callback(presentedViewController, drawerView, completed)
+        } else {
+            presentationDelegate?.drawerDismissalDidEnd?(completed)
+        }
     }
 
     override public var shouldRemovePresentersView: Bool {
@@ -91,10 +111,20 @@ public class DrawerPresentationController: UIPresentationController {
 
 @objc public protocol DrawerPresentationDelegate {
 
+    @available(*, deprecated, renamed: "drawerPresentationWillBegin(for:in:)")
     @objc optional func drawerPresentationWillBegin()
+    @available(*, deprecated, renamed: "drawerPresentationDidEnd(for:in:completed:)")
     @objc optional func drawerPresentationDidEnd(_ completed: Bool)
+    @available(*, deprecated, renamed: "drawerDismissalWillBegin(for:in:)")
     @objc optional func drawerDismissalWillBegin()
+    @available(*, deprecated, renamed: "drawerDismissalDidEnd(for:in:completed:)")
     @objc optional func drawerDismissalDidEnd(_ completed: Bool)
+
+    @objc optional func drawerPresentationWillBegin(for viewController: UIViewController, in drawerView: DrawerView)
+    @objc optional func drawerPresentationDidEnd(for viewController: UIViewController, in drawerView: DrawerView, completed: Bool)
+    @objc optional func drawerDismissalWillBegin(for viewController: UIViewController, in drawerView: DrawerView)
+    @objc optional func drawerDismissalDidEnd(for viewController: UIViewController, in drawerView: DrawerView, completed: Bool)
+
 }
 
 extension DrawerPresentationController: DrawerViewDelegate {
