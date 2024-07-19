@@ -1,0 +1,11 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Run UI Tests"
+  lane :test_ui do
+    run_tests(workspace: "DrawerView.xcworkspace",
+              scheme: "DrawerViewUI")
+  end
+
+end
