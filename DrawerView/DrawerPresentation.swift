@@ -57,31 +57,30 @@ public class DrawerPresentationController: UIPresentationController {
         drawerView.layoutIfNeeded()
 
         // Make callbacks backwards compatible
-        if let callback = presentationDelegate?.drawerPresentationWillBegin(for:in:) {
-            callback(presentedViewController, drawerView)
-        } else {
-            presentationDelegate?.drawerPresentationWillBegin?()
-        }
+        presentationDelegate?.drawerPresentationWillBegin?(
+            for: presentedViewController,
+            in: drawerView
+        )
     }
 
     public override func presentationTransitionDidEnd(_ completed: Bool) {
         super.presentationTransitionDidEnd(completed)
         // Make callbacks backwards compatible
-        if let callback = presentationDelegate?.drawerPresentationDidEnd(for:in:completed:) {
-            callback(presentedViewController, drawerView, completed)
-        } else {
-            presentationDelegate?.drawerPresentationDidEnd?(completed)
-        }
+        presentationDelegate?.drawerPresentationDidEnd?(
+            for: presentedViewController,
+            in: drawerView,
+            completed: completed
+        )
     }
 
     public override func dismissalTransitionWillBegin() {
         super.dismissalTransitionWillBegin()
         // Make callbacks backwards compatible
-        if let callback = presentationDelegate?.drawerDismissalWillBegin(for:in:) {
-            callback(presentedViewController, drawerView)
-        } else {
-            presentationDelegate?.drawerDismissalWillBegin?()
-        }
+
+        presentationDelegate?.drawerDismissalWillBegin?(
+            for: presentedViewController,
+            in: drawerView
+        )
     }
 
     public override func dismissalTransitionDidEnd(_ completed: Bool) {
@@ -92,12 +91,11 @@ public class DrawerPresentationController: UIPresentationController {
         presentedViewController.removeFromParent()
         drawerView.removeFromSuperview()
 
-        // Make callbacks backwards compatible
-        if let callback = presentationDelegate?.drawerDismissalDidEnd(for:in:completed:) {
-            callback(presentedViewController, drawerView, completed)
-        } else {
-            presentationDelegate?.drawerDismissalDidEnd?(completed)
-        }
+        presentationDelegate?.drawerDismissalDidEnd?(
+            for: presentedViewController,
+            in: drawerView,
+            completed: completed
+        )
     }
 
     override public var shouldRemovePresentersView: Bool {
@@ -110,15 +108,6 @@ public class DrawerPresentationController: UIPresentationController {
 }
 
 @objc public protocol DrawerPresentationDelegate {
-
-    @available(*, deprecated, renamed: "drawerPresentationWillBegin(for:in:)")
-    @objc optional func drawerPresentationWillBegin()
-    @available(*, deprecated, renamed: "drawerPresentationDidEnd(for:in:completed:)")
-    @objc optional func drawerPresentationDidEnd(_ completed: Bool)
-    @available(*, deprecated, renamed: "drawerDismissalWillBegin(for:in:)")
-    @objc optional func drawerDismissalWillBegin()
-    @available(*, deprecated, renamed: "drawerDismissalDidEnd(for:in:completed:)")
-    @objc optional func drawerDismissalDidEnd(_ completed: Bool)
 
     @objc optional func drawerPresentationWillBegin(for viewController: UIViewController, in drawerView: DrawerView)
     @objc optional func drawerPresentationDidEnd(for viewController: UIViewController, in drawerView: DrawerView, completed: Bool)
