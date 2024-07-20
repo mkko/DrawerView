@@ -15,7 +15,6 @@
 		C0AAB2362C47E8C60075C513 /* DrawerViewUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0AAB2352C47E8C60075C513 /* DrawerViewUITestsLaunchTests.swift */; };
 		C0AAB2422C47EA550075C513 /* DrawerView.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0AAB2412C47EA550075C513 /* DrawerView.framework */; };
 		C0AAB2432C47EA550075C513 /* DrawerView.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C0AAB2412C47EA550075C513 /* DrawerView.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C0AAB2482C48FBFC0075C513 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0AAB2472C48FBFC0075C513 /* TableViewController.swift */; };
 		C0AAB24A2C4902B30075C513 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0AAB2012C47E8170075C513 /* ViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -56,7 +55,6 @@
 		C0AAB2352C47E8C60075C513 /* DrawerViewUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawerViewUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		C0AAB23D2C47E9AC0075C513 /* DrawerView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DrawerView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0AAB2412C47EA550075C513 /* DrawerView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DrawerView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C0AAB2472C48FBFC0075C513 /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,7 +101,6 @@
 				C0AAB1FD2C47E8170075C513 /* AppDelegate.swift */,
 				C0AAB1FF2C47E8170075C513 /* SceneDelegate.swift */,
 				C0AAB2012C47E8170075C513 /* ViewController.swift */,
-				C0AAB2472C48FBFC0075C513 /* TableViewController.swift */,
 				C0AAB2062C47E8190075C513 /* Assets.xcassets */,
 				C0AAB2082C47E8190075C513 /* LaunchScreen.storyboard */,
 				C0AAB20B2C47E8190075C513 /* Info.plist */,
@@ -232,7 +229,6 @@
 			files = (
 				C0AAB24A2C4902B30075C513 /* ViewController.swift in Sources */,
 				C0AAB1FE2C47E8170075C513 /* AppDelegate.swift in Sources */,
-				C0AAB2482C48FBFC0075C513 /* TableViewController.swift in Sources */,
 				C0AAB2002C47E8170075C513 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

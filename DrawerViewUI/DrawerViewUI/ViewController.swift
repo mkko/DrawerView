@@ -29,6 +29,8 @@ class ViewController: UIViewController {
 
     let resetButton = UIButton()
 
+    let toggleButton = UIButton()
+
     var presentationManager: DrawerPresentationManager?
     
     var presented: UIViewController?
@@ -55,34 +57,68 @@ class ViewController: UIViewController {
         view.addSubview(tableView)
         tableView.dataSource = self
 
+        let containerView = UIView()
+        let actions = UIStackView()
+        [containerView, actions].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
+
+        actions.backgroundColor = .systemPink
+        actions.distribution = .equalSpacing
+
+        NSLayoutConstraint.activate([
+            containerView.topAnchor.constraint(equalTo: view.topAnchor),
+            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            containerView.bottomAnchor.constraint(equalTo: actions.topAnchor),
+
+            actions.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            actions.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            actions.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+        ])
+
+
         drawerView.accessibilityIdentifier = "drawer"
-        drawerView.attachTo(view: view)
+        drawerView.attachTo(view: containerView)
         drawerView.backgroundColor = .systemTeal
         drawerView.delegate = self
 
-        let buttons = UIStackView()
-        buttons.distribution = .equalSpacing
-        buttons.frame = CGRect(x: 0, y: 10, width: drawerView.bounds.width - 0, height: 40)
-        buttons.autoresizingMask = [
-            .flexibleWidth, .flexibleBottomMargin
-        ]
-        drawerView.addSubview(buttons)
 
-        // resetButton.frame = CGRect(x: 10, y: 10, width: 100, height: 40)
-        resetButton.accessibilityIdentifier = "reset"
-        resetButton.setTitle("Reset", for: .normal)
+        resetButton.accessibilityIdentifier = "clear"
+        resetButton.setTitle("Clear", for: .normal)
         resetButton.addTarget(self, action: #selector(reset), for: .touchUpInside)
-        buttons.addArrangedSubview(resetButton)
+        actions.addArrangedSubview(resetButton)
+
+        toggleButton.accessibilityIdentifier = "toggle"
+        toggleButton.setTitle("Toggle", for: .normal)
+        toggleButton.addTarget(self, action: #selector(toggle), for: .touchUpInside)
+        actions.addArrangedSubview(toggleButton)
+
+        let concealButton = UIButton()
+        concealButton.accessibilityIdentifier = "hide"
+        concealButton.setTitle("Hide", for: .normal)
+        concealButton.addTarget(self, action: #selector(hide), for: .touchUpInside)
+        actions.addArrangedSubview(concealButton)
 
         let modalButton = UIButton()
         modalButton.accessibilityIdentifier = "modal"
         modalButton.setTitle("Modal", for: .normal)
         modalButton.addTarget(self, action: #selector(modal), for: .touchUpInside)
-        buttons.addArrangedSubview(modalButton)
+        actions.addArrangedSubview(modalButton)
     }
 
     @objc func reset() {
         events = []
+    }
+
+    @objc func toggle() {
+        switch drawerView.position {
+        case .closed, .collapsed, .partiallyOpen:
+            drawerView.setPosition(.open, animated: true)
+        case .open:
+            drawerView.setPosition(.collapsed, animated: true)
+        }
     }
 
     @objc func modal() {
@@ -98,6 +134,9 @@ class ViewController: UIViewController {
         self.present(presented, animated: true)
     }
 
+    @objc func hide() {
+        drawerView.setConcealed(!drawerView.isConcealed, animated: true)
+    }
     @objc func dismissModal() {
         presented?.dismiss(animated: true)
     }

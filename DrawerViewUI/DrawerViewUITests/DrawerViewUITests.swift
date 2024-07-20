@@ -11,7 +11,11 @@ final class DrawerViewUITests: XCTestCase {
 
     var app: XCUIApplication!
 
-    var reset: XCUIElement!
+    var clear: XCUIElement!
+
+    var toggle: XCUIElement!
+
+    var hide: XCUIElement!
 
     var drawer: XCUIElement!
 
@@ -21,8 +25,9 @@ final class DrawerViewUITests: XCTestCase {
         app = XCUIApplication()
         app.launch()
 
-        reset = app.buttons["reset"]
-        reset.tap()
+        clear = app.buttons["clear"]
+        toggle = app.buttons["toggle"]
+        hide = app.buttons["hide"]
 
         drawer = app.otherElements["drawer"]
         XCTAssertTrue(drawer.exists)
@@ -85,6 +90,20 @@ final class DrawerViewUITests: XCTestCase {
             "drawerDismissalWillBegin",
             "drawerDismissalDidEnd"
         ])
+    }
+
+    func testProgrammaticToggle() throws {
+        toggle.tap()
+        toggle.tap()
+
+        assertEvents(fromCells: app.cells, expectedEvents: [])
+    }
+
+    func testProgrammaticHide() throws {
+        hide.tap()
+        hide.tap()
+
+        assertEvents(fromCells: app.cells, expectedEvents: [])
     }
 
     private func assertEvents(fromCells cells: XCUIElementQuery, expectedEvents: [String], file: StaticString = #filePath, line: UInt = #line) {

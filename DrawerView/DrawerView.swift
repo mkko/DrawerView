@@ -240,11 +240,11 @@ private struct ChildScrollViewInfo {
 
     public func setConcealed(_ concealed: Bool, animated: Bool, completion: ((Bool) -> Void)? = nil) {
         _isConcealed = concealed
-        setPosition(currentPosition, animated: animated, completion: completion)
+        setPosition(currentPosition, animated: animated, notifyDelegate: false, completion: completion)
     }
 
     public func removeFromSuperview(animated: Bool, completion: ((Bool) -> Void)? = nil) {
-        setPosition(.closed, animated: animated) { _ in
+        setPosition(.closed, animated: animated, notifyDelegate: false) { _ in
             self.removeFromSuperview()
             self.overlay?.removeFromSuperview()
             completion?(true)
@@ -379,7 +379,7 @@ private struct ChildScrollViewInfo {
             return currentPosition
         }
         set {
-            self.setPosition(newValue, animated: false)
+            self.setPosition(newValue, animated: false, notifyDelegate: false)
         }
     }
 
@@ -622,11 +622,8 @@ private struct ChildScrollViewInfo {
     /// - parameter position The position to be set.
     /// - parameter animated Wheter the change should be animated or not.
     public func setPosition(_ position: DrawerPosition, animated: Bool, completion: ((Bool) -> Void)? = nil) {
-
-        // Don't notify about position if concealing the drawer. Notify only if position changed.
-        let visiblePosition = (_isConcealed ? .closed : position)
-        let notifyDelegate = !_isConcealed && (currentPosition != visiblePosition)
-        self.setPosition(position, animated: animated, notifyDelegate: notifyDelegate, completion: completion)
+        // Programmatic position should not notify the delegate.
+        self.setPosition(position, animated: animated, notifyDelegate: false, completion: completion)
     }
 
     private func setPosition(_ position: DrawerPosition, animated: Bool, notifyDelegate: Bool, completion: ((Bool) -> Void)? = nil) {
@@ -643,7 +640,7 @@ private struct ChildScrollViewInfo {
 
         if let superview = self.superview {
             nextSnapPosition = snapPosition(for: visiblePosition, inSuperView: superview)
-            self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: true) { finished in
+            self.scrollToPosition(nextSnapPosition, animated: animated, notifyDelegate: notifyDelegate) { finished in
                 if notifyDelegate {
                     self.delegate?.drawer?(self, didTransitionTo: visiblePosition)
                 }
@@ -735,7 +732,7 @@ private struct ChildScrollViewInfo {
 
     private func updateSnapPosition(animated: Bool) {
         if panGestureRecognizer.state.isTracking == false {
-            self.setPosition(currentPosition, animated: animated)
+            self.setPosition(currentPosition, animated: animated, notifyDelegate: false)
         }
     }
 
@@ -927,7 +924,7 @@ private struct ChildScrollViewInfo {
                 } else {
                     nextPosition = targetPosition
                 }
-                self.setPosition(nextPosition, animated: true)
+                self.setPosition(nextPosition, animated: true, notifyDelegate: true)
             }
 
             self.childScrollViews.forEach { $0.scrollView.isScrollEnabled = $0.scrollWasEnabled }
