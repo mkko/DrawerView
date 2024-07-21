@@ -4,8 +4,14 @@ platform :ios do
 
   desc "Run UI Tests"
   lane :test_ui do
-    run_tests(workspace: "DrawerView.xcworkspace",
-              scheme: "DrawerViewUI")
+    run_tests(
+      workspace: "DrawerView.xcworkspace",
+      scheme: "DrawerViewUI",
+      include_simulator_logs: false,
+      output_xctestrun: false,
+      verbose: true,
+      open_report: false,
+    )
   end
 
 end
