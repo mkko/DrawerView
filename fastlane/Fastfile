@@ -4,14 +4,35 @@ platform :ios do
 
   desc "Run UI Tests"
   lane :test_ui do
-    run_tests(
+    scan(
       workspace: "DrawerView.xcworkspace",
       scheme: "DrawerViewUI",
+      ensure_devices_found: true,
       include_simulator_logs: false,
       output_xctestrun: false,
       verbose: true,
       open_report: false,
+      clean: true
     )
+
+    persist_artifacts
   end
 
+end
+
+error do |lane, exception|
+  persist_artifacts
+end
+
+private_lane :persist_artifacts do |options|
+  xcresult_path = Actions.lane_context[SharedValues::SCAN_GENERATED_XCRESULT_PATH]
+  if "#{xcresult_path}" != ""
+    puts "Copying artifacts from #{xcresult_path}..."
+    copy_artifacts(
+      target_path: "artifacts",
+      artifacts: ["#{xcresult_path}"]
+    )
+  else
+    puts "No xcresult_path specified, no artifacts to copy"
+  end
 end

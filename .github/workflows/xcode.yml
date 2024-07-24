@@ -42,3 +42,9 @@ jobs:
       - name: Test UI
         run: |
           bundle exec fastlane test_ui
+      - name: Archive UI test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/
