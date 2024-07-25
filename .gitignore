@@ -1,5 +1,7 @@
 
-# Created by https://www.gitignore.io/api/xcode,swift,objective-c,carthage,cocoapods
+# GitHub
+
+artifacts
 
 ### Carthage ###
 # Carthage
