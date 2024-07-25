@@ -1,0 +1,25 @@
+name: Run UI tests
+
+on:
+
+jobs:
+  ui-test:
+    name: Run UI tests
+    runs-on: macos-latest
+    on: []
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Bundle Install
+        run: |
+          bundle install
+      - name: Test UI
+        run: |
+          bundle exec fastlane test_ui
+      - name: Archive UI test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/
