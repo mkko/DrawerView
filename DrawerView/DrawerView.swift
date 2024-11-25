@@ -24,7 +24,8 @@ let dateFormatter: DateFormatter = {
     case closed = 0
     case collapsed = 1
     case partiallyOpen = 2
-    case open = 3
+    case pushedUp = 3
+    case open = 4
 }
 
 extension DrawerPosition: CustomStringConvertible {
@@ -34,6 +35,7 @@ extension DrawerPosition: CustomStringConvertible {
         case .closed: return "closed"
         case .collapsed: return "collapsed"
         case .partiallyOpen: return "partiallyOpen"
+        case .pushedUp:     return "pushedUp"
         case .open: return "open"
         }
     }
@@ -42,7 +44,7 @@ extension DrawerPosition: CustomStringConvertible {
 fileprivate extension DrawerPosition {
 
     static var allPositions: [DrawerPosition] {
-        return [.closed, .collapsed, .partiallyOpen, .open]
+        return [.closed, .collapsed, .partiallyOpen, .pushedUp, .open]
     }
 
     static let activePositions: [DrawerPosition] = allPositions
@@ -368,6 +370,13 @@ private struct ChildScrollViewInfo {
 
     /// The height of the drawer when partially open.
     public var partiallyOpenHeight: CGFloat = 264.0 {
+        didSet {
+            self.updateSnapPosition(animated: false)
+        }
+    }
+    
+    /// The amount the drawer is pushed up from partially open when selected.
+    public var pushUp: CGFloat = 50 {
         didSet {
             self.updateSnapPosition(animated: false)
         }
@@ -995,6 +1004,9 @@ private struct ChildScrollViewInfo {
             } else {
                 return self.topMargin
             }
+            
+        case .pushedUp:
+            return superview.bounds.height - bottomInset - (self.pushUp + self.partiallyOpenHeight)
         case .partiallyOpen:
             return superview.bounds.height - bottomInset - self.partiallyOpenHeight
         case .collapsed:
@@ -1016,6 +1028,8 @@ private struct ChildScrollViewInfo {
             return (position.rawValue >= topmost) ? 1 : 0
         case (.open, .whenOpen):
             fallthrough
+        case (.pushedUp, .whenOpen):
+            return 1
         case (.partiallyOpen, .whenOpen):
             return 1
         case (.collapsed, _):
@@ -1032,6 +1046,8 @@ private struct ChildScrollViewInfo {
     private func shadowOpacityFactor(for position: DrawerPosition) -> Float {
         switch position {
         case .open:
+            return self.shadowOpacity
+        case .pushedUp:
             return self.shadowOpacity
         case .partiallyOpen:
             return self.shadowOpacity
