@@ -5,8 +5,6 @@
 	<key>NSPrivacyTracking</key>
 	<false/>
 	<key>NSPrivacyCollectedDataTypes</key>
-	<array>
-		<dict/>
-	</array>
+	<array/>
 </dict>
 </plist>
