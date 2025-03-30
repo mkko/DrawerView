@@ -19,8 +19,8 @@ extension UIViewController: DrawerPresenter {
 public class DrawerPresentationController: UIPresentationController {
 
     private let drawerView: DrawerView
-
     private var presentationDelegate: DrawerPresentationDelegate?
+    private var isDismissing = false
 
     init(presentedViewController: UIViewController,
          presenting presentingViewController: UIViewController?,
@@ -76,6 +76,8 @@ public class DrawerPresentationController: UIPresentationController {
 
     public override func dismissalTransitionWillBegin() {
         super.dismissalTransitionWillBegin()
+        isDismissing = true
+
         // Make callbacks backwards compatible
         if let callback = presentationDelegate?.drawerDismissalWillBegin(for:in:) {
             callback(presentedViewController, drawerView)
@@ -86,13 +88,8 @@ public class DrawerPresentationController: UIPresentationController {
 
     public override func dismissalTransitionDidEnd(_ completed: Bool) {
         super.dismissalTransitionDidEnd(completed)
+        isDismissing = false
 
-        // Clean up the drawer for reuse.
-        presentedViewController.view.removeFromSuperview()
-        presentedViewController.removeFromParent()
-        drawerView.removeFromSuperview()
-
-        // Make callbacks backwards compatible
         if let callback = presentationDelegate?.drawerDismissalDidEnd(for:in:completed:) {
             callback(presentedViewController, drawerView, completed)
         } else {
@@ -102,10 +99,6 @@ public class DrawerPresentationController: UIPresentationController {
 
     override public var shouldRemovePresentersView: Bool {
         return false
-    }
-
-    override public func containerViewWillLayoutSubviews() {
-        super.containerViewWillLayoutSubviews()
     }
 }
 
@@ -130,7 +123,8 @@ public class DrawerPresentationController: UIPresentationController {
 extension DrawerPresentationController: DrawerViewDelegate {
 
     public func drawer(_ drawerView: DrawerView, willTransitionFrom startPosition: DrawerPosition, to targetPosition: DrawerPosition) {
-        if targetPosition == .closed {
+        // Only trigger dismiss if we're not already dismissing to avoid recursion
+        if targetPosition == .closed && !isDismissing {
             presentedViewController.dismiss(animated: true)
         }
     }
@@ -170,6 +164,7 @@ extension DrawerPresentationManager: UIViewControllerTransitioningDelegate {
 public final class DrawerPresentationAnimator: NSObject {
 
     let presentation: PresentationType
+    private let animationDuration: TimeInterval = 0.3  // Standard iOS animation duration
 
     enum PresentationType {
       case present
@@ -186,25 +181,31 @@ extension DrawerPresentationAnimator: UIViewControllerAnimatedTransitioning {
     public func transitionDuration(
         using transitionContext: UIViewControllerContextTransitioning?
     ) -> TimeInterval {
-        return 0.0
+        return animationDuration
     }
 
     public func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
-
         switch presentation {
         case .present:
             guard let drawerView = transitionContext.view(forKey: .to) as? DrawerView else {
+                transitionContext.completeTransition(false)
                 return
             }
 
             drawerView.setPosition(.open, animated: true) { finished in
-               transitionContext.completeTransition(finished)
-           }
+                transitionContext.completeTransition(finished)
+            }
         case .dismiss:
             guard let drawerView = transitionContext.view(forKey: .from) as? DrawerView else {
+                transitionContext.completeTransition(false)
                 return
             }
+
+            let originalVisibilityBehavior = drawerView.contentVisibilityBehavior
+            drawerView.contentVisibilityBehavior = .never
+
             drawerView.setPosition(.closed, animated: true) { finished in
+                drawerView.contentVisibilityBehavior = originalVisibilityBehavior
                 transitionContext.completeTransition(finished)
             }
         }

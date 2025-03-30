@@ -112,12 +112,12 @@ class ViewController: UIViewController {
         }
     }
 
-    let drawerPresentation = DrawerPresentationManager()
+    let settingsPresentation = DrawerPresentationManager()
 
     private func presentDrawer() {
-        let viewController = self.storyboard!.instantiateViewController(withIdentifier: "ModalPresentationViewController") as! ModalPresentationViewController
-        drawerPresentation.drawer.openHeightBehavior = .fitting
-        viewController.transitioningDelegate = drawerPresentation
+        let viewController = UIViewController()
+//        settingsPresentation.drawer.openHeightBehavior = .fitting
+        viewController.transitioningDelegate = settingsPresentation
         viewController.modalPresentationStyle = .custom
         self.present(viewController, animated: true, completion: nil)
     }
