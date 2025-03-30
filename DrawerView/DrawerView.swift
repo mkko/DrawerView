@@ -498,7 +498,7 @@ private struct ChildScrollViewInfo {
     }
 
     func embed(view: UIView) {
-        view.backgroundColor = .clear
+        // view.backgroundColor = .clear
         view.frame = self.bounds
         view.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(view)
