@@ -54,7 +54,14 @@ fileprivate extension DrawerPosition {
     ]
 }
 
-let kVelocityTreshold: CGFloat = 0
+// Minimum velocity (pts/sec) to advance position when prediction is ambiguous
+let kVelocityTreshold: CGFloat = 800
+
+// Minimum drag distance (ratio of distance between positions) to allow position change
+let kMinimumDragDistanceRatio: CGFloat = 0.25
+
+// Time horizon (seconds) for projecting target position based on current velocity
+let kVelocityProjectionTime: CGFloat = 0.08
 
 // Vertical leeway is used to cover the bottom with springy animations.
 let kVerticalLeeway: CGFloat = 10.0
@@ -263,8 +270,8 @@ private struct ChildScrollViewInfo {
         panGestureRecognizer.minimumNumberOfTouches = 1
         return panGestureRecognizer
     }()
-    
-    /// Damping ratio of the spring animation when opening or closing the drawer 
+
+    /// Damping ratio of the spring animation when opening or closing the drawer
     public var animationSpringDampingRatio: CGFloat = 0.8
 
     /// Boolean indicating if the activity drawer should dismiss when you scroll down
@@ -908,20 +915,45 @@ private struct ChildScrollViewInfo {
                 // Let it scroll.
                 log("Let child view scroll.")
             } else if drawerPanStarted {
+                log("drawerPanStarted")
                 self.delegate?.drawerWillEndDragging?(self)
 
-                // Check velocity and snap position separately:
-                // 1) A treshold for velocity that makes drawer slide to the next state
-                // 2) A prediction that estimates the next position based on target offset.
-                // If 2 doesn't evaluate to the current position, use that.
-                let targetOffset = self.frame.origin.y + velocity.y / 100
+                // Determine next position based on:
+                // 1) Minimum drag distance - require meaningful movement before changing position
+                // 2) Velocity threshold - fast swipes can advance to next position
+                // 3) Position prediction - estimate target based on velocity and current offset
+
+                guard let superview = superview else {
+                    return
+                }
+
+                // Measure actual drag distance from gesture start
+                let dragDistance = abs(self.frame.origin.y - self.panOrigin)
+
+                // Project target position based on current velocity
+                let projectedDistance = velocity.y * kVelocityProjectionTime
+                let targetOffset = self.frame.origin.y + projectedDistance
                 let targetPosition = positionFor(offset: targetOffset)
 
-                // The positions are reversed, reverse the sign.
-                let advancement = velocity.y > 0 ? -1 : 1
+                // Check if drag meets minimum threshold for position change
+                let hasMinimumDragDistance: Bool
+                if targetPosition != self.position {
+                    let currentPositionSnapOffset = self.snapPosition(for: self.position, inSuperView: superview)
+                    let targetPositionSnapOffset = self.snapPosition(for: targetPosition, inSuperView: superview)
+                    let distanceBetweenPositions = abs(targetPositionSnapOffset - currentPositionSnapOffset)
+                    let minimumDragDistance = distanceBetweenPositions * kMinimumDragDistanceRatio
+                    hasMinimumDragDistance = dragDistance >= minimumDragDistance
+                } else {
+                    hasMinimumDragDistance = true
+                }
 
+                // Determine next position: insufficient drag returns to current, high velocity
+                // advances to next, otherwise use velocity-projected target
+                let advancement = velocity.y > 0 ? -1 : 1
                 let nextPosition: DrawerPosition
-                if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
+                if !hasMinimumDragDistance {
+                    nextPosition = self.position
+                } else if targetPosition == self.position && abs(velocity.y) > kVelocityTreshold,
                     let advanced = self.snapPositionsDescending.advance(from: targetPosition, offset: advancement) {
                     nextPosition = advanced
                 } else {
