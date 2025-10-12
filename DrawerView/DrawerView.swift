@@ -1400,9 +1400,34 @@ private struct ChildScrollViewInfo {
 extension DrawerView: UIGestureRecognizerDelegate {
 
     override public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        if gestureRecognizer === panGestureRecognizer || gestureRecognizer === overlayTapRecognizer {
+        if gestureRecognizer === panGestureRecognizer {
+            guard enabled else { return false }
+
+            // Check if the pan gesture is primarily horizontal (like swipe-to-delete)
+            // If so, don't begin to allow those gestures to work
+            let translation = panGestureRecognizer.translation(in: self)
+            let velocity = panGestureRecognizer.velocity(in: self)
+
+            // If there's meaningful translation/velocity, check direction
+            if abs(translation.x) > 0 || abs(translation.y) > 0 {
+                let isHorizontal = abs(translation.x) > abs(translation.y)
+                if isHorizontal {
+                    return false
+                }
+            } else if abs(velocity.x) > 0 || abs(velocity.y) > 0 {
+                let isHorizontal = abs(velocity.x) > abs(velocity.y)
+                if isHorizontal {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        if gestureRecognizer === overlayTapRecognizer {
             return enabled
         }
+
         return true
     }
 
