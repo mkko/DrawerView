@@ -181,6 +181,20 @@ private struct ChildScrollViewInfo {
             updateVisuals()
         }
     }
+    
+    /// The background blur effect style for dark mode.
+    public var darkBlurEffectStyle: UIBlurEffect.Style = .dark {
+        didSet {
+            updateVisuals()
+        }
+    }
+    
+    /// The background blur effect style for light mode.
+    public var lightBlurEffectStyle: UIBlurEffect.Style = .light {
+        didSet {
+            updateVisuals()
+        }
+    }
 
     public var borderColor: UIColor = kDefaultBorderColor {
         didSet {
@@ -1138,7 +1152,7 @@ private struct ChildScrollViewInfo {
 
     private func updateBackgroundVisuals(_ backgroundView: UIVisualEffectView) {
         backgroundView.effect = self.backgroundEffect
-            .effect(inTraitCollection: self.traitCollection)
+            .effect(inTraitCollection: self.traitCollection, darkBlurEffectStyle: darkBlurEffectStyle, lightBlurEffectStyle: lightBlurEffectStyle)
         if #available(iOS 11.0, *) {
             backgroundView.layer.cornerRadius = self.cornerRadius
             backgroundView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
@@ -1495,7 +1509,7 @@ public extension DrawerView {
 
 extension DrawerView.BackgroundEffectStyle {
 
-    func effect(inTraitCollection traitCollection: UITraitCollection) -> UIVisualEffect? {
+    func effect(inTraitCollection traitCollection: UITraitCollection, darkBlurEffectStyle: UIBlurEffect.Style, lightBlurEffectStyle: UIBlurEffect.Style) -> UIVisualEffect? {
         switch self {
         case .none: return nil
         case let .visualEffect(effect): return effect
@@ -1507,8 +1521,8 @@ extension DrawerView.BackgroundEffectStyle {
                 darkMode = false
             }
             return darkMode
-                ? UIBlurEffect(style: .dark)
-                : UIBlurEffect(style: .light)
+                ? UIBlurEffect(style: darkBlurEffectStyle)
+                : UIBlurEffect(style: lightBlurEffectStyle)
         }
     }
 }
